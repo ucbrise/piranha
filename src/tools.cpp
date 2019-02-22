@@ -572,7 +572,7 @@ void populateBitsVector(vector<smallType> &vec, string r_type, size_t size)
 	if (r_type == "COMMON")
 	{
 		for (size_t i = 0; i < size; ++i)
-			vec[i] = aes_common->getBit();
+			vec[i] = aes_next->getBit();
 	}
 
 	if (r_type == "INDEP")
@@ -595,7 +595,7 @@ void sharesOfBits(vector<smallType> &bit_shares_x_1, vector<smallType> &bit_shar
 		{
 			for (size_t k = 0; k < BIT_SIZE; ++k)
 			{
-				temp = aes_common->randModPrime();
+				temp = aes_next->randModPrime();
 				bit_shares_x_1[i*BIT_SIZE + k] = temp;
 				bit_shares_x_2[i*BIT_SIZE + k] = subtractModPrime((x[i] >> (BIT_SIZE - 1 - k) & 1), temp);
 			}
@@ -626,7 +626,7 @@ void sharesOfLSB(vector<smallType> &share_1, vector<smallType> &share_2,
 	{
 		for (size_t i = 0; i < size; ++i)
 		{
-			share_1[i] = aes_common->getBit();
+			share_1[i] = aes_next->getBit();
 			share_2[i] = share_1[i] ^ (r[i] % 2);
 		}
 	}
@@ -651,7 +651,7 @@ void sharesOfLSB(vector<myType> &share_1, vector<myType> &share_2,
 	{
 		for (size_t i = 0; i < size; ++i)
 		{
-			share_1[i] = aes_common->get64Bits();
+			share_1[i] = aes_next->get64Bits();
 			share_2[i] = floatToMyType(r[i] % 2) - share_1[i];
 		}
 	}
@@ -676,7 +676,7 @@ void sharesOfBitVector(vector<smallType> &share_1, vector<smallType> &share_2,
 	{
 		for (size_t i = 0; i < size; ++i)
 		{
-			share_1[i] = aes_common->getBit();
+			share_1[i] = aes_next->getBit();
 			share_2[i] = share_1[i] ^ vec[i];
 		}
 	}
@@ -701,7 +701,7 @@ void sharesOfBitVector(vector<myType> &share_1, vector<myType> &share_2,
 	{
 		for (size_t i = 0; i < size; ++i)
 		{
-			share_1[i] = aes_common->get64Bits();
+			share_1[i] = aes_next->get64Bits();
 			share_2[i] = floatToMyType(vec[i]) - share_1[i];
 		}
 	}

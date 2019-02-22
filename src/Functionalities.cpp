@@ -421,7 +421,7 @@ void funcDotProductMPC(const vector<myType> &a, const vector<myType> &b,
 // 			for (size_t k = 0; k < dim; ++k)
 // 			{
 // 				index3 = index2*dim + k;
-// 				c[index3] = aes_common->randModPrime();
+// 				c[index3] = aes_next->randModPrime();
 // 				if (partyNum == PARTY_A)
 // 					c[index3] = subtractModPrime((k!=0), c[index3]);
 
@@ -531,11 +531,11 @@ void funcPrivateCompareMPC(const vector<smallType> &share_m, const vector<myType
 		// 			for (size_t k = 0; k < dim; ++k)
 		// 			{
 		// 				index3 = index2*dim + k;
-		// 				c[index3] = aes_common->randModPrime();
+		// 				c[index3] = aes_next->randModPrime();
 		// 				if (partyNum == PARTY_A)
 		// 					c[index3] = subtractModPrime((k!=0), c[index3]);
 
-		// 				c[index3] = multiplyModPrime(c[index3], aes_common->randNonZeroModPrime());
+		// 				c[index3] = multiplyModPrime(c[index3], aes_next->randNonZeroModPrime());
 		// 			}
 		// 		}
 		// 		else
@@ -568,10 +568,10 @@ void funcPrivateCompareMPC(const vector<smallType> &share_m, const vector<myType
 		// 					c[index3] = addModPrime(c[index3], tempM);
 		// 				}
 
-		// 				c[index3] = multiplyModPrime(c[index3], aes_common->randNonZeroModPrime());
+		// 				c[index3] = multiplyModPrime(c[index3], aes_next->randNonZeroModPrime());
 		// 			}
 		// 		}
-		// 		aes_common->AES_random_shuffle(c, index2*dim, (index2+1)*dim);
+		// 		aes_next->AES_random_shuffle(c, index2*dim, (index2+1)*dim);
 		// 	}
 		// }
 		sendVector<smallType>(c, PARTY, sizeLong);

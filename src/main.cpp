@@ -10,9 +10,9 @@
 
 
 int partyNum;
-
-AESObject* aes_common;
 AESObject* aes_indep;
+AESObject* aes_next;
+AESObject* aes_prev;
 
 
 
@@ -73,7 +73,7 @@ int main(int argc, char** argv)
 
 /****************************** AES SETUP and SYNC ******************************/ 
 	aes_indep = new AESObject(argv[3]);
-	aes_common = new AESObject(argv[4]);
+	aes_next = new AESObject(argv[4]);
 
 	initializeCommunication(argv[2], partyNum);
 	synchronize(2000000);
@@ -154,8 +154,9 @@ int main(int argc, char** argv)
 
 
 /****************************** CLEAN-UP ******************************/ 
-	delete aes_common;
 	delete aes_indep;
+	delete aes_next;
+	delete aes_prev;
 	// delete config;
 	// delete l0;
 	// delete l1;

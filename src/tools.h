@@ -25,7 +25,7 @@
 
 extern int partyNum;
 
-extern AESObject* aes_common;
+extern AESObject* aes_next;
 extern AESObject* aes_indep;
 
 extern smallType additionModPrime[PRIME_NUMBER][PRIME_NUMBER];
@@ -309,12 +309,12 @@ void populateRandomVector(vector<T> &vec, size_t size, string r_type, string neg
 			if (sizeof(T) == sizeof(myType))
 			{
 				for (size_t i = 0; i < size; ++i)
-					vec[i] = sign*aes_common->get64Bits();		
+					vec[i] = sign*aes_next->get64Bits();		
 			}
 			else
 			{
 				for (size_t i = 0; i < size; ++i)
-					vec[i] = sign*aes_common->get8Bits();		
+					vec[i] = sign*aes_next->get8Bits();		
 			}
 		}
 		
@@ -323,12 +323,12 @@ void populateRandomVector(vector<T> &vec, size_t size, string r_type, string neg
 			if (sizeof(T) == sizeof(myType))
 			{
 				for (size_t i = 0; i < size; ++i)
-					vec[i] = aes_common->get64Bits();		
+					vec[i] = aes_next->get64Bits();		
 			}
 			else
 			{
 				for (size_t i = 0; i < size; ++i)
-					vec[i] = aes_common->get8Bits();		
+					vec[i] = aes_next->get8Bits();		
 			}			
 		}
 	}
@@ -469,7 +469,7 @@ void sharesModuloOdd(vector<myType> &shares_1, vector<myType> &shares_2,
 	if (r_type == "COMMON")
 	{
 		for (size_t i = 0; i < size; ++i)
-			shares_1[i] = aes_common->randModuloOdd();
+			shares_1[i] = aes_next->randModuloOdd();
 	}
 
 	if (r_type == "INDEP")
