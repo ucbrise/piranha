@@ -16,12 +16,7 @@ int NUM_OF_PARTIES;
 
 AESObject* aes_common;
 AESObject* aes_indep;
-AESObject* aes_a_1;
-AESObject* aes_a_2;
-AESObject* aes_b_1;
-AESObject* aes_b_2;
-AESObject* aes_c_1;
-ParallelAESObject* aes_parallel;
+
 
 
 
@@ -83,12 +78,6 @@ int main(int argc, char** argv)
 /****************************** AES SETUP and SYNC ******************************/ 
 	aes_indep = new AESObject(argv[4]);
 	aes_common = new AESObject(argv[5]);
-	aes_a_1 = new AESObject("files/keyD");
-	aes_a_2 = new AESObject("files/keyD");
-	aes_b_1 = new AESObject("files/keyD");
-	aes_b_2 = new AESObject("files/keyD");
-	aes_c_1 = new AESObject("files/keyD");
-	aes_parallel = new ParallelAESObject(argv[5]);
 
 	if (!STANDALONE)
 	{
@@ -96,8 +85,6 @@ int main(int argc, char** argv)
 		synchronize(2000000);	
 	}
 
-	if (PARALLEL)
-		aes_parallel->precompute();
 
 /****************************** RUN NETWORK/BENCHMARKS ******************************/ 
 	start_m();
@@ -176,12 +163,6 @@ int main(int argc, char** argv)
 /****************************** CLEAN-UP ******************************/ 
 	delete aes_common;
 	delete aes_indep;
-	delete aes_a_1;
-	delete aes_a_2;
-	delete aes_b_1;
-	delete aes_b_2;
-	delete aes_c_1;
-	delete aes_parallel;
 	// delete config;
 	// delete l0;
 	// delete l1;

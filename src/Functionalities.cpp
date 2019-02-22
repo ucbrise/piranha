@@ -393,78 +393,78 @@ void funcDotProductMPC(const vector<myType> &a, const vector<myType> &b,
 }
 
 //Thread function for parallel private compare
-void parallelPC(smallType* c, size_t start, size_t end, int t, 
-				const smallType* share_m, const myType* r, 
-				const smallType* beta, const smallType* betaPrime, size_t dim)
-{
-	size_t index3, index2;
-	size_t PARTY;
+// void parallelPC(smallType* c, size_t start, size_t end, int t, 
+// 				const smallType* share_m, const myType* r, 
+// 				const smallType* beta, const smallType* betaPrime, size_t dim)
+// {
+// 	size_t index3, index2;
+// 	size_t PARTY;
 
-	smallType bit_r, a, tempM;
-	myType valueX;
+// 	smallType bit_r, a, tempM;
+// 	myType valueX;
 
-	thread_local int shuffle_counter = 0;
-	thread_local int nonZero_counter = 0;
+// 	thread_local int shuffle_counter = 0;
+// 	thread_local int nonZero_counter = 0;
 
-	//Check the security of the first if condition
-	for (size_t index2 = start; index2 < end; ++index2)
-	{
-		if (beta[index2] == 1 and r[index2] != MINUS_ONE)
-			valueX = r[index2] + 1;
-		else
-			valueX = r[index2];
+// 	//Check the security of the first if condition
+// 	for (size_t index2 = start; index2 < end; ++index2)
+// 	{
+// 		if (beta[index2] == 1 and r[index2] != MINUS_ONE)
+// 			valueX = r[index2] + 1;
+// 		else
+// 			valueX = r[index2];
 
-		if (beta[index2] == 1 and r[index2] == MINUS_ONE)
-		{
-			//One share of zero and other shares of 1
-			//Then multiply and shuffle
-			for (size_t k = 0; k < dim; ++k)
-			{
-				index3 = index2*dim + k;
-				c[index3] = aes_common->randModPrime();
-				if (partyNum == PARTY_A)
-					c[index3] = subtractModPrime((k!=0), c[index3]);
+// 		if (beta[index2] == 1 and r[index2] == MINUS_ONE)
+// 		{
+// 			//One share of zero and other shares of 1
+// 			//Then multiply and shuffle
+// 			for (size_t k = 0; k < dim; ++k)
+// 			{
+// 				index3 = index2*dim + k;
+// 				c[index3] = aes_common->randModPrime();
+// 				if (partyNum == PARTY_A)
+// 					c[index3] = subtractModPrime((k!=0), c[index3]);
 
-				c[index3] = multiplyModPrime(c[index3], aes_parallel->randNonZeroModPrime(t, nonZero_counter));
-			}
-		}
-		else
-		{
-			//Single for loop
-			a = 0;
-			for (size_t k = 0; k < dim; ++k)
-			{
-				index3 = index2*dim + k;
-				c[index3] = a;
-				tempM = share_m[index3];
+// 				c[index3] = multiplyModPrime(c[index3], aes_parallel->randNonZeroModPrime(t, nonZero_counter));
+// 			}
+// 		}
+// 		else
+// 		{
+// 			//Single for loop
+// 			a = 0;
+// 			for (size_t k = 0; k < dim; ++k)
+// 			{
+// 				index3 = index2*dim + k;
+// 				c[index3] = a;
+// 				tempM = share_m[index3];
 
-				bit_r = (smallType)((valueX >> (63-k)) & 1);
+// 				bit_r = (smallType)((valueX >> (63-k)) & 1);
 
-				if (bit_r == 0)
-					a = addModPrime(a, tempM);
-				else
-					a = addModPrime(a, subtractModPrime((partyNum == PARTY_A), tempM));
+// 				if (bit_r == 0)
+// 					a = addModPrime(a, tempM);
+// 				else
+// 					a = addModPrime(a, subtractModPrime((partyNum == PARTY_A), tempM));
 
-				if (!beta[index2])
-				{
-					if (partyNum == PARTY_A)
-						c[index3] = addModPrime(c[index3], 1+bit_r);
-					c[index3] = subtractModPrime(c[index3], tempM);
-				}
-				else
-				{
-					if (partyNum == PARTY_A)
-						c[index3] = addModPrime(c[index3], 1-bit_r);
-					c[index3] = addModPrime(c[index3], tempM);
-				}
+// 				if (!beta[index2])
+// 				{
+// 					if (partyNum == PARTY_A)
+// 						c[index3] = addModPrime(c[index3], 1+bit_r);
+// 					c[index3] = subtractModPrime(c[index3], tempM);
+// 				}
+// 				else
+// 				{
+// 					if (partyNum == PARTY_A)
+// 						c[index3] = addModPrime(c[index3], 1-bit_r);
+// 					c[index3] = addModPrime(c[index3], tempM);
+// 				}
 
-				c[index3] = multiplyModPrime(c[index3], aes_parallel->randNonZeroModPrime(t, nonZero_counter));
-			}
-		}
-		aes_parallel->AES_random_shuffle(c, index2*dim, (index2+1)*dim, t, shuffle_counter);
-	}
-	aes_parallel->counterIncrement();
-}
+// 				c[index3] = multiplyModPrime(c[index3], aes_parallel->randNonZeroModPrime(t, nonZero_counter));
+// 			}
+// 		}
+// 		aes_parallel->AES_random_shuffle(c, index2*dim, (index2+1)*dim, t, shuffle_counter);
+// 	}
+// 	aes_parallel->counterIncrement();
+// }
 
 
 // Private Compare functionality
@@ -491,89 +491,89 @@ void funcPrivateCompareMPC(const vector<smallType> &share_m, const vector<myType
 		vector<smallType> c(sizeLong);
 		myType valueX;
 
-		if (PARALLEL)
-		{
-			thread *threads = new thread[NO_CORES];
-			int chunksize = size/NO_CORES;
+		// if (PARALLEL)
+		// {
+		// 	thread *threads = new thread[NO_CORES];
+		// 	int chunksize = size/NO_CORES;
 
-			for (int i = 0; i < NO_CORES; i++)
-			{
-				int start = i*chunksize;
-				int end = (i+1)*chunksize;
-				if (i == NO_CORES - 1)
-					end = size;
+		// 	for (int i = 0; i < NO_CORES; i++)
+		// 	{
+		// 		int start = i*chunksize;
+		// 		int end = (i+1)*chunksize;
+		// 		if (i == NO_CORES - 1)
+		// 			end = size;
 				
-				threads[i] = thread(parallelPC, c.data(), start, end, i, share_m.data(), 
-									r.data(), beta.data(), betaPrime.data(), dim);
-				// threads[i] = thread(parallelPC, ref(c.data()), start, end, i, ref(share_m.data()), 
-				// 					ref(r.data()), ref(beta.data()), ref(betaPrime.data()), dim);
-			}
+		// 		threads[i] = thread(parallelPC, c.data(), start, end, i, share_m.data(), 
+		// 							r.data(), beta.data(), betaPrime.data(), dim);
+		// 		// threads[i] = thread(parallelPC, ref(c.data()), start, end, i, ref(share_m.data()), 
+		// 		// 					ref(r.data()), ref(beta.data()), ref(betaPrime.data()), dim);
+		// 	}
 
-			for (int i = 0; i < NO_CORES; i++)
-				threads[i].join();
+		// 	for (int i = 0; i < NO_CORES; i++)
+		// 		threads[i].join();
 
-			delete[] threads;
-		}
-		else
-		{
-			//Check the security of the first if condition
-			for (size_t index2 = 0; index2 < size; ++index2)
-			{
-				if (beta[index2] == 1 and r[index2] != MINUS_ONE)
-					valueX = r[index2] + 1;
-				else
-					valueX = r[index2];
+		// 	delete[] threads;
+		// }
+		// else
+		// {
+		// 	//Check the security of the first if condition
+		// 	for (size_t index2 = 0; index2 < size; ++index2)
+		// 	{
+		// 		if (beta[index2] == 1 and r[index2] != MINUS_ONE)
+		// 			valueX = r[index2] + 1;
+		// 		else
+		// 			valueX = r[index2];
 
-				if (beta[index2] == 1 and r[index2] == MINUS_ONE)
-				{
-					//One share of zero and other shares of 1
-					//Then multiply and shuffle
-					for (size_t k = 0; k < dim; ++k)
-					{
-						index3 = index2*dim + k;
-						c[index3] = aes_common->randModPrime();
-						if (partyNum == PARTY_A)
-							c[index3] = subtractModPrime((k!=0), c[index3]);
+		// 		if (beta[index2] == 1 and r[index2] == MINUS_ONE)
+		// 		{
+		// 			//One share of zero and other shares of 1
+		// 			//Then multiply and shuffle
+		// 			for (size_t k = 0; k < dim; ++k)
+		// 			{
+		// 				index3 = index2*dim + k;
+		// 				c[index3] = aes_common->randModPrime();
+		// 				if (partyNum == PARTY_A)
+		// 					c[index3] = subtractModPrime((k!=0), c[index3]);
 
-						c[index3] = multiplyModPrime(c[index3], aes_common->randNonZeroModPrime());
-					}
-				}
-				else
-				{
-					//Single for loop
-					a = 0;
-					for (size_t k = 0; k < dim; ++k)
-					{
-						index3 = index2*dim + k;
-						c[index3] = a;
-						tempM = share_m[index3];
+		// 				c[index3] = multiplyModPrime(c[index3], aes_common->randNonZeroModPrime());
+		// 			}
+		// 		}
+		// 		else
+		// 		{
+		// 			//Single for loop
+		// 			a = 0;
+		// 			for (size_t k = 0; k < dim; ++k)
+		// 			{
+		// 				index3 = index2*dim + k;
+		// 				c[index3] = a;
+		// 				tempM = share_m[index3];
 
-						bit_r = (smallType)((valueX >> (63-k)) & 1);
+		// 				bit_r = (smallType)((valueX >> (63-k)) & 1);
 
-						if (bit_r == 0)
-							a = addModPrime(a, tempM);
-						else
-							a = addModPrime(a, subtractModPrime((partyNum == PARTY_A), tempM));
+		// 				if (bit_r == 0)
+		// 					a = addModPrime(a, tempM);
+		// 				else
+		// 					a = addModPrime(a, subtractModPrime((partyNum == PARTY_A), tempM));
 
-						if (!beta[index2])
-						{
-							if (partyNum == PARTY_A)
-								c[index3] = addModPrime(c[index3], 1+bit_r);
-							c[index3] = subtractModPrime(c[index3], tempM);
-						}
-						else
-						{
-							if (partyNum == PARTY_A)
-								c[index3] = addModPrime(c[index3], 1-bit_r);
-							c[index3] = addModPrime(c[index3], tempM);
-						}
+		// 				if (!beta[index2])
+		// 				{
+		// 					if (partyNum == PARTY_A)
+		// 						c[index3] = addModPrime(c[index3], 1+bit_r);
+		// 					c[index3] = subtractModPrime(c[index3], tempM);
+		// 				}
+		// 				else
+		// 				{
+		// 					if (partyNum == PARTY_A)
+		// 						c[index3] = addModPrime(c[index3], 1-bit_r);
+		// 					c[index3] = addModPrime(c[index3], tempM);
+		// 				}
 
-						c[index3] = multiplyModPrime(c[index3], aes_common->randNonZeroModPrime());
-					}
-				}
-				aes_common->AES_random_shuffle(c, index2*dim, (index2+1)*dim);
-			}
-		}
+		// 				c[index3] = multiplyModPrime(c[index3], aes_common->randNonZeroModPrime());
+		// 			}
+		// 		}
+		// 		aes_common->AES_random_shuffle(c, index2*dim, (index2+1)*dim);
+		// 	}
+		// }
 		sendVector<smallType>(c, PARTY, sizeLong);
 	}
 

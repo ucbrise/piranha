@@ -374,50 +374,50 @@ void populateRandomVector(vector<T> &vec, size_t size, string r_type, string neg
 		}
 	}
 
-	if (r_type == "a_1")
-	{
-		assert((partyNum == PARTY_A or partyNum == PARTY_C) && "Only A and C can call for a_1");
-		assert(neg_type == "POSITIVE" && "neg_type should be POSITIVE");
-		assert(sizeof(T) == sizeof(myType) && "sizeof(T) == sizeof(myType)");
-		for (size_t i = 0; i < size; ++i)
-			vec[i] = aes_a_1->get64Bits();
-	}
+	// if (r_type == "a_1")
+	// {
+	// 	assert((partyNum == PARTY_A or partyNum == PARTY_C) && "Only A and C can call for a_1");
+	// 	assert(neg_type == "POSITIVE" && "neg_type should be POSITIVE");
+	// 	assert(sizeof(T) == sizeof(myType) && "sizeof(T) == sizeof(myType)");
+	// 	for (size_t i = 0; i < size; ++i)
+	// 		vec[i] = aes_a_1->get64Bits();
+	// }
 
-	if (r_type == "b_1")
-	{
-		assert((partyNum == PARTY_A or partyNum == PARTY_C) && "Only A and C can call for b_1");
-		assert(neg_type == "POSITIVE" && "neg_type should be POSITIVE");
-		assert(sizeof(T) == sizeof(myType) && "sizeof(T) == sizeof(myType)");
-		for (size_t i = 0; i < size; ++i)
-			vec[i] = aes_b_1->get64Bits();
-	}
+	// if (r_type == "b_1")
+	// {
+	// 	assert((partyNum == PARTY_A or partyNum == PARTY_C) && "Only A and C can call for b_1");
+	// 	assert(neg_type == "POSITIVE" && "neg_type should be POSITIVE");
+	// 	assert(sizeof(T) == sizeof(myType) && "sizeof(T) == sizeof(myType)");
+	// 	for (size_t i = 0; i < size; ++i)
+	// 		vec[i] = aes_b_1->get64Bits();
+	// }
 
-	if (r_type == "c_1")
-	{	
-		assert((partyNum == PARTY_A or partyNum == PARTY_C) && "Only A and C can call for c_1");
-		assert(neg_type == "POSITIVE" && "neg_type should be POSITIVE");
-		assert(sizeof(T) == sizeof(myType) && "sizeof(T) == sizeof(myType)");
-		for (size_t i = 0; i < size; ++i)
-			vec[i] = aes_c_1->get64Bits();
-	}
+	// if (r_type == "c_1")
+	// {	
+	// 	assert((partyNum == PARTY_A or partyNum == PARTY_C) && "Only A and C can call for c_1");
+	// 	assert(neg_type == "POSITIVE" && "neg_type should be POSITIVE");
+	// 	assert(sizeof(T) == sizeof(myType) && "sizeof(T) == sizeof(myType)");
+	// 	for (size_t i = 0; i < size; ++i)
+	// 		vec[i] = aes_c_1->get64Bits();
+	// }
 
-	if (r_type == "a_2")
-	{
-		assert((partyNum == PARTY_B or partyNum == PARTY_C) && "Only B and C can call for a_2");
-		assert(neg_type == "POSITIVE" && "neg_type should be POSITIVE");
-		assert(sizeof(T) == sizeof(myType) && "sizeof(T) == sizeof(myType)");
-		for (size_t i = 0; i < size; ++i)
-			vec[i] = aes_a_2->get64Bits();
-	}
+	// if (r_type == "a_2")
+	// {
+	// 	assert((partyNum == PARTY_B or partyNum == PARTY_C) && "Only B and C can call for a_2");
+	// 	assert(neg_type == "POSITIVE" && "neg_type should be POSITIVE");
+	// 	assert(sizeof(T) == sizeof(myType) && "sizeof(T) == sizeof(myType)");
+	// 	for (size_t i = 0; i < size; ++i)
+	// 		vec[i] = aes_a_2->get64Bits();
+	// }
 
-	if (r_type == "b_2")
-	{
-		assert((partyNum == PARTY_B or partyNum == PARTY_C) && "Only B and C can call for b_2");
-		assert(neg_type == "POSITIVE" && "neg_type should be POSITIVE");
-		assert(sizeof(T) == sizeof(myType) && "sizeof(T) == sizeof(myType)");
-		for (size_t i = 0; i < size; ++i)
-			vec[i] = aes_b_2->get64Bits();
-	}	
+	// if (r_type == "b_2")
+	// {
+	// 	assert((partyNum == PARTY_B or partyNum == PARTY_C) && "Only B and C can call for b_2");
+	// 	assert(neg_type == "POSITIVE" && "neg_type should be POSITIVE");
+	// 	assert(sizeof(T) == sizeof(myType) && "sizeof(T) == sizeof(myType)");
+	// 	for (size_t i = 0; i < size; ++i)
+	// 		vec[i] = aes_b_2->get64Bits();
+	// }	
 }
 
 
