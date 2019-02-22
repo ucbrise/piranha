@@ -35,7 +35,8 @@ using namespace std;
 
 
 //MPC globals
-extern int NUM_OF_PARTIES;
+// extern int NUM_OF_PARTIES;
+#define NUM_OF_PARTIES 3
 #define STANDALONE (NUM_OF_PARTIES == 1)
 #define THREE_PC (NUM_OF_PARTIES == 3)
 #define FOUR_PC (NUM_OF_PARTIES == 4)

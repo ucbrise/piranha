@@ -20,7 +20,6 @@
 #include <math.h>
 #include <sstream>
 #include "AESObject.h"
-#include "ParallelAESObject.h"
 #include "connect.h"
 #include "globals.h"
 
@@ -28,12 +27,6 @@ extern int partyNum;
 
 extern AESObject* aes_common;
 extern AESObject* aes_indep;
-extern AESObject* aes_a_1;
-extern AESObject* aes_a_2;
-extern AESObject* aes_b_1;
-extern AESObject* aes_b_2;
-extern AESObject* aes_c_1;
-extern ParallelAESObject* aes_parallel;
 
 extern smallType additionModPrime[PRIME_NUMBER][PRIME_NUMBER];
 extern smallType multiplicationModPrime[PRIME_NUMBER][PRIME_NUMBER];

@@ -11,7 +11,7 @@
 
 using namespace std;
 int partyNum;
-int NUM_OF_PARTIES;	
+// int NUM_OF_PARTIES;	
 
 
 AESObject* aes_common;
@@ -25,7 +25,7 @@ int main(int argc, char** argv)
 
 /****************************** PREPROCESSING ******************************/ 
 	partyNum = atoi(argv[2]);
-	NUM_OF_PARTIES = 3;
+	// NUM_OF_PARTIES = 3;
 	string whichNetwork = "No Network";
 	// NeuralNetConfig* config = new NeuralNetConfig(NUM_ITERATIONS);
 
