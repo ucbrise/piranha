@@ -12,7 +12,6 @@
 using namespace std;
 int partyNum;
 int NUM_OF_PARTIES;	
-void parseInputs(int argc, char* argv[]);
 
 
 AESObject* aes_common;
@@ -30,7 +29,8 @@ int main(int argc, char** argv)
 {
 
 /****************************** PREPROCESSING ******************************/ 
-	parseInputs(argc, argv);
+	partyNum = atoi(argv[2]);
+	NUM_OF_PARTIES = 3;
 	string whichNetwork = "No Network";
 	// NeuralNetConfig* config = new NeuralNetConfig(NUM_ITERATIONS);
 
@@ -196,20 +196,4 @@ int main(int argc, char** argv)
 
 
 
-void parseInputs(int argc, char* argv[])
-{	
-	if (argc < 10) 
-		print_usage(argv[0]);
 
-	if (strcmp(argv[1], "STANDALONE") == 0)
-		NUM_OF_PARTIES = 1;
-	else if (strcmp(argv[1], "3PC") == 0)
-		NUM_OF_PARTIES = 3;
-	else if (strcmp(argv[1], "4PC") == 0)
-		NUM_OF_PARTIES = 4;
-
-	partyNum = atoi(argv[2]);
-	
-	if (partyNum < 0 or partyNum > 4) 
-		print_usage(argv[0]);
-}
