@@ -9,10 +9,7 @@
 #include "Functionalities.h"
 
 
-using namespace std;
 int partyNum;
-// int NUM_OF_PARTIES;	
-
 
 AESObject* aes_common;
 AESObject* aes_indep;
@@ -24,8 +21,7 @@ int main(int argc, char** argv)
 {
 
 /****************************** PREPROCESSING ******************************/ 
-	partyNum = atoi(argv[2]);
-	// NUM_OF_PARTIES = 3;
+	partyNum = atoi(argv[1]);
 	string whichNetwork = "No Network";
 	// NeuralNetConfig* config = new NeuralNetConfig(NUM_ITERATIONS);
 
@@ -76,14 +72,11 @@ int main(int argc, char** argv)
 
 
 /****************************** AES SETUP and SYNC ******************************/ 
-	aes_indep = new AESObject(argv[4]);
-	aes_common = new AESObject(argv[5]);
+	aes_indep = new AESObject(argv[3]);
+	aes_common = new AESObject(argv[4]);
 
-	if (!STANDALONE)
-	{
-		initializeCommunication(argv[3], partyNum);
-		synchronize(2000000);	
-	}
+	initializeCommunication(argv[2], partyNum);
+	synchronize(2000000);
 
 
 /****************************** RUN NETWORK/BENCHMARKS ******************************/ 

@@ -43,7 +43,7 @@ public:
 	smallType randModPrime();
 	smallType randNonZeroModPrime();
 	myType randModuloOdd();
-	void AES_random_shuffle(vector<smallType> &vec, size_t begin_offset, size_t end_offset);
+	void AES_random_shuffle(std::vector<smallType> &vec, size_t begin_offset, size_t end_offset);
 };
 
 

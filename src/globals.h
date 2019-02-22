@@ -9,7 +9,6 @@
 #include <assert.h>
 #include <limits.h>
 #include <array>
-using namespace std;
 
 //Macros
 #define _aligned_malloc(size,alignment) aligned_alloc(alignment,size)

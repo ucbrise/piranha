@@ -6,41 +6,19 @@
 #include <fstream>
 #include "AESObject.h"
 
-
 using namespace std;
 
-
-// AESObject::AESObject(char* filename)
-// {
-// 	ifstream f(filename);
-// 	string str { istreambuf_iterator<char>(f), istreambuf_iterator<char>() };
-// 	f.close();
-// 	// cout << str << "\n";
-// 	int len = str.length();
-// 	// char* common_aes_key = new char[len+1];
-// 	// vector<char> common_aes_key('\0', len+1);
-
-// 	vector<char> common_aes_key(str.begin(), str.end());
-// 	common_aes_key.push_back('\0');
-// 	AES_set_encrypt_key(common_aes_key.data(), 256, &aes_key);
-// 	rCounter = -1;
-// 	// delete common_aes_key;
-// }
 
 AESObject::AESObject(char* filename)
 {
 	ifstream f(filename);
 	string str { istreambuf_iterator<char>(f), istreambuf_iterator<char>() };
 	f.close();
-	// cout << str << "\n";
 	int len = str.length();
-	// char* common_aes_key = new char[len+1];
 	char common_aes_key[len+1];
 	memset(common_aes_key, '\0', len+1);
 	strcpy(common_aes_key, str.c_str());
 	AES_set_encrypt_key((unsigned char*)common_aes_key, 256, &aes_key);
-	// rCounter = -1;
-	// delete common_aes_key;
 }
 
 
