@@ -1,12 +1,12 @@
 
 #include <iostream>
 #include <string>
-// #include "secondary.h"
+#include "secondary.h"
 #include "connect.h"
 #include "AESObject.h"
 // #include "NeuralNetConfig.h"
 // #include "NeuralNetwork.h"
-#include "Functionalities.h"
+// #include "Functionalities.h"
 
 
 int partyNum;
@@ -21,7 +21,7 @@ int main(int argc, char** argv)
 {
 
 /****************************** PREPROCESSING ******************************/ 
-	partyNum = atoi(argv[1]);
+	parseInputs(argc, argv);
 	string whichNetwork = "No Network";
 	// NeuralNetConfig* config = new NeuralNetConfig(NUM_ITERATIONS);
 
@@ -92,7 +92,7 @@ int main(int argc, char** argv)
 	int i = 0;
 	for (RSSVector::iterator it = sameer.begin(); it != sameer.end(); it++) {
         std::cout << "sameer[" << i << "].1st = " << it->first << std::endl;
-        std::cout << "sameer[" << i << "].2nd = " << it->second<< std::endl; 
+        std::cout << "sameer[" << i << "].2nd = " << it->second << std::endl; 
         i++;
     }
 
@@ -106,7 +106,7 @@ int main(int argc, char** argv)
 	std::cout << "----------------" << std::endl;
 	for (RSSVector::iterator it = sameer.begin(); it != sameer.end(); it++) {
         std::cout << "sameer[" << i << "].1st = " << it->first << std::endl;
-        std::cout << "sameer[" << i << "].2nd = " << it->second<< std::endl; 
+        std::cout << "sameer[" << i << "].2nd = " << it->second << std::endl; 
         i++;
     }
 	// whichNetwork = "Mat-Mul";

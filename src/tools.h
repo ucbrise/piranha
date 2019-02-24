@@ -14,7 +14,6 @@
 #include <time.h>
 #include "secCompMultiParty.h"
 #include "main_gf_funcs.h"
-// #include "../util/sha256.h"
 #include <string>
 #include <openssl/sha.h>
 #include <math.h>
@@ -147,8 +146,6 @@ __m128i stringTo__m128i(string str);
 
 unsigned int charValue(char c);
 
-double diff(timespec start, timespec end);
-
 string convertBooltoChars(bool *input, int length);
 
 string toHex(string s);
@@ -160,13 +157,6 @@ void print(__m128i* arr, int size);
 void print128_num(__m128i var);
 
 
-
-
-void print_usage(const char * bin);
-void start_time();
-void end_time(string str);
-void start_rounds();
-void end_rounds(string str);
 
 void print_myType(myType var, string message, string type);
 void print_linear(myType var, string type);
@@ -223,11 +213,6 @@ void convolutionReshapeBackprop(const vector<myType> &vec, vector<myType> &vecOu
 								size_t C, size_t D, size_t B);
 
 
-void start_m();
-void end_m(string str);
-
-
-
 
 
 // Template functions
@@ -276,19 +261,6 @@ void getVectorfromPrimary(vector<T> &vec, size_t size, string r_mode, string n_m
 
 
 
-
-
-
-
-//Template implementations
-// template<typename T>
-// void populateRandomVector(vector<T> &vec, size_t size, string r_type, string neg_type)
-// {	
-// 	assert((r_type == "COMMON" or r_type == "INDEP") && "invalid randomness type for populateRandomVector");
-// 	assert((neg_type == "NEGATIVE" or neg_type == "POSITIVE") && "invalid negativeness type for populateRandomVector");
-// 	assert(sizeof(T) == sizeof(myType) && "Probably only need 64-bit numbers");
-// 	assert(r_type == "COMMON" && "Only common randomness mode required currently");
-// }
 
 template<typename T>
 void populateRandomVector(vector<T> &vec, size_t size, string r_type, string neg_type)

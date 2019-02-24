@@ -15,18 +15,10 @@
 #include <Eigen/Dense>
 using namespace std;
 using namespace Eigen;
-#define NANOSECONDS_PER_SEC 1E9
 
 
-//For time measurements
-clock_t tStart;
-struct timespec requestStart, requestEnd;
-bool alreadyMeasuringTime = false;
-
-int roundComplexitySend = 0;
-int roundComplexityRecv = 0;
-bool alreadyMeasuringRounds = false;
-
+smallType additionModPrime[PRIME_NUMBER][PRIME_NUMBER];
+smallType multiplicationModPrime[PRIME_NUMBER][PRIME_NUMBER];
 
 
 
@@ -281,23 +273,6 @@ unsigned int charValue(char c)
     return -1;
 }
 
-double diff(timespec start, timespec end)
-{
-    timespec temp;
-
-    if ((end.tv_nsec-start.tv_nsec)<0)
-    {
-            temp.tv_sec = end.tv_sec-start.tv_sec-1;
-            temp.tv_nsec = 1000000000+end.tv_nsec-start.tv_nsec;
-    }
-    else 
-    {
-            temp.tv_sec = end.tv_sec-start.tv_sec;
-            temp.tv_nsec = end.tv_nsec-start.tv_nsec;
-    }
-    return temp.tv_sec + (double)temp.tv_nsec/NANOSECONDS_PER_SEC;
-}
-
 string convertBooltoChars(bool *input, int length)
 {
 	stringstream output;
@@ -339,85 +314,6 @@ void print128_num(__m128i var)
 		val[6], val[7]);
 }
 
-
-
-void print_usage (const char * bin) 
-{
-    cout << "Usage: " << bin << " MPC_TYPE PARTY_NUM IP_ADDR_FILE AES_SEED_INDEP AES_SEED_COMMON TRAINING_DATA TRAINING_LABELS TESTING_DATA TESTING_LABELS" << endl;
-    cout << endl;
-    cout << "Required Arguments:\n";
-    cout << "MPC_TYPE			Type of MPC (STANDALONE, 3PC or 4PC)\n";
-    cout << "PARTY_NUM			Party Identifier (0,1,2,3 or 4 (standalone))\n";
-    cout << "IP_ADDR_FILE		\tIP Address file\n";
-    cout << "AES_SEED_INDEP		\tAES seed file independent\n";
-    cout << "AES_SEED_COMMON	\t \tAES seed file common (for shared keys)\n";
-    cout << "TRAINING_DATA		\tTraining data file\n";
-    cout << "TRAINING_LABELS	\t \tTraining labels file\n";
-	cout << "TESTING_DATA		\tTesting data file\n";
-    cout << "TESTING_LABELS		\tTesting labels file\n";
-    cout << endl;
-    cout << "Report bugs to swagh@princeton.edu" << endl;
-    exit(-1);
-}
-
-	
-void start_time()
-{
-	if (alreadyMeasuringTime)
-	{
-		cout << "Nested timing measurements" << endl;
-		exit(-1);
-	}
-
-	tStart = clock();
-	clock_gettime(CLOCK_REALTIME, &requestStart);
-	alreadyMeasuringTime = true;
-}
-
-void end_time(string str)
-{
-	if (!alreadyMeasuringTime)
-	{
-		cout << "start_time() never called" << endl;
-		exit(-1);
-	}
-
-	clock_gettime(CLOCK_REALTIME, &requestEnd);
-	cout << "------------------------------------" << endl;
-	cout << "Wall Clock time for " << str << ": " << diff(requestStart, requestEnd) << " sec\n";
-	cout << "CPU time for " << str << ": " << (double)(clock() - tStart)/CLOCKS_PER_SEC << " sec\n";
-	cout << "------------------------------------" << endl;	
-	alreadyMeasuringTime = false;
-}
-
-
-void start_rounds()
-{
-	if (alreadyMeasuringRounds)
-	{
-		cout << "Nested round measurements" << endl;
-		exit(-1);
-	}
-
-	roundComplexitySend = 0;
-	roundComplexityRecv = 0;
-	alreadyMeasuringRounds = true;
-}
-
-void end_rounds(string str)
-{
-	if (!alreadyMeasuringTime)
-	{
-		cout << "start_rounds() never called" << endl;
-		exit(-1);
-	}
-
-	cout << "------------------------------------" << endl;
-	cout << "Send Round Complexity of " << str << ": " << roundComplexitySend << endl;
-	cout << "Recv Round Complexity of " << str << ": " << roundComplexityRecv << endl;
-	cout << "------------------------------------" << endl;	
-	alreadyMeasuringRounds = false;
-}
 
 void print_myType(myType var, string message, string type)
 {
@@ -862,22 +758,4 @@ void maxPoolReshape(const vector<myType> &vec, vector<myType> &vecShaped,
 						for (size_t b = 0; b < fw; ++b)
 							vecShaped[counter++] = vec[loc + a*iw + b];
 				}
-}
-
-
-extern void aggregateCommunication();
-
-void start_m()
-{
-	cout << endl;
-	start_time();
-	start_communication();
-}
-
-void end_m(string str)
-{
-	end_time(str);
-	pause_communication();
-	aggregateCommunication();
-	end_communication(str);
 }
