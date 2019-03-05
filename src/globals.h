@@ -34,16 +34,11 @@
 
 
 //MPC globals
-// extern int NUM_OF_PARTIES;
 #define NUM_OF_PARTIES 3
-#define STANDALONE (NUM_OF_PARTIES == 1)
-#define THREE_PC (NUM_OF_PARTIES == 3)
-#define FOUR_PC (NUM_OF_PARTIES == 4)
 #define PARTY_A 0
 #define PARTY_B 1
 #define PARTY_C 2
 #define PARTY_D 3
-#define PARTY_S 4
 
 #define PRIME_NUMBER 67
 #define FLOAT_PRECISION 13
@@ -84,8 +79,11 @@
 typedef __m128i superLongType;
 typedef uint64_t myType;
 typedef uint8_t smallType;
-typedef std::pair<myType, myType> RSS;
-typedef std::vector<RSS> RSSVector;
+typedef std::pair<myType, myType> RSSMyType;
+typedef std::pair<smallType, smallType> RSSSmallType;
+typedef std::vector<RSSMyType> RSSVectorMyType;
+typedef std::vector<RSSSmallType> RSSVectorSmallType;
+
 
 const int BIT_SIZE = (sizeof(myType) * CHAR_BIT);
 const myType LARGEST_NEG = ((myType)1 << (BIT_SIZE - 1));

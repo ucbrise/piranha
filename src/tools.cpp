@@ -1,12 +1,3 @@
-/*
- * 	BMR_BGW_aux.cpp
- * 
- *      Author: Aner Ben-Efraim, Satyanarayana
- * 	
- * 	year: 2016
- * 
- */
-
 
 #include "tools.h"
 #include <stdint.h>

@@ -214,6 +214,15 @@ void convolutionReshapeBackprop(const vector<myType> &vec, vector<myType> &vecOu
 
 
 
+template <typename T,typename U>                                                   
+std::pair<T,U> operator+(const std::pair<T,U> & l,const std::pair<T,U> & r) {   
+    return {l.first+r.first,l.second+r.second};
+}                                      
+
+template <typename T,typename U>                                                   
+std::pair<T,U> operator-(const std::pair<T,U> & l,const std::pair<T,U> & r) {   
+    return {l.first-r.first,l.second-r.second};
+}
 
 // Template functions
 template<typename T>

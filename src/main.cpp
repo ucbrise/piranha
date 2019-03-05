@@ -4,7 +4,7 @@
 #include "secondary.h"
 #include "connect.h"
 #include "AESObject.h"
-// #include "NeuralNetConfig.h"
+#include "NeuralNetConfig.h"
 // #include "NeuralNetwork.h"
 // #include "Functionalities.h"
 
@@ -23,7 +23,7 @@ int main(int argc, char** argv)
 /****************************** PREPROCESSING ******************************/ 
 	parseInputs(argc, argv);
 	string whichNetwork = "No Network";
-	// NeuralNetConfig* config = new NeuralNetConfig(NUM_ITERATIONS);
+	NeuralNetConfig* config = new NeuralNetConfig(NUM_ITERATIONS);
 
 
 /****************************** SELECT NETWORK ******************************/ 
@@ -83,28 +83,28 @@ int main(int argc, char** argv)
 	start_m();
 	whichNetwork = "Debugging mode";
 
-	RSSVector sameer;
+	RSSVectorMyType sameer;
 	int size = 2;
 	for (int i = 0; i < size; ++i)
 		for (int j = 0; j < size; ++j)
 			sameer.push_back(std::make_pair(i*partyNum,j*partyNum));
 
 	int i = 0;
-	for (RSSVector::iterator it = sameer.begin(); it != sameer.end(); it++) {
+	for (RSSVectorMyType::iterator it = sameer.begin(); it != sameer.end(); it++) {
         std::cout << "sameer[" << i << "].1st = " << it->first << std::endl;
         std::cout << "sameer[" << i << "].2nd = " << it->second << std::endl; 
         i++;
     }
 
     if (partyNum == PARTY_A)
-	    receiveVector<RSS>(sameer, PARTY_B, sameer.size());
+	    receiveVector<RSSMyType>(sameer, PARTY_B, sameer.size());
 
 	if (partyNum == PARTY_B)
-		sendVector<RSS>(sameer, PARTY_A, sameer.size());
+		sendVector<RSSMyType>(sameer, PARTY_A, sameer.size());
 
 	i = 0;
 	std::cout << "----------------" << std::endl;
-	for (RSSVector::iterator it = sameer.begin(); it != sameer.end(); it++) {
+	for (RSSVectorMyType::iterator it = sameer.begin(); it != sameer.end(); it++) {
         std::cout << "sameer[" << i << "].1st = " << it->first << std::endl;
         std::cout << "sameer[" << i << "].2nd = " << it->second << std::endl; 
         i++;
