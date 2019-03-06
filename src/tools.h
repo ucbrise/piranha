@@ -170,6 +170,9 @@ myType divideMyTypeSA(myType a, myType b);
 myType dividePlainSA(myType a, int b);
 void dividePlainSA(vector<myType> &vec, int divisor);
 myType multiplyMyTypesSA(myType a, myType b, int shift);
+
+size_t nextParty(size_t party);
+size_t prevParty(size_t party);
 size_t partner(size_t party);
 size_t adversary(size_t party);
 

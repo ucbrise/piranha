@@ -396,6 +396,39 @@ myType multiplyMyTypesSA(myType a, myType b, int shift)
 	return ret;
 }
 
+size_t nextParty(size_t party)
+{
+	size_t ret;
+
+	switch(party)
+	{
+    case PARTY_A : ret = PARTY_B;
+             break;       
+    case PARTY_B : ret = PARTY_C;
+             break;
+    case PARTY_C : ret = PARTY_A;
+             break;       
+	}	
+	return ret;	
+}
+
+size_t prevParty(size_t party)
+{
+	size_t ret;
+
+	switch(party)
+	{
+    case PARTY_A : ret = PARTY_C;
+             break;       
+    case PARTY_B : ret = PARTY_A;
+             break;
+    case PARTY_C : ret = PARTY_B;
+             break;       
+	}	
+	return ret;	
+}
+
+
 size_t partner(size_t party)
 {
 	size_t ret;

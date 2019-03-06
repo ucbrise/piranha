@@ -12,6 +12,7 @@ int partyNum;
 AESObject* aes_indep;
 AESObject* aes_next;
 AESObject* aes_prev;
+Precompute PrecomputeObject;
 
 
 
@@ -23,7 +24,6 @@ int main(int argc, char** argv)
 	parseInputs(argc, argv);
 	string whichNetwork = "No Network";
 	NeuralNetConfig* config = new NeuralNetConfig(NUM_ITERATIONS);
-
 
 /****************************** SELECT NETWORK ******************************/ 
 	//MINIONN, Network-D in GAZELLE
@@ -109,7 +109,7 @@ int main(int argc, char** argv)
  //        i++;
  //    }
 
-	
+
 	// whichNetwork = "Mat-Mul";
 	// testMatMul(784, 128, 10, NUM_ITERATIONS);
 	// testMatMul(1, 500, 100, NUM_ITERATIONS);

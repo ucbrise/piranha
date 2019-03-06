@@ -5,7 +5,7 @@
 #include <thread>
 using namespace std;
 
-
+extern Precompute PrecomputeObject;
 
 /******************************** Functionalities 2PC ********************************/
 // Share Truncation, truncate shares of a by power (in place) (power is logarithmic)
@@ -51,6 +51,73 @@ void funcXORModuloOdd2PC(RSSVectorSmallType &bit, RSSVectorMyType &shares, RSSVe
 	// 	}
 	// }
 /******************************** TODO ****************************************/
+}
+
+void funcReconstruct(const RSSVectorMyType &a, vector<myType> &b, size_t size, string str)
+{
+	assert(a.size() == size && "a.size mismatch for reconstruct function");
+
+	vector<myType> a_next(size), a_recv(size);
+	for (int i = 0; i < size; ++i)
+	{
+		a_recv[i] = 0;
+		a_next[i] = a[i].first;
+		b[i] = a[i].first;
+		b[i] = b[i] + a[i].second;
+	}
+
+	thread *threads = new thread[2];
+
+	threads[0] = thread(sendVector<myType>, a_next, nextParty(partyNum), size);
+	threads[1] = thread(receiveVector<myType>, a_prev, prevParty(partyNum), size);
+
+	for (int i = 0; i < 2; i++)
+		threads[i].join();
+
+	delete[] threads;
+
+	for (int i = 0; i < size; ++i)
+		b[i] = b[i] + a_prev[i];
+
+#if (LOG_DEBUG)
+	for (int i = 0; i < size; ++i)
+		print_linear(b[i], "SINGED");
+	std::cout << std::endl;
+#endif
+}
+
+
+void funcReconstruct(const vector<myType> &a, vector<myType> &b, size_t size, string str)
+{
+	assert(a.size() == size && "a.size mismatch for reconstruct function");
+
+	vector<myType> a_next(size), a_recv(size);
+	for (int i = 0; i < size; ++i)
+	{
+		a_recv[i] = 0;
+		a_next[i] = 0;
+	}
+
+	thread *threads = new thread[4];
+
+	threads[0] = thread(sendVector<myType>, a, nextParty(partyNum), size);
+	threads[1] = thread(sendVector<myType>, a, prevParty(partyNum), size);
+	threads[2] = thread(receiveVector<myType>, a_next, nextParty(partyNum), size);
+	threads[3] = thread(receiveVector<myType>, a_prev, prevParty(partyNum), size);
+
+	for (int i = 0; i < 4; i++)
+		threads[i].join();
+
+	delete[] threads;
+
+	for (int i = 0; i < size; ++i)
+		b[i] = a[i] + a_prev[i] + a_next[i];
+
+#if (LOG_DEBUG)
+	for (int i = 0; i < size; ++i)
+		print_linear(b[i], "SINGED");
+	std::cout << std::endl;
+#endif
 }
 
 void funcReconstruct2PC(const RSSVectorMyType &a, size_t size, string str)
@@ -132,10 +199,66 @@ void funcMatMulMPC(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVector
 				 	size_t transpose_a, size_t transpose_b)
 {
 	log_print("funcMatMulMPC");
+	assert(a.size() == rows*common_dim && "Matrix a incorrect for Mat-Mul");
+	assert(b.size() == common_dim*columns && "Matrix b incorrect for Mat-Mul");
+	assert(c.size() == rows*columns && "Matrix c incorrect for Mat-Mul");
+	assert(transpose_a == 0 && "Currently transpose_a off");
+	assert(transpose_b == 0 && "Currently transpose_b off");
+
 #if (LOG_DEBUG)
 	cout << "Rows, Common_dim, Columns: " << rows << "x" << common_dim << "x" << columns << endl;
 #endif
 
+	size_t final_size = rows*columns;
+	vector<myType> temp(final_size, 0), diffReconstructed(final_size, 0);
+	for (int i = 0; i < rows; ++i)
+	{
+		for (int j = 0; j < columns; ++j)
+		{
+			// temp[i*columns + j] = 0;
+			for (int k = 0; k < common_dim; ++k)
+			{
+				temp[i*columns + j] += a[i*common_dim + k].first * b[k*columns + j].first +
+									   a[i*common_dim + k].first * b[k*columns + j].second +
+									   a[i*common_dim + k].second * b[k*columns + j].first;
+			}
+		}
+	}
+
+	RSSVectorMyType r, rPrime;
+	PrecomputeObject.getDividedShares(r, rPrime, FLOAT_PRECISION, final_size);
+	for (int i = 0; i < final_size; ++i)
+		temp[i] = temp[i] - rPrime[i].first;
+	
+	funcReconstruct(temp, diffReconstructed, final_size, "Multiplication difference reconstruction");
+	dividePlainSA(temp, (1 << FLOAT_PRECISION) );
+	if (partyNum == PARTY_A)
+	{
+		for (int i = 0; i < final_size; ++i)
+		{
+			c[i].first = r[i].first + temp[i];
+			c[i].second = r[i].second;
+		}
+	}
+
+	if (partyNum == PARTY_B)
+	{
+		for (int i = 0; i < final_size; ++i)
+		{
+			c[i].first = r[i].first;
+			c[i].second = r[i].second;
+		}
+	}
+
+	if (partyNum == PARTY_C)
+	{
+		for (int i = 0; i < final_size; ++i)
+		{
+			c[i].first = r[i].first;
+			c[i].second = r[i].second + temp[i];
+		}
+	}
+	
 /******************************** TODO ****************************************/
 	// if (THREE_PC)
 	// {
