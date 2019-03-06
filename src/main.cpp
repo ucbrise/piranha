@@ -5,8 +5,7 @@
 #include "connect.h"
 #include "AESObject.h"
 #include "NeuralNetConfig.h"
-// #include "NeuralNetwork.h"
-// #include "Functionalities.h"
+#include "NeuralNetwork.h"
 
 
 int partyNum;
@@ -50,13 +49,13 @@ int main(int argc, char** argv)
 	// config->addLayer(l3);
 
 	//SecureML
-	// whichNetwork = "SecureML";
-	// FCConfig* l0 = new FCConfig(MINI_BATCH_SIZE, LAYER0, LAYER1); 
-	// FCConfig* l1 = new FCConfig(MINI_BATCH_SIZE, LAYER1, LAYER2); 
-	// FCConfig* l2 = new FCConfig(MINI_BATCH_SIZE, LAYER2, LAST_LAYER_SIZE); 
-	// config->addLayer(l0);
-	// config->addLayer(l1);
-	// config->addLayer(l2);
+	whichNetwork = "SecureML";
+	FCConfig* l0 = new FCConfig(MINI_BATCH_SIZE, LAYER0, LAYER1); 
+	FCConfig* l1 = new FCConfig(MINI_BATCH_SIZE, LAYER1, LAYER2); 
+	FCConfig* l2 = new FCConfig(MINI_BATCH_SIZE, LAYER2, LAST_LAYER_SIZE); 
+	config->addLayer(l0);
+	config->addLayer(l1);
+	config->addLayer(l2);
 
 	//Chameleon
 	// whichNetwork = "Sarda";
@@ -67,8 +66,8 @@ int main(int argc, char** argv)
 	// config->addLayer(l1);
 	// config->addLayer(l2);
 
-	//config->checkNetwork();
-	//NeuralNetwork* network = new NeuralNetwork(config);
+	config->checkNetwork();
+	NeuralNetwork* network = new NeuralNetwork(config);
 
 
 /****************************** AES SETUP and SYNC ******************************/ 
@@ -81,34 +80,36 @@ int main(int argc, char** argv)
 
 /****************************** RUN NETWORK/BENCHMARKS ******************************/ 
 	start_m();
-	whichNetwork = "Debugging mode";
+	// whichNetwork = "Debugging mode";
 
-	RSSVectorMyType sameer;
-	int size = 2;
-	for (int i = 0; i < size; ++i)
-		for (int j = 0; j < size; ++j)
-			sameer.push_back(std::make_pair(i*partyNum,j*partyNum));
+	// RSSVectorMyType sameer;
+	// int size = 2;
+	// for (int i = 0; i < size; ++i)
+	// 	for (int j = 0; j < size; ++j)
+	// 		sameer.push_back(std::make_pair(i*partyNum,j*partyNum));
 
-	int i = 0;
-	for (RSSVectorMyType::iterator it = sameer.begin(); it != sameer.end(); it++) {
-        std::cout << "sameer[" << i << "].1st = " << it->first << std::endl;
-        std::cout << "sameer[" << i << "].2nd = " << it->second << std::endl; 
-        i++;
-    }
+	// int i = 0;
+	// for (RSSVectorMyType::iterator it = sameer.begin(); it != sameer.end(); it++) {
+ //        std::cout << "sameer[" << i << "].1st = " << it->first << std::endl;
+ //        std::cout << "sameer[" << i << "].2nd = " << it->second << std::endl; 
+ //        i++;
+ //    }
 
-    if (partyNum == PARTY_A)
-	    receiveVector<RSSMyType>(sameer, PARTY_B, sameer.size());
+ //    if (partyNum == PARTY_A)
+	//     receiveVector<RSSMyType>(sameer, PARTY_B, sameer.size());
 
-	if (partyNum == PARTY_B)
-		sendVector<RSSMyType>(sameer, PARTY_A, sameer.size());
+	// if (partyNum == PARTY_B)
+	// 	sendVector<RSSMyType>(sameer, PARTY_A, sameer.size());
 
-	i = 0;
-	std::cout << "----------------" << std::endl;
-	for (RSSVectorMyType::iterator it = sameer.begin(); it != sameer.end(); it++) {
-        std::cout << "sameer[" << i << "].1st = " << it->first << std::endl;
-        std::cout << "sameer[" << i << "].2nd = " << it->second << std::endl; 
-        i++;
-    }
+	// i = 0;
+	// std::cout << "----------------" << std::endl;
+	// for (RSSVectorMyType::iterator it = sameer.begin(); it != sameer.end(); it++) {
+ //        std::cout << "sameer[" << i << "].1st = " << it->first << std::endl;
+ //        std::cout << "sameer[" << i << "].2nd = " << it->second << std::endl; 
+ //        i++;
+ //    }
+
+	
 	// whichNetwork = "Mat-Mul";
 	// testMatMul(784, 128, 10, NUM_ITERATIONS);
 	// testMatMul(1, 500, 100, NUM_ITERATIONS);
@@ -139,8 +140,8 @@ int main(int argc, char** argv)
 	// testMaxPoolDerivative(24, 24, 2, 2, 16, NUM_ITERATIONS);
 	// testMaxPoolDerivative(8, 8, 4, 4, 50, NUM_ITERATIONS);
 
-	// whichNetwork += " train";
-	// train(network, config);
+	whichNetwork += " train";
+	train(network, config);
 
 	// whichNetwork += " test";
 	// test(network);
@@ -157,14 +158,14 @@ int main(int argc, char** argv)
 	delete aes_indep;
 	delete aes_next;
 	delete aes_prev;
-	// delete config;
-	// delete l0;
-	// delete l1;
-	// delete l2;
+	delete config;
+	delete l0;
+	delete l1;
+	delete l2;
 	// delete l3;
 	// delete network;
 	// if (partyNum != PARTY_S)
-	// 	deleteObjects();
+	deleteObjects();
 
 	return 0;
 }

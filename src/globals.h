@@ -51,7 +51,7 @@
 
 //Neural Network globals.
 //Batch size has to be a power of two
-#define NUM_LAYERS 5
+#define NUM_LAYERS 4
 #define LL (NUM_LAYERS-2)
 #define LAYER0 784
 #define LAYER1 128
