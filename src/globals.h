@@ -10,6 +10,7 @@
 #include <limits.h>
 #include <array>
 
+
 //Macros
 #define _aligned_malloc(size,alignment) aligned_alloc(alignment,size)
 #define _aligned_free free
@@ -18,7 +19,8 @@
 
 
 //AES and other globals
-#define LOG_DEBUG false
+#define LOG_DEBUG true
+#define LOG_DEBUG_NETWORK false
 #define RANDOM_COMPUTE 256//Size of buffer for random elements
 #define FIXED_KEY_AES "43739841701238781571456410093f43"
 #define STRING_BUFFER_SIZE 256
@@ -41,7 +43,7 @@
 #define PARTY_D 3
 
 #define PRIME_NUMBER 67
-#define FLOAT_PRECISION 13
+#define FLOAT_PRECISION 0
 #define PRIMARY (partyNum == PARTY_A or partyNum == PARTY_B)
 #define	NON_PRIMARY (partyNum == PARTY_C or partyNum == PARTY_D)
 #define HELPER (partyNum == PARTY_C)

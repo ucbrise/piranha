@@ -9,13 +9,15 @@
 class Precompute
 {
 private:
-	Precompute();
-	~Precompute();
 	void initialize();
 
 public:
-	void getShareConvertObjects();
+	Precompute();
+	~Precompute();
+
 	void getDividedShares(RSSVectorMyType &r, RSSVectorMyType &rPrime, int d, size_t size);
+	void getRefreshShares(RSSVectorMyType &a, size_t size);
+	void getShareConvertObjects();
 };
 
 

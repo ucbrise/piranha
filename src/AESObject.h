@@ -4,6 +4,7 @@
 
 #pragma once
 #include <algorithm>
+#include "TedKrovetzAesNiWrapperC.h"
 #include "globals.h"
 
 

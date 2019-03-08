@@ -1,11 +1,15 @@
 
 #include <iostream>
 #include <string>
+#include "AESObject.h"
+#include "Precompute.h"
 #include "secondary.h"
 #include "connect.h"
-#include "AESObject.h"
 #include "NeuralNetConfig.h"
 #include "NeuralNetwork.h"
+#include "Functionalities.h"
+
+
 
 
 int partyNum;
@@ -140,8 +144,11 @@ int main(int argc, char** argv)
 	// testMaxPoolDerivative(24, 24, 2, 2, 16, NUM_ITERATIONS);
 	// testMaxPoolDerivative(8, 8, 4, 4, 50, NUM_ITERATIONS);
 
-	whichNetwork += " train";
-	train(network, config);
+	// whichNetwork += " train";
+	// train(network, config);
+
+	whichNetwork = "Debug Mat-Mul";
+	debugMatMul();
 
 	// whichNetwork += " test";
 	// test(network);

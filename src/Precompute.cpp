@@ -4,12 +4,7 @@
 
 Precompute::Precompute(){initialize();}
 Precompute::~Precompute(){}
-
 void Precompute::initialize(){}
-void Precompute::getShareConvertObjects();
-{
-
-}
 
 // Currently, r = 3 and rPrime = 3 * 2^d
 void Precompute::getDividedShares(RSSVectorMyType &r, RSSVectorMyType &rPrime, int d, size_t size)
@@ -26,3 +21,14 @@ void Precompute::getDividedShares(RSSVectorMyType &r, RSSVectorMyType &rPrime, i
 	}
 }
 
+void getRefreshShares(RSSVectorMyType &a, size_t size)
+{
+	assert(a.size() == size && "size mismatch for refreshing shares");
+	for (int i = 0; i < size; ++i)
+	{
+		a[i].first = 0;
+		a[i].second = 0;
+	}
+}
+
+void Precompute::getShareConvertObjects(){;}

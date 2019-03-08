@@ -1,6 +1,7 @@
 
 #pragma once
 #include "Functionalities.h"
+#include "Precompute.h"
 #include <algorithm>    // std::rotate
 #include <thread>
 using namespace std;
@@ -53,14 +54,57 @@ void funcXORModuloOdd2PC(RSSVectorSmallType &bit, RSSVectorMyType &shares, RSSVe
 /******************************** TODO ****************************************/
 }
 
-void funcReconstruct(const RSSVectorMyType &a, vector<myType> &b, size_t size, string str)
+void funcAddMyTypeAndRSS(RSSVectorMyType &a, vector<myType> &b, RSSVectorMyType &c, size_t size)
+{
+	if (partyNum == PARTY_A)
+	{
+		for (int i = 0; i < size; ++i)
+		{
+			c[i].first = a[i].first + b[i];
+			c[i].second = a[i].second;
+		}
+	}
+	else if (partyNum == PARTY_B)
+	{
+		for (int i = 0; i < size; ++i)
+		{
+			c[i].first = a[i].first;
+			c[i].second = a[i].second;
+		}
+	}
+	else if (partyNum == PARTY_C)
+	{
+		for (int i = 0; i < size; ++i)
+		{
+			c[i].first = a[i].first;
+			c[i].second = a[i].second + b[i];
+		}
+	}
+}
+
+//Here, data is plaintext data. It is converted to fixed point inside this function.
+void funcAddConstant(RSSVectorMyType &a, const vector<myType> &data)
+{
+	if (partyNum == PARTY_A)
+	{
+		for (size_t i = 0; i < a.size(); ++i)
+			a[i].first = data[i];
+	}
+	else if (partyNum == PARTY_C)
+	{
+		for (size_t i = 0; i < a.size(); ++i)
+			a[i].second = data[i];
+	}		
+}
+
+void funcReconstruct(const RSSVectorMyType &a, vector<myType> &b, size_t size, string str, bool print)
 {
 	assert(a.size() == size && "a.size mismatch for reconstruct function");
 
-	vector<myType> a_next(size), a_recv(size);
+	vector<myType> a_next(size), a_prev(size);
 	for (int i = 0; i < size; ++i)
 	{
-		a_recv[i] = 0;
+		a_prev[i] = 0;
 		a_next[i] = a[i].first;
 		b[i] = a[i].first;
 		b[i] = b[i] + a[i].second;
@@ -68,8 +112,8 @@ void funcReconstruct(const RSSVectorMyType &a, vector<myType> &b, size_t size, s
 
 	thread *threads = new thread[2];
 
-	threads[0] = thread(sendVector<myType>, a_next, nextParty(partyNum), size);
-	threads[1] = thread(receiveVector<myType>, a_prev, prevParty(partyNum), size);
+	threads[0] = thread(sendVector<myType>, ref(a_next), nextParty(partyNum), size);
+	threads[1] = thread(receiveVector<myType>, ref(a_prev), prevParty(partyNum), size);
 
 	for (int i = 0; i < 2; i++)
 		threads[i].join();
@@ -80,67 +124,87 @@ void funcReconstruct(const RSSVectorMyType &a, vector<myType> &b, size_t size, s
 		b[i] = b[i] + a_prev[i];
 
 #if (LOG_DEBUG)
-	for (int i = 0; i < size; ++i)
-		print_linear(b[i], "SINGED");
-	std::cout << std::endl;
+	if (print)
+	{
+		std::cout << str << ": ";
+		for (int i = 0; i < size; ++i)
+			print_linear(b[i], "SIGNED");
+		std::cout << std::endl;
+	}
 #endif
 }
 
-
-void funcReconstruct(const vector<myType> &a, vector<myType> &b, size_t size, string str)
+//Asymmetric protocol for semi-honest setting.
+void funcReconstruct(const vector<myType> &a, vector<myType> &b, size_t size, string str, bool print)
 {
 	assert(a.size() == size && "a.size mismatch for reconstruct function");
 
-	vector<myType> a_next(size), a_recv(size);
-	for (int i = 0; i < size; ++i)
+	vector<myType> temp_A(size,0), temp_B(size, 0);
+
+	if (partyNum == PARTY_A or partyNum == PARTY_B)
+		sendVector<myType>(a, PARTY_C, size);
+
+	if (partyNum == PARTY_C)
 	{
-		a_recv[i] = 0;
-		a_next[i] = 0;
+		receiveVector<myType>(temp_A, PARTY_A, size);
+		receiveVector<myType>(temp_B, PARTY_B, size);
+		addVectors<myType>(temp_A, a, temp_A, size);
+		addVectors<myType>(temp_B, temp_A, b, size);
+		sendVector<myType>(b, PARTY_A, size);
+		sendVector<myType>(b, PARTY_B, size);
 	}
 
-	thread *threads = new thread[4];
-
-	threads[0] = thread(sendVector<myType>, a, nextParty(partyNum), size);
-	threads[1] = thread(sendVector<myType>, a, prevParty(partyNum), size);
-	threads[2] = thread(receiveVector<myType>, a_next, nextParty(partyNum), size);
-	threads[3] = thread(receiveVector<myType>, a_prev, prevParty(partyNum), size);
-
-	for (int i = 0; i < 4; i++)
-		threads[i].join();
-
-	delete[] threads;
-
-	for (int i = 0; i < size; ++i)
-		b[i] = a[i] + a_prev[i] + a_next[i];
+	if (partyNum == PARTY_A or partyNum == PARTY_B)
+		receiveVector<myType>(b, PARTY_C, size);
 
 #if (LOG_DEBUG)
-	for (int i = 0; i < size; ++i)
-		print_linear(b[i], "SINGED");
-	std::cout << std::endl;
+	if (print)
+	{
+		std::cout << str << ": ";
+		for (int i = 0; i < size; ++i)
+			print_linear(b[i], "SIGNED");
+		std::cout << std::endl;
+	}
 #endif
 }
 
-void funcReconstruct2PC(const RSSVectorMyType &a, size_t size, string str)
-{
-/******************************** TODO ****************************************/	
-	// assert((partyNum == PARTY_A or partyNum == PARTY_B) && "Reconstruct called by spurious parties");
+//Symmetric variant of the reconstruct protocol.
+// void funcReconstruct(const vector<myType> &a, vector<myType> &b, size_t size, string str, bool print)
+// {
+// 	assert(a.size() == size && "a.size mismatch for reconstruct function");
 
-	// RSSVectorMyType temp(size);
-	// if (partyNum == PARTY_B)
-	// 	sendVector<RSSMyType>(a, PARTY_A, size);
+// 	vector<myType> a_next(size), a_prev(size);
+// 	for (int i = 0; i < size; ++i)
+// 	{
+// 		a_prev[i] = 0;
+// 		a_next[i] = 0;
+// 	}
 
-	// if (partyNum == PARTY_A)
-	// {
-	// 	receiveVector<RSSMyType>(temp, PARTY_B, size);
-	// 	addVectors<myType>(temp, a, temp, size);
-	
-	// 	cout << str << ": ";
-	// 	for (size_t i = 0; i < size; ++i)
-	// 		print_linear(temp[i], DEBUG_PRINT);
-	// 	cout << endl;
-	// }
-/******************************** TODO ****************************************/	
-}
+// 	thread *threads = new thread[4];
+
+// 	threads[0] = thread(sendVector<myType>, ref(a), nextParty(partyNum), size);
+// 	threads[1] = thread(sendVector<myType>, ref(a), prevParty(partyNum), size);
+// 	threads[2] = thread(receiveVector<myType>, ref(a_next), nextParty(partyNum), size);
+// 	threads[3] = thread(receiveVector<myType>, ref(a_prev), prevParty(partyNum), size);
+
+// 	for (int i = 0; i < 4; i++)
+// 		threads[i].join();
+
+// 	delete[] threads;
+
+// 	for (int i = 0; i < size; ++i)
+// 		b[i] = a[i] + a_prev[i] + a_next[i];
+
+// #if (LOG_DEBUG)
+// 	if (print)
+// 	{
+// 		std::cout << str << ": ";
+// 		for (int i = 0; i < size; ++i)
+// 			print_linear(b[i], "SIGNED");
+// 		std::cout << std::endl;
+// 	}
+// #endif
+// }
 
 
 void funcReconstructBit2PC(const RSSVectorSmallType &a, size_t size, string str)
@@ -210,7 +274,7 @@ void funcMatMulMPC(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVector
 #endif
 
 	size_t final_size = rows*columns;
-	vector<myType> temp(final_size, 0), diffReconstructed(final_size, 0);
+	vector<myType> temp3(final_size, 0), diffReconst(final_size, 0);
 	for (int i = 0; i < rows; ++i)
 	{
 		for (int j = 0; j < columns; ++j)
@@ -218,25 +282,25 @@ void funcMatMulMPC(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVector
 			// temp[i*columns + j] = 0;
 			for (int k = 0; k < common_dim; ++k)
 			{
-				temp[i*columns + j] += a[i*common_dim + k].first * b[k*columns + j].first +
-									   a[i*common_dim + k].first * b[k*columns + j].second +
-									   a[i*common_dim + k].second * b[k*columns + j].first;
+				temp3[i*columns + j] += a[i*common_dim + k].first * b[k*columns + j].first +
+									    a[i*common_dim + k].first * b[k*columns + j].second +
+									    a[i*common_dim + k].second * b[k*columns + j].first;
 			}
 		}
 	}
 
-	RSSVectorMyType r, rPrime;
+	RSSVectorMyType r(final_size), rPrime(final_size);
 	PrecomputeObject.getDividedShares(r, rPrime, FLOAT_PRECISION, final_size);
 	for (int i = 0; i < final_size; ++i)
-		temp[i] = temp[i] - rPrime[i].first;
+		temp3[i] = temp3[i] - rPrime[i].first;
 	
-	funcReconstruct(temp, diffReconstructed, final_size, "Multiplication difference reconstruction");
-	dividePlainSA(temp, (1 << FLOAT_PRECISION) );
+	funcReconstruct(temp3, diffReconst, final_size, "Mat-Mul diff reconst", false);
+	dividePlainSA(diffReconst, (1 << FLOAT_PRECISION));
 	if (partyNum == PARTY_A)
 	{
 		for (int i = 0; i < final_size; ++i)
 		{
-			c[i].first = r[i].first + temp[i];
+			c[i].first = r[i].first + diffReconst[i];
 			c[i].second = r[i].second;
 		}
 	}
@@ -255,7 +319,7 @@ void funcMatMulMPC(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVector
 		for (int i = 0; i < final_size; ++i)
 		{
 			c[i].first = r[i].first;
-			c[i].second = r[i].second + temp[i];
+			c[i].second = r[i].second + diffReconst[i];
 		}
 	}
 	
@@ -1446,34 +1510,27 @@ void debugMatMul()
 {
 
 /******************************** TODO ****************************************/	
-	// size_t rows = 3; 
-	// size_t common_dim = 2;
-	// size_t columns = 3;
-	// // size_t rows = 784; 
-	// // size_t common_dim = 128;
-	// // size_t columns = 128;
- // 	size_t transpose_a = 0, transpose_b = 0;
+	size_t rows = 3; 
+	size_t common_dim = 2;
+	size_t columns = 3;
+ 	size_t transpose_a = 0, transpose_b = 0;
 
-	// RSSVectorMyType a(rows*common_dim);
-	// RSSVectorMyType b(common_dim*columns);
-	// RSSVectorMyType c(rows*columns);
+	RSSVectorMyType a(rows*common_dim, make_pair(0,0)), 
+					b(common_dim*columns, make_pair(0,0)), c(rows*columns);
+	vector<myType> a_reconst(rows*columns), b_reconst(common_dim*columns), c_reconst(rows*columns); 
 
-	// for (size_t i = 0; i < a.size(); ++i)
-	// 	a[i] = floatToMyType(i);
+	vector<myType> data_a = {floatToMyType(3),floatToMyType(4),
+							 floatToMyType(5),floatToMyType(6),
+							 floatToMyType(7),floatToMyType(8)};
+	vector<myType> data_b = {floatToMyType(4),floatToMyType(5),floatToMyType(6),
+							 floatToMyType(7),floatToMyType(8),floatToMyType(9)};
+	funcAddConstant(a, data_a);
+	funcAddConstant(b, data_b);
 
-	// for (size_t i = 0; i < b.size(); ++i)
-	// 	b[i] = floatToMyType(i);
-
-	// if (PRIMARY)
-	// 	funcReconstruct2PC(a, a.size(), "a");
-
-	// if (PRIMARY)
-	// 	funcReconstruct2PC(b, b.size(), "b");
-
-	// funcMatMulMPC(a, b, c, rows, common_dim, columns, transpose_a, transpose_b);
-
-	// if (PRIMARY)
-	// 	funcReconstruct2PC(c, c.size(), "c");
+	// funcReconstruct(a, a_reconst, rows*common_dim, "a", true);
+	// funcReconstruct(b, b_reconst, common_dim*columns, "b", true);
+	funcMatMulMPC(a, b, c, rows, common_dim, columns, transpose_a, transpose_b);
+	// funcReconstruct(c, c_reconst, rows*columns, "c", true);
 /******************************** TODO ****************************************/	
 }
 

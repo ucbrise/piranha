@@ -81,25 +81,18 @@ void receiveSixVectors(vector<T> &vec1, vector<T> &vec2, vector<T> &vec3,
 template<typename T>
 void sendVector(const vector<T> &vec, size_t player, size_t size)
 {
-	// if ((size*sizeof(T) == 3689359120) or (size*sizeof(T) == 3686410000))
-	// 	size = 1000;
-
-	// if (size >= 1048576)
-	// {
-	// 	cout << "Hello " << endl;
-	// 	size = 1048576;
-	// }
-
-#if (LOG_DEBUG)
+#if (LOG_DEBUG_NETWORK)
 	cout << "Sending " << size*sizeof(T) << " Bytes to player " << player << " via ";
-	if (sizeof(T) == 8)
+	if (sizeof(T) == 16)
+		cout << "RSSMyType" << endl;
+	else if (sizeof(T) == 8)
 		cout << "myType" << endl;
-	else 
+	else if (sizeof(T) == 2)
+		cout << "RSSSmallType" << endl;
+	else if (sizeof(T) == 1)
 		cout << "smallType" << endl;
 #endif
 
-	// cout << "Sending " << size << " to player " << player << endl;
-	// communicationSenders[player]->sendMsg(vec.data(), size * sizeof(T), 0);
 	if(!communicationSenders[player]->sendMsg(vec.data(), size * sizeof(T), 0))
 		cout << "Send vector error" << endl;
 }
@@ -107,24 +100,18 @@ void sendVector(const vector<T> &vec, size_t player, size_t size)
 template<typename T>
 void receiveVector(vector<T> &vec, size_t player, size_t size)
 {
-	// if ((size*sizeof(T) == 3689359120) or (size*sizeof(T) == 3686410000))
-	// 	size = 1000;
-	// if (size >= 1048576)
-	// {
-	// 	cout << "Hello " << endl;
-	// 	size = 1048576;
-	// }
-
-#if (LOG_DEBUG)
+#if (LOG_DEBUG_NETWORK)
 	cout << "Receiving " << size*sizeof(T) << " Bytes from player " << player << " via ";
-	if (sizeof(T) == 8)
+	if (sizeof(T) == 16)
+		cout << "RSSMyType" << endl;
+	else if (sizeof(T) == 8)
 		cout << "myType" << endl;
-	else 
+	else if (sizeof(T) == 2)
+		cout << "RSSSmallType" << endl;
+	else if (sizeof(T) == 1)
 		cout << "smallType" << endl;
 #endif
 
-	// cout << "Receiving " << size << " from player " << player << endl;
-	// communicationReceivers[player]->receiveMsg(vec.data(), size * sizeof(T), 0);
 	if(!communicationReceivers[player]->receiveMsg(vec.data(), size * sizeof(T), 0))
 		cout << "Receive myType vector error" << endl;
 }

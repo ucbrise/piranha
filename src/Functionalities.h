@@ -14,9 +14,10 @@ extern void end_communication(string str);
 
 void funcTruncate2PC(RSSVectorMyType &a, size_t power, size_t size, size_t party_1, size_t party_2);
 void funcXORModuloOdd2PC(RSSVectorSmallType &bit, RSSVectorMyType &shares, RSSVectorMyType &output, size_t size);
-void funcReconstruct(const RSSVectorMyType &a, vector<myType> &b, size_t size, string str);
-void funcReconstruct(const vector<myType> &a, vector<myType> &b, size_t size, string str);
-void funcReconstruct2PC(const RSSVectorMyType &a, size_t size, string str);
+void funcAddMyTypeAndRSS(RSSVectorMyType &a, vector<myType> &b, RSSVectorMyType &c, size_t size);
+void funcAddConstant(RSSVectorMyType &vec, const vector<myType> &data);
+void funcReconstruct(const RSSVectorMyType &a, vector<myType> &b, size_t size, string str, bool print);
+void funcReconstruct(const vector<myType> &a, vector<myType> &b, size_t size, string str, bool print);
 void funcReconstructBit2PC(const RSSVectorSmallType &a, size_t size, string str);
 void funcConditionalSet2PC(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorSmallType &c, 
 							RSSVectorMyType &u, RSSVectorMyType &v, size_t size);

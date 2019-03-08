@@ -383,10 +383,11 @@ myType dividePlainSA(myType a, int b)
 
 void dividePlainSA(vector<myType> &vec, int divisor)
 {
-	// assert((sizeof(double) == sizeof(myType)) && "sizeof(double) != sizeof(myType)");
 	assert((divisor != 0) && "Cannot divide by 0");
+	// cout << "Dividing: " << static_cast<int64_t>(vec[0]) << " by: " << divisor << endl;
 	for (int i = 0; i < vec.size(); ++i)
-		vec[i] = (myType)((double)((int64_t)vec[i])/(double)((int64_t)divisor)); 	
+		vec[i] = (myType)((double)((int64_t)vec[i])/(double)((int64_t)divisor)); 
+	// cout << "Answer is: " << static_cast<int64_t>(vec[0]) << endl;	
 }
 
 myType multiplyMyTypesSA(myType a, myType b, int shift)
