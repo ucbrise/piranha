@@ -84,7 +84,7 @@ int main(int argc, char** argv)
 
 /****************************** RUN NETWORK/BENCHMARKS ******************************/ 
 	start_m();
-	// whichNetwork = "Debugging mode";
+	whichNetwork = "Debugging mode";
 
 	// RSSVectorMyType sameer;
 	// int size = 2;
@@ -94,24 +94,26 @@ int main(int argc, char** argv)
 
 	// int i = 0;
 	// for (RSSVectorMyType::iterator it = sameer.begin(); it != sameer.end(); it++) {
- //        std::cout << "sameer[" << i << "].1st = " << it->first << std::endl;
- //        std::cout << "sameer[" << i << "].2nd = " << it->second << std::endl; 
- //        i++;
- //    }
+	// 	std::cout << "sameer[" << i << "].1st = " << it->first << std::endl;
+	// 	std::cout << "sameer[" << i << "].2nd = " << it->second << std::endl; 
+	// 	i++;
+	// }
 
- //    if (partyNum == PARTY_A)
-	//     receiveVector<RSSMyType>(sameer, PARTY_B, sameer.size());
+	// if (partyNum == PARTY_A)
+	// 	sendVector<RSSMyType>(sameer, PARTY_B, sameer.size());
+	// 	// threadSend<RSSMyType>(sameer, PARTY_B, sameer.size());
 
 	// if (partyNum == PARTY_B)
-	// 	sendVector<RSSMyType>(sameer, PARTY_A, sameer.size());
+	// 	receiveVector<RSSMyType>(sameer, PARTY_A, sameer.size());
+	// 	// threadReceive<RSSMyType>(sameer, PARTY_A, sameer.size());
 
 	// i = 0;
 	// std::cout << "----------------" << std::endl;
 	// for (RSSVectorMyType::iterator it = sameer.begin(); it != sameer.end(); it++) {
- //        std::cout << "sameer[" << i << "].1st = " << it->first << std::endl;
- //        std::cout << "sameer[" << i << "].2nd = " << it->second << std::endl; 
- //        i++;
- //    }
+	// 	std::cout << "sameer[" << i << "].1st = " << it->first << std::endl;
+	// 	std::cout << "sameer[" << i << "].2nd = " << it->second << std::endl; 
+	// 	i++;
+	// }
 
 
 	// whichNetwork = "Mat-Mul";

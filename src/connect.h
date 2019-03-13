@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <iomanip>
 #include <fstream>
+// #include <thread>
 using namespace std;
 
 extern BmrNet ** communicationSenders;
@@ -76,7 +77,72 @@ void receiveSixVectors(vector<T> &vec1, vector<T> &vec2, vector<T> &vec3,
 
 
 
-// #include <unistd.h>
+// template<typename T>
+// void threadSend(const vector<T> &vec, size_t player, size_t size);
+// template<typename T>
+// void threadReceive(vector<T> &vec, size_t player, size_t size);
+
+// template<typename T>
+// void send1(const vector<T> &vec, size_t player, size_t size)
+// {
+// 	if(!communicationSenders[player]->sendMsg(vec.data(), (size) * sizeof(T), 1))
+// 		cout << "Send vector error" << endl;	
+// }
+// template<typename T>
+// void send2(const vector<T> &vec, size_t player, size_t size)
+// {
+// 	if(!communicationSenders[player]->sendMsg(vec.data()+(size), (size) * sizeof(T), 0))
+// 		cout << "Send vector error" << endl;	
+// }
+
+// template<typename T>
+// void recv1(vector<T> &vec, size_t player, size_t size)
+// {
+// 	if(!communicationReceivers[player]->receiveMsg(vec.data(), (size) * sizeof(T), 1))
+// 		cout << "Receive vector error" << endl;
+// }
+
+// template<typename T>
+// void recv2(vector<T> &vec, size_t player, size_t size)
+// {
+// 	if(!communicationReceivers[player]->receiveMsg(vec.data() + (size), (size) * sizeof(T), 0))
+// 		cout << "Receive vector error" << endl;
+// }
+
+// template<typename T>
+// void threadSend(const vector<T> &vec, size_t player, size_t size)
+// {
+// 	assert(sizeof(T) == 16 && "Hmm");
+// 	assert(size%2 == 0 && "Send won't work");
+
+// 	thread *threads = new thread[2];
+
+// 	threads[0] = thread(send1<T>, ref(vec), player, size/2);
+// 	threads[1] = thread(send2<T>, ref(vec), player, size/2);
+
+// 	for (int i = 0; i < 2; i++)
+// 		threads[i].join();
+
+// 	delete[] threads;
+// }
+
+// template<typename T>
+// void threadReceive(vector<T> &vec, size_t player, size_t size)
+// {
+// 	assert(sizeof(T) == 16 && "Hmm");
+// 	assert(size%2 == 0 && "Send won't work");
+
+// 	thread *threads = new thread[2];
+
+// 	threads[0] = thread(recv1<T>, ref(vec), player, size/2);
+// 	threads[1] = thread(recv2<T>, ref(vec), player, size/2);
+
+// 	for (int i = 0; i < 2; i++)
+// 		threads[i].join();
+
+// 	delete[] threads;
+// }
+
 
 template<typename T>
 void sendVector(const vector<T> &vec, size_t player, size_t size)
