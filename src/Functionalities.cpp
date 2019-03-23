@@ -4,11 +4,11 @@
 #include "Precompute.h"
 #include <algorithm>    // std::rotate
 #include <thread>
-#include <Eigen/Dense>
-using namespace std;
-// using namespace Eigen;
-// using eigenMatrix = Eigen::Matrix<pair<myType, myType>, Eigen::Dynamic, Eigen::Dynamic>;
+#include "EigenMatMul.h"
 
+
+#define USING_EIGEN true
+using namespace std;
 extern Precompute PrecomputeObject;
 
 /******************************** Functionalities 2PC ********************************/
@@ -256,9 +256,7 @@ void funcConditionalSet2PC(const RSSVectorMyType &a, const RSSVectorMyType &b, R
 /******************************** TODO ****************************************/	
 }
 
-
 /******************************** Functionalities MPC ********************************/
-
 // Matrix Multiplication of a*b = c with transpose flags for a,b.
 // Output is a share between PARTY_A and PARTY_B.
 // a^transpose_a is rows*common_dim and b^transpose_b is common_dim*columns
@@ -281,6 +279,9 @@ void funcMatMulMPC(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVector
 	// size_t second_size = common_dim*columns;
 	size_t final_size = rows*columns;
 	vector<myType> temp3(final_size, 0), diffReconst(final_size, 0);
+
+#if (!USING_EIGEN)
+/********************************* Triple For Loop *********************************/
 	for (int i = 0; i < rows; ++i)
 	{
 		for (int j = 0; j < columns; ++j)
@@ -294,33 +295,53 @@ void funcMatMulMPC(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVector
 			}
 		}
 	}
-
+/********************************* Triple For Loop *********************************/	
+#endif
+#if (USING_EIGEN)
 /********************************* WITH EIGEN Mat-Mul *********************************/
-	// Eigen::Matrix<pair<myType, myType>, Eigen::Dynamic, Eigen::Dynamic> eigen_a(rows, common_dim), 
-	// 										eigen_b(common_dim, columns), eigen_c(rows, columns);
+	eigenMatrix eigen_a(rows, common_dim), eigen_b(common_dim, columns), eigen_c(rows, columns);
 
-	// for (size_t i = 0; i < rows; ++i)
-	// {
-	// 	for (size_t j = 0; j < common_dim; ++j)
-	// 	{
-	// 		eigen_a(i, j).first = a[i*common_dim + j].first;
-	// 		eigen_a(i, j).second = a[i*common_dim + j].second;
-	// 	}
-	// }
+	for (size_t i = 0; i < rows; ++i)
+	{
+		for (size_t j = 0; j < common_dim; ++j)
+		{
+			if (transpose_a)
+			{
+				eigen_a.m_share[0](i, j) = a[j*rows + i].first;
+				eigen_a.m_share[1](i, j) = a[j*rows + i].second;
+			}
+			else
+			{
+				eigen_a.m_share[0](i, j) = a[i*common_dim + j].first;
+				eigen_a.m_share[1](i, j) = a[i*common_dim + j].second;
+			}
+		}
+	}
 
-	// for (size_t i = 0; i < common_dim; ++i)
-	// {
-	// 	for (size_t j = 0; j < columns; ++j)
-	// 	{
-	// 		eigen_b(i, j).first = b[i*columns + j].first;	
-	// 		eigen_b(i, j).second = b[i*columns + j].second;	
-	// 	}
-	// }
+	for (size_t i = 0; i < common_dim; ++i)
+	{
+		for (size_t j = 0; j < columns; ++j)
+		{
+			if (transpose_b)
+			{
+				eigen_b.m_share[0](i, j) = b[j*common_dim + i].first;	
+				eigen_b.m_share[1](i, j) = b[j*common_dim + i].second;	
+			}
+			else
+			{
+				eigen_b.m_share[0](i, j) = b[i*columns + j].first;	
+				eigen_b.m_share[1](i, j) = b[i*columns + j].second;	
+			}
+		}
+	}
 
-	// eigen_c = eigen_a * eigen_b;
+	eigen_c = eigen_a * eigen_b;
 
+	for (size_t i = 0; i < rows; ++i)
+		for (size_t j = 0; j < columns; ++j)
+				temp3[i*columns + j] = eigen_c.m_share[0](i,j);
 /********************************* WITH EIGEN Mat-Mul *********************************/
-
+#endif
 
 	RSSVectorMyType r(final_size), rPrime(final_size);
 	PrecomputeObject.getDividedShares(r, rPrime, FLOAT_PRECISION, final_size);
@@ -354,96 +375,7 @@ void funcMatMulMPC(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVector
 			c[i].first = r[i].first;
 			c[i].second = r[i].second + diffReconst[i];
 		}
-	}
-	
-/******************************** TODO ****************************************/
-	// if (THREE_PC)
-	// {
-	// 	// cout << "Here" << endl;
-	// 	size_t size = rows*columns;
-	// 	size_t size_left = rows*common_dim;
-	// 	size_t size_right = common_dim*columns;
-	// 	RSSVectorMyType A(size_left, 0), B(size_right, 0), C(size, 0);
-
-	// 	if (HELPER)
-	// 	{
-	// 		RSSVectorMyType A1(size_left, 0), A2(size_left, 0), 
-	// 					   B1(size_right, 0), B2(size_right, 0), 
-	// 					   C1(size, 0), C2(size, 0);
-
-	// 		populateRandomVector<RSSMyType>(A1, size_left, "a_1", "POSITIVE");
-	// 		populateRandomVector<RSSMyType>(A2, size_left, "a_2", "POSITIVE");
-	// 		populateRandomVector<RSSMyType>(B1, size_right, "b_1", "POSITIVE");
-	// 		populateRandomVector<RSSMyType>(B2, size_right, "b_2", "POSITIVE");
-	// 		populateRandomVector<RSSMyType>(C1, size, "c_1", "POSITIVE");
-
-	// 		addVectors<RSSMyType>(A1, A2, A, size_left);
-	// 		addVectors<RSSMyType>(B1, B2, B, size_right);
-
-	// 		matrixMultEigen(A, B, C, rows, common_dim, columns, 0, 0);
-	// 		subtractVectors<RSSMyType>(C, C1, C2, size);
-
-	// 		// splitIntoShares(C, C1, C2, size);
-
-	// 		// sendThreeVectors<myType>(A1, B1, C1, PARTY_A, size_left, size_right, size);
-	// 		// sendThreeVectors<myType>(A2, B2, C2, PARTY_B, size_left, size_right, size);
-	// 		sendVector<RSSMyType>(C2, PARTY_B, size);
-	// 	}
-
-	// 	if (PRIMARY)
-	// 	{
-	// 		RSSVectorMyType E(size_left), F(size_right);
-	// 		RSSVectorMyType temp_E(size_left), temp_F(size_right);
-	// 		RSSVectorMyType temp_c(size);
-
-	// 		if (partyNum == PARTY_A)
-	// 		{
-	// 			populateRandomVector<RSSMyType>(A, size_left, "a_1", "POSITIVE");
-	// 			populateRandomVector<RSSMyType>(B, size_right, "b_1", "POSITIVE");
-	// 			populateRandomVector<RSSMyType>(C, size, "c_1", "POSITIVE");
-	// 		}
-
-	// 		if (partyNum == PARTY_B)
-	// 		{
-	// 			populateRandomVector<RSSMyType>(A, size_left, "a_2", "POSITIVE");
-	// 			populateRandomVector<RSSMyType>(B, size_right, "b_2", "POSITIVE");
-	// 			receiveVector<RSSMyType>(C, PARTY_C, size);
-	// 		}			
-
-	// 		// receiveThreeVectors<myType>(A, B, C, PARTY_C, size_left, size_right, size);
-	// 		subtractVectors<RSSMyType>(a, A, E, size_left);
-	// 		subtractVectors<RSSMyType>(b, B, F, size_right);
-
-
-	// 		thread *threads = new thread[2];
-
-	// 		threads[0] = thread(sendTwoVectors<RSSMyType>, ref(E), ref(F), adversary(partyNum), size_left, size_right);
-	// 		threads[1] = thread(receiveTwoVectors<RSSMyType>, ref(temp_E), ref(temp_F), adversary(partyNum), size_left, size_right);
-	
-	// 		for (int i = 0; i < 2; i++)
-	// 			threads[i].join();
-
-	// 		delete[] threads;
-
-	// 		addVectors<RSSMyType>(E, temp_E, E, size_left);
-	// 		addVectors<RSSMyType>(F, temp_F, F, size_right);
-
-	// 		matrixMultEigen(a, F, c, rows, common_dim, columns, 0, 0);
-	// 		matrixMultEigen(E, b, temp_c, rows, common_dim, columns, 0, 0);
-
-	// 		addVectors<myType>(c, temp_c, c, size);
-	// 		addVectors<myType>(c, C, c, size);
-
-	// 		if (partyNum == PARTY_A)
-	// 		{
-	// 			matrixMultEigen(E, F, temp_c, rows, common_dim, columns, 0, 0);
-	// 			subtractVectors<myType>(c, temp_c, c, size);
-	// 		}
-
-	// 		funcTruncate2PC(c, FLOAT_PRECISION, size, PARTY_A, PARTY_B);
-	// 	}
-	// }
-/******************************** TODO ****************************************/	
+	}	
 }
 
 
@@ -1482,9 +1414,9 @@ void debugSS()
 void debugMatMul()
 {
 	// size_t rows = 1000; 
-	// size_t common_dim = 2000;
+	// size_t common_dim = 1000;
 	// size_t columns = 1000;
- // 	size_t transpose_a = 0, transpose_b = 0;
+	// size_t transpose_a = 0, transpose_b = 0;
 
 	// RSSVectorMyType a(rows*common_dim, make_pair(1,1)), 
 	// 				b(common_dim*columns, make_pair(1,1)), c(rows*columns);
@@ -1509,10 +1441,10 @@ void debugMatMul()
 	funcAddConstant(a, data_a);
 	funcAddConstant(b, data_b);
 
-	// funcReconstruct(a, a_reconst, rows*common_dim, "a", true);
-	// funcReconstruct(b, b_reconst, common_dim*columns, "b", true);
+	funcReconstruct(a, a_reconst, rows*common_dim, "a", true);
+	funcReconstruct(b, b_reconst, common_dim*columns, "b", true);
 	funcMatMulMPC(a, b, c, rows, common_dim, columns, transpose_a, transpose_b);
-	// funcReconstruct(c, c_reconst, rows*columns, "c", true);
+	funcReconstruct(c, c_reconst, rows*columns, "c", true);
 /******************************** TODO ****************************************/	
 }
 
