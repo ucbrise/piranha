@@ -149,8 +149,8 @@ int main(int argc, char** argv)
 	// whichNetwork += " train";
 	// train(network, config);
 
-	whichNetwork = "Debug Mat-Mul";
-	debugMatMul();
+	whichNetwork = "Debug Dot-Product";
+	debugDotProd();
 
 	// whichNetwork += " test";
 	// test(network);

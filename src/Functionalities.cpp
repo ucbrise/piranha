@@ -4,7 +4,10 @@
 #include "Precompute.h"
 #include <algorithm>    // std::rotate
 #include <thread>
+#include <Eigen/Dense>
 using namespace std;
+// using namespace Eigen;
+// using eigenMatrix = Eigen::Matrix<pair<myType, myType>, Eigen::Dynamic, Eigen::Dynamic>;
 
 extern Precompute PrecomputeObject;
 
@@ -54,6 +57,7 @@ void funcXORModuloOdd2PC(RSSVectorSmallType &bit, RSSVectorMyType &shares, RSSVe
 /******************************** TODO ****************************************/
 }
 
+//Add public vector b to RSS vector a into c.
 void funcAddMyTypeAndRSS(RSSVectorMyType &a, vector<myType> &b, RSSVectorMyType &c, size_t size)
 {
 	if (partyNum == PARTY_A)
@@ -273,6 +277,8 @@ void funcMatMulMPC(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVector
 	cout << "Rows, Common_dim, Columns: " << rows << "x" << common_dim << "x" << columns << endl;
 #endif
 
+	// size_t first_size = rows*common_dim;
+	// size_t second_size = common_dim*columns;
 	size_t final_size = rows*columns;
 	vector<myType> temp3(final_size, 0), diffReconst(final_size, 0);
 	for (int i = 0; i < rows; ++i)
@@ -288,6 +294,33 @@ void funcMatMulMPC(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVector
 			}
 		}
 	}
+
+/********************************* WITH EIGEN Mat-Mul *********************************/
+	// Eigen::Matrix<pair<myType, myType>, Eigen::Dynamic, Eigen::Dynamic> eigen_a(rows, common_dim), 
+	// 										eigen_b(common_dim, columns), eigen_c(rows, columns);
+
+	// for (size_t i = 0; i < rows; ++i)
+	// {
+	// 	for (size_t j = 0; j < common_dim; ++j)
+	// 	{
+	// 		eigen_a(i, j).first = a[i*common_dim + j].first;
+	// 		eigen_a(i, j).second = a[i*common_dim + j].second;
+	// 	}
+	// }
+
+	// for (size_t i = 0; i < common_dim; ++i)
+	// {
+	// 	for (size_t j = 0; j < columns; ++j)
+	// 	{
+	// 		eigen_b(i, j).first = b[i*columns + j].first;	
+	// 		eigen_b(i, j).second = b[i*columns + j].second;	
+	// 	}
+	// }
+
+	// eigen_c = eigen_a * eigen_b;
+
+/********************************* WITH EIGEN Mat-Mul *********************************/
+
 
 	RSSVectorMyType r(final_size), rPrime(final_size);
 	PrecomputeObject.getDividedShares(r, rPrime, FLOAT_PRECISION, final_size);
@@ -418,101 +451,52 @@ void funcDotProductMPC(const RSSVectorMyType &a, const RSSVectorMyType &b,
 						   RSSVectorMyType &c, size_t size) 
 {
 	log_print("funcDotProductMPC");
+	assert(a.size() == size && "Matrix a incorrect for Mat-Mul");
+	assert(b.size() == size && "Matrix b incorrect for Mat-Mul");
+	assert(c.size() == size && "Matrix c incorrect for Mat-Mul");
 
-/******************************** TODO ****************************************/
-	// if (THREE_PC)
-	// {
-	// 	RSSVectorMyType A(size, 0), B(size, 0), C(size, 0);
 
-	// 	if (HELPER)
-	// 	{
-	// 		RSSVectorMyType A1(size, 0), A2(size, 0), 
-	// 					   B1(size, 0), B2(size, 0), 
-	// 					   C1(size, 0), C2(size, 0);
+	vector<myType> temp3(size, 0), diffReconst(size, 0);
+	for (int i = 0; i < size; ++i)
+	{
+		temp3[i] += a[i].first * b[i].first +
+				    a[i].first * b[i].second +
+				    a[i].second * b[i].first;
+	}
 
-	// 		populateRandomVector<RSSMyType>(A1, size, "a_1", "POSITIVE");
-	// 		populateRandomVector<RSSMyType>(A2, size, "a_2", "POSITIVE");
-	// 		populateRandomVector<RSSMyType>(B1, size, "b_1", "POSITIVE");
-	// 		populateRandomVector<RSSMyType>(B2, size, "b_2", "POSITIVE");
-	// 		populateRandomVector<RSSMyType>(C1, size, "c_1", "POSITIVE");
-
-	// 		addVectors<myType>(A1, A2, A, size);
-	// 		addVectors<myType>(B1, B2, B, size);
-
-	// 		for (size_t i = 0; i < size; ++i)
-	// 			C[i] = A[i] * B[i];
-
-	// 		subtractVectors<myType>(C, C1, C2, size);
-	// 		sendVector<RSSMyType>(C2, PARTY_B, size);
-	// 	}
-
-	// 	if (PRIMARY)
-	// 	{
-	// 		if (partyNum == PARTY_A)
-	// 		{
-	// 			populateRandomVector<RSSMyType>(A, size, "a_1", "POSITIVE");
-	// 			populateRandomVector<RSSMyType>(B, size, "b_1", "POSITIVE");
-	// 			populateRandomVector<RSSMyType>(C, size, "c_1", "POSITIVE");
-	// 		}
-
-	// 		if (partyNum == PARTY_B)
-	// 		{
-	// 			populateRandomVector<RSSMyType>(A, size, "a_2", "POSITIVE");
-	// 			populateRandomVector<RSSMyType>(B, size, "b_2", "POSITIVE");
-	// 			receiveVector<RSSMyType>(C, PARTY_C, size);
-	// 		}			
-
-	// 		// receiveThreeVectors<myType>(A, B, C, PARTY_C, size, size, size);
-	// 		RSSVectorMyType E(size), F(size), temp_E(size), temp_F(size);
-	// 		myType temp;
-
-	// 		subtractVectors<myType>(a, A, E, size);
-	// 		subtractVectors<myType>(b, B, F, size);
-
-	// 		thread *threads = new thread[2];
-
-	// 		threads[0] = thread(sendTwoVectors<myType>, ref(E), ref(F), adversary(partyNum), size, size);
-	// 		threads[1] = thread(receiveTwoVectors<myType>, ref(temp_E), ref(temp_F), adversary(partyNum), size, size);
+	RSSVectorMyType r(size), rPrime(size);
+	PrecomputeObject.getDividedShares(r, rPrime, FLOAT_PRECISION, size);
+	for (int i = 0; i < size; ++i)
+		temp3[i] = temp3[i] - rPrime[i].first;
 	
-	// 		for (int i = 0; i < 2; i++)
-	// 			threads[i].join();
+	funcReconstruct(temp3, diffReconst, size, "Dot-product diff reconst", false);
+	dividePlainSA(diffReconst, (1 << FLOAT_PRECISION));
+	if (partyNum == PARTY_A)
+	{
+		for (int i = 0; i < size; ++i)
+		{
+			c[i].first = r[i].first + diffReconst[i];
+			c[i].second = r[i].second;
+		}
+	}
 
-	// 		delete[] threads;
+	if (partyNum == PARTY_B)
+	{
+		for (int i = 0; i < size; ++i)
+		{
+			c[i].first = r[i].first;
+			c[i].second = r[i].second;
+		}
+	}
 
-	// 		//HEREEEEEEE
-	// 		// if (partyNum == PARTY_A)
-	// 		// 	sendTwoVectors<myType>(E, F, adversary(partyNum), size, size);
-	// 		// else
-	// 		// 	receiveTwoVectors<myType>(temp_E, temp_F, adversary(partyNum), size, size);
-
-	// 		// if (partyNum == PARTY_B)
-	// 		// 	sendTwoVectors<myType>(E, F, adversary(partyNum), size, size);
-	// 		// else
-	// 		// 	receiveTwoVectors<myType>(temp_E, temp_F, adversary(partyNum), size, size);
-
-	// 		// sendTwoVectors<myType>(E, F, adversary(partyNum), size, size);
-	// 		// receiveTwoVectors<myType>(temp_E, temp_F, adversary(partyNum), size, size);
-
-	// 		addVectors<myType>(E, temp_E, E, size);
-	// 		addVectors<myType>(F, temp_F, F, size);
-
-	// 		for (size_t i = 0; i < size; ++i)
-	// 		{
-	// 			c[i] = a[i] * F[i];
-	// 			temp = E[i] * b[i];
-	// 			c[i] = c[i] + temp;
-
-	// 			if (partyNum == PARTY_A)
-	// 			{
-	// 				temp = E[i] * F[i];
-	// 				c[i] = c[i] - temp;
-	// 			}
-	// 		}
-	// 		addVectors<myType>(c, C, c, size);
-	// 		funcTruncate2PC(c, FLOAT_PRECISION, size, PARTY_A, PARTY_B);
-	// 	}
-	// }
-/******************************** TODO ****************************************/
+	if (partyNum == PARTY_C)
+	{
+		for (int i = 0; i < size; ++i)
+		{
+			c[i].first = r[i].first;
+			c[i].second = r[i].second + diffReconst[i];
+		}
+	}
 }
 
 //Thread function for parallel private compare
@@ -1328,35 +1312,24 @@ void funcMaxIndexMPC(RSSVectorMyType &a, const RSSVectorMyType &maxIndex,
 /******************************** Debug ********************************/
 void debugDotProd()
 {
+	size_t rows = 3; 
+	size_t columns = 3;
 
-/******************************** TODO ****************************************/		
-	// size_t size = 10;
-	// RSSVectorMyType a(size, 0), b(size, 0), c(size);
-	// RSSVectorMyType temp(size);
+	RSSVectorMyType a(rows*columns, make_pair(0,0)), 
+					b(rows*columns, make_pair(0,0)), 
+					c(rows*columns);
+	vector<myType> a_reconst(rows*columns), b_reconst(rows*columns), c_reconst(rows*columns); 
 
-	// populateRandomVector<RSSMyType>(temp, size, "COMMON", "NEGATIVE");
-	// for (size_t i = 0; i < size; ++i)
-	// {
-	// 	if (partyNum == PARTY_A)
-	// 		a[i] = temp[i] + floatToMyType(i);
-	// 	else
-	// 		a[i] = temp[i];
-	// }
+	vector<myType> data = {floatToMyType(3),floatToMyType(4),floatToMyType(5),
+							 floatToMyType(6),floatToMyType(7),floatToMyType(8), 
+							 floatToMyType(7),floatToMyType(8),floatToMyType(9)};
+	funcAddConstant(a, data);
+	funcAddConstant(b, data);
 
-	// populateRandomVector<RSSMyType>(temp, size, "COMMON", "NEGATIVE");
-	// for (size_t i = 0; i < size; ++i)
-	// {
-	// 	if (partyNum == PARTY_A)
-	// 		b[i] = temp[i] + floatToMyType(i);
-	// 	else
-	// 		b[i] = temp[i];
-	// }
-
-	// funcDotProductMPC(a, b, c, size);
-
-	// if (PRIMARY)
-	// 	funcReconstruct2PC(c, size, "c");
-/******************************** TODO ****************************************/		
+	funcReconstruct(a, a_reconst, rows*columns, "a", true);
+	funcReconstruct(b, b_reconst, rows*columns, "b", true);
+	funcDotProductMPC(a, b, c, rows*columns);
+	funcReconstruct(c, c_reconst, rows*columns, "c", true);
 }
 
 void debugComputeMSB()
@@ -1508,12 +1481,21 @@ void debugSS()
 
 void debugMatMul()
 {
+	// size_t rows = 1000; 
+	// size_t common_dim = 2000;
+	// size_t columns = 1000;
+ // 	size_t transpose_a = 0, transpose_b = 0;
+
+	// RSSVectorMyType a(rows*common_dim, make_pair(1,1)), 
+	// 				b(common_dim*columns, make_pair(1,1)), c(rows*columns);
+
+	// funcMatMulMPC(a, b, c, rows, common_dim, columns, transpose_a, transpose_b);
 
 /******************************** TODO ****************************************/	
 	size_t rows = 3; 
 	size_t common_dim = 2;
 	size_t columns = 3;
- 	size_t transpose_a = 0, transpose_b = 0;
+	size_t transpose_a = 0, transpose_b = 0;
 
 	RSSVectorMyType a(rows*common_dim, make_pair(0,0)), 
 					b(common_dim*columns, make_pair(0,0)), c(rows*columns);
