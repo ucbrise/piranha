@@ -152,6 +152,12 @@ int main(int argc, char** argv)
 	whichNetwork = "Debug Mat-Mul";
 	debugDotProd();
 
+	// size_t size = 10000;
+	// size_t sizeLong = size*64;
+	// RSSVectorSmallType share_m(sizeLong, make_pair(1,1)), beta(size, make_pair(0,0)), betaPrime(size);
+	// RSSVectorMyType r(size, make_pair(1,1)); 
+	// funcPrivateCompareMPC(share_m, r, beta, betaPrime, size, 64);
+
 	// whichNetwork += " test";
 	// test(network);
 

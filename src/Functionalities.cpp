@@ -556,7 +556,7 @@ void funcPrivateCompareMPC(const RSSVectorSmallType &share_m, const RSSVectorMyT
 	assert(dim == BIT_SIZE && "Private Compare assert issue");
 	size_t sizeLong = size*dim;
 	size_t index3, index2;
-	RSSVectorSmallType c(sizeLong), diff(sizeLong), twoBetaMinusOne(sizeLong);
+	RSSVectorSmallType c(sizeLong), diff(sizeLong), twoBetaMinusOne(sizeLong), xMinusR(sizeLong);
 	RSSSmallType a, tempM, tempN;
 	myType valueX;
 	smallType bit_r;
@@ -586,7 +586,8 @@ void funcPrivateCompareMPC(const RSSVectorSmallType &share_m, const RSSVectorMyT
 		}
 	}
 
-
+	funcDotProductMPC(diff, twoBetaMinusOne, xMinusR, sizeLong);
+	vector<myType> ones(sizeLong, 1);
 
 	for (int index2 = 0; index2 < size; ++index2)
 	{
@@ -601,24 +602,36 @@ void funcPrivateCompareMPC(const RSSVectorSmallType &share_m, const RSSVectorMyT
 
 			tempN = XORPublicModPrime(tempM, bit_r);
 			a = addModPrime(a, tempN);
-		
-			//c += (2beta - 1) * (x - r) + 1;
 
-			// if (!beta[index2])
-			// {
-			// 	if (partyNum == PARTY_A)
-			// 		c[index3] = addModPrime(c[index3], 1+bit_r);
-			// 	c[index3] = subtractModPrime(c[index3], tempM);
-			// }
-			// else
-			// {
-			// 	if (partyNum == PARTY_A)
-			// 		c[index3] = addModPrime(c[index3], 1-bit_r);
-			// 	c[index3] = addModPrime(c[index3], tempM);
-			// }
+
+			if (partyNum == PARTY_A)
+			{
+				for (int i = 0; i < size; ++i)
+				{
+					c[i].first += xMinusR[i].first + 1;
+					c[i].second += xMinusR[i].second;
+				}
+			}
+			else if (partyNum == PARTY_B)
+			{
+				for (int i = 0; i < size; ++i)
+				{
+					c[i].first += xMinusR[i].first;
+					c[i].second += xMinusR[i].second;
+				}
+			}
+			else if (partyNum == PARTY_C)
+			{
+				for (int i = 0; i < size; ++i)
+				{
+					c[i].first += xMinusR[i].first;
+					c[i].second += xMinusR[i].second + 1;
+				}
+			}			
 		}
 	}
 
+	//TODO 7 rounds of multiplication
 /******************************** TODO ****************************************/
 	// assert(dim == BIT_SIZE && "Private Compare assert issue");
 	// size_t sizeLong = size*dim;
