@@ -586,8 +586,8 @@ void funcPrivateCompareMPC(const RSSVectorSmallType &share_m, const RSSVectorMyT
 		}
 	}
 
+	//(-1)^beta * x[i] - r[i]
 	funcDotProductMPC(diff, twoBetaMinusOne, xMinusR, sizeLong);
-	vector<myType> ones(sizeLong, 1);
 
 	for (int index2 = 0; index2 < size; ++index2)
 	{
@@ -603,163 +603,111 @@ void funcPrivateCompareMPC(const RSSVectorSmallType &share_m, const RSSVectorMyT
 			tempN = XORPublicModPrime(tempM, bit_r);
 			a = addModPrime(a, tempN);
 
-
 			if (partyNum == PARTY_A)
 			{
-				for (int i = 0; i < size; ++i)
-				{
-					c[i].first += xMinusR[i].first + 1;
-					c[i].second += xMinusR[i].second;
-				}
+				c[index3].first = additionModPrime[c[index3].first][xMinusR[index3].first];
+				c[index3].first = additionModPrime[c[index3].first][1];
+				c[index3].second = additionModPrime[c[index3].second][xMinusR[index3].second];
 			}
 			else if (partyNum == PARTY_B)
 			{
-				for (int i = 0; i < size; ++i)
-				{
-					c[i].first += xMinusR[i].first;
-					c[i].second += xMinusR[i].second;
-				}
+				c[index3].first = additionModPrime[c[index3].first][xMinusR[index3].first];
+				c[index3].second = additionModPrime[c[index3].second][xMinusR[index3].second];
 			}
 			else if (partyNum == PARTY_C)
 			{
-				for (int i = 0; i < size; ++i)
-				{
-					c[i].first += xMinusR[i].first;
-					c[i].second += xMinusR[i].second + 1;
-				}
+				c[index3].first = additionModPrime[c[index3].first][xMinusR[index3].first];
+				c[index3].second = additionModPrime[c[index3].second][xMinusR[index3].second];
+				c[index3].second = additionModPrime[c[index3].second][1];
 			}			
 		}
 	}
 
 	//TODO 7 rounds of multiplication
-/******************************** TODO ****************************************/
-	// assert(dim == BIT_SIZE && "Private Compare assert issue");
-	// size_t sizeLong = size*dim;
-	// size_t index3, index2;
-	// size_t PARTY;
-
-	// if (THREE_PC)
-	// 	PARTY = PARTY_C;
-	// else if (FOUR_PC)
-	// 	PARTY = PARTY_D;
-
-
-	// if (PRIMARY)
-	// {
-	// 	smallType bit_r, a, tempM;
-	// 	RSSVectorSmallType c(sizeLong);
-	// 	myType valueX;
-
-	// 	if (PARALLEL)
-	// 	{
-	// 		thread *threads = new thread[NO_CORES];
-	// 		int chunksize = size/NO_CORES;
-
-	// 		for (int i = 0; i < NO_CORES; i++)
-	// 		{
-	// 			int start = i*chunksize;
-	// 			int end = (i+1)*chunksize;
-	// 			if (i == NO_CORES - 1)
-	// 				end = size;
-				
-	// 			threads[i] = thread(parallelPC, c.data(), start, end, i, share_m.data(), 
-	// 								r.data(), beta.data(), betaPrime.data(), dim);
-	// 			// threads[i] = thread(parallelPC, ref(c.data()), start, end, i, ref(share_m.data()), 
-	// 			// 					ref(r.data()), ref(beta.data()), ref(betaPrime.data()), dim);
-	// 		}
-
-	// 		for (int i = 0; i < NO_CORES; i++)
-	// 			threads[i].join();
-
-	// 		delete[] threads;
-	// 	}
-	// 	else
-	// 	{
-	// 		//Check the security of the first if condition
-	// 		for (size_t index2 = 0; index2 < size; ++index2)
-	// 		{
-	// 			if (beta[index2] == 1 and r[index2] != MINUS_ONE)
-	// 				valueX = r[index2] + 1;
-	// 			else
-	// 				valueX = r[index2];
-
-	// 			if (beta[index2] == 1 and r[index2] == MINUS_ONE)
-	// 			{
-	// 				//One share of zero and other shares of 1
-	// 				//Then multiply and shuffle
-	// 				for (size_t k = 0; k < dim; ++k)
-	// 				{
-	// 					index3 = index2*dim + k;
-	// 					c[index3] = aes_common->randModPrime();
-	// 					if (partyNum == PARTY_A)
-	// 						c[index3] = subtractModPrime((k!=0), c[index3]);
-
-	// 					c[index3] = multiplyModPrime(c[index3], aes_common->randNonZeroModPrime());
-	// 				}
-	// 			}
-	// 			else
-	// 			{
-	// 				//Single for loop
-	// 				a = 0;
-	// 				for (size_t k = 0; k < dim; ++k)
-	// 				{
-	// 					index3 = index2*dim + k;
-	// 					c[index3] = a;
-	// 					tempM = share_m[index3];
-
-	// 					bit_r = (smallType)((valueX >> (63-k)) & 1);
-
-	// 					if (bit_r == 0)
-	// 						a = addModPrime(a, tempM);
-	// 					else
-	// 						a = addModPrime(a, subtractModPrime((partyNum == PARTY_A), tempM));
-
-	// 					if (!beta[index2])
-	// 					{
-	// 						if (partyNum == PARTY_A)
-	// 							c[index3] = addModPrime(c[index3], 1+bit_r);
-	// 						c[index3] = subtractModPrime(c[index3], tempM);
-	// 					}
-	// 					else
-	// 					{
-	// 						if (partyNum == PARTY_A)
-	// 							c[index3] = addModPrime(c[index3], 1-bit_r);
-	// 						c[index3] = addModPrime(c[index3], tempM);
-	// 					}
-
-	// 					c[index3] = multiplyModPrime(c[index3], aes_common->randNonZeroModPrime());
-	// 				}
-	// 			}
-	// 			aes_common->AES_random_shuffle(c, index2*dim, (index2+1)*dim);
-	// 		}
-	// 	}
-	// 	sendVector<RSSSmallType>(c, PARTY, sizeLong);
-	// }
-
-	// if (partyNum == PARTY)
-	// {
-	// 	RSSVectorSmallType c1(sizeLong);
-	// 	RSSVectorSmallType c2(sizeLong);
-
-	// 	receiveVector<RSSSmallType>(c1, PARTY_A, sizeLong);
-	// 	receiveVector<RSSSmallType>(c2, PARTY_B, sizeLong);
-
-	// 	for (size_t index2 = 0; index2 < size; ++index2)
-	// 	{
-	// 		betaPrime[index2] = 0;
-	// 		for (int k = 0; k < dim; ++k)
-	// 		{
-	// 			index3 = index2*dim + k;
-	// 			if (addModPrime(c1[index3], c2[index3]) == 0)
-	// 			{
-	// 				betaPrime[index2] = 1;
-	// 				break;
-	// 			}	
-	// 		}
-	// 	}
-	// }
-/******************************** TODO ****************************************/	
+	funcCrunchMultiply(c, betaPrime, size, dim);	
 }
+
+//Multiply each group of 64 with a random number in Z_p* and reconstruct output in betaPrime.
+void funcCrunchMultiply(const RSSVectorSmallType &c, RSSVectorSmallType &betaPrime, size_t size, size_t dim)
+{
+	size_t sizeLong = size*dim;
+	RSSVectorSmallType c_0(sizeLong/2, make_pair(0,0)), c_1(sizeLong/4, make_pair(0,0)), 
+					   c_2(sizeLong/8, make_pair(0,0)), c_3(sizeLong/16, make_pair(0,0)), 
+					   c_4(sizeLong/32, make_pair(0,0)), c_5(sizeLong/64, make_pair(0,0));
+	vector<smallType> reconst(size, 0);
+
+	funcMultiplyNeighbours(c, c_0, sizeLong);
+	funcMultiplyNeighbours(c_0, c_1, sizeLong/2);
+	funcMultiplyNeighbours(c_1, c_2, sizeLong/4);
+	funcMultiplyNeighbours(c_2, c_3, sizeLong/8);
+	funcMultiplyNeighbours(c_3, c_4, sizeLong/16);
+	funcMultiplyNeighbours(c_4, c_5, sizeLong/32);
+
+	vector<smallType> a_next(size), a_prev(size);
+	for (int i = 0; i < size; ++i)
+	{
+		a_prev[i] = 0;
+		a_next[i] = c_5[i].first;
+		reconst[i] = c_5[i].first;
+		reconst[i] = additionModPrime[reconst[i]][c_5[i].second];
+	}
+
+	thread *threads = new thread[2];
+
+	threads[0] = thread(sendVector<smallType>, ref(a_next), nextParty(partyNum), size);
+	threads[1] = thread(receiveVector<smallType>, ref(a_prev), prevParty(partyNum), size);
+
+	for (int i = 0; i < 2; i++)
+		threads[i].join();
+
+	delete[] threads;
+
+	for (int i = 0; i < size; ++i)
+		reconst[i] = additionModPrime[reconst[i]][a_prev[i]];
+
+	for (int i = 0; i < size; ++i)
+	{
+		betaPrime[i].first = 0;
+		betaPrime[i].second = 0;
+		if (reconst[i] == 0)
+		{
+			if (partyNum == PARTY_A)
+				betaPrime[i].first = 1;
+			else if (partyNum == PARTY_C)
+				betaPrime[i].second = 1;
+		}
+	}
+}
+
+void funcMultiplyNeighbours(const RSSVectorSmallType &c_1, RSSVectorSmallType &c_2, size_t size)
+{
+	vector<smallType> temp3(size/2, 0), recv(size/2, 0);
+	for (int i = 0; i < size/2; ++i)
+	{
+		temp3[i] = additionModPrime[temp3[i]][multiplicationModPrime[c_1[2*i].first][c_1[2*i+1].first]];
+		temp3[i] = additionModPrime[temp3[i]][multiplicationModPrime[c_1[2*i].first][c_1[2*i+1].second]];
+		temp3[i] = additionModPrime[temp3[i]][multiplicationModPrime[c_1[2*i].second][c_1[2*i+1].first]];
+	}
+
+	//Add random shares of 0 locally
+	thread *threads = new thread[2];
+
+	threads[0] = thread(sendVector<smallType>, ref(temp3), nextParty(partyNum), size/2);
+	threads[1] = thread(receiveVector<smallType>, ref(recv), prevParty(partyNum), size/2);
+
+	for (int i = 0; i < 2; i++)
+		threads[i].join();
+
+	delete[] threads;
+
+	for (int i = 0; i < size/2; ++i)
+	{
+		c_2[i].first = temp3[i];
+		c_2[i].second = recv[i];
+	}
+}
+
+
 
 // Convert shares of a in \Z_L to shares in \Z_{L-1} (in place)
 // a \neq L-1

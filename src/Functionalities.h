@@ -29,6 +29,8 @@ void funcDotProductMPC(const RSSVectorMyType &a, const RSSVectorMyType &b,
 void funcPrivateCompareMPC(const RSSVectorSmallType &share_m, const RSSVectorMyType &r, 
 							  const RSSVectorSmallType &beta, RSSVectorSmallType &betaPrime, 
 							  size_t size, size_t dim);
+void funcCrunchMultiply(const RSSVectorSmallType &c, RSSVectorSmallType &betaPrime, size_t size, size_t dim);
+void funcMultiplyNeighbours(const RSSVectorSmallType &c_1, RSSVectorSmallType &c_2, size_t size);
 void funcShareConvertMPC(RSSVectorMyType &a, size_t size);
 void funcComputeMSB4PC(const RSSVectorMyType &a, RSSVectorSmallType &b, size_t size);
 void funcComputeMSB3PC(const RSSVectorMyType &a, RSSVectorMyType &b, size_t size);
