@@ -31,4 +31,14 @@ void getRefreshShares(RSSVectorMyType &a, size_t size)
 	}
 }
 
+void getRefreshShares(RSSVectorSmallType &a, size_t size)
+{
+	assert(a.size() == size && "size mismatch for refreshing shares");
+	for (int i = 0; i < size; ++i)
+	{
+		a[i].first = 0;
+		a[i].second = 0;
+	}
+}
+
 void Precompute::getShareConvertObjects(){;}

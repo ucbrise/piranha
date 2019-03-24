@@ -150,7 +150,7 @@ int main(int argc, char** argv)
 	// train(network, config);
 
 	whichNetwork = "Debug Mat-Mul";
-	debugMatMul();
+	debugDotProd();
 
 	// whichNetwork += " test";
 	// test(network);

@@ -28,6 +28,7 @@ extern AESObject* aes_next;
 extern AESObject* aes_indep;
 
 extern smallType additionModPrime[PRIME_NUMBER][PRIME_NUMBER];
+extern smallType subtractModPrime[PRIME_NUMBER][PRIME_NUMBER];
 extern smallType multiplicationModPrime[PRIME_NUMBER][PRIME_NUMBER];
 
 
@@ -162,14 +163,14 @@ void print_myType(myType var, string message, string type);
 void print_linear(myType var, string type);
 
 
-void matrixMultEigen(const vector<myType> &a, const vector<myType> &b, vector<myType> &c, 
-					size_t rows, size_t common_dim, size_t columns,
-				 	size_t transpose_a, size_t transpose_b);
+// void matrixMultEigen(const vector<myType> &a, const vector<myType> &b, vector<myType> &c, 
+// 					size_t rows, size_t common_dim, size_t columns,
+// 				 	size_t transpose_a, size_t transpose_b);
 
-myType divideMyTypeSA(myType a, myType b);
+// myType divideMyTypeSA(myType a, myType b);
 myType dividePlainSA(myType a, int b);
 void dividePlainSA(vector<myType> &vec, int divisor);
-myType multiplyMyTypesSA(myType a, myType b, int shift);
+// myType multiplyMyTypesSA(myType a, myType b, int shift);
 
 size_t nextParty(size_t party);
 size_t prevParty(size_t party);
@@ -177,11 +178,60 @@ size_t partner(size_t party);
 size_t adversary(size_t party);
 
 
-inline smallType addModPrime(smallType a, smallType b)
-{return additionModPrime[a][b];}
-inline smallType multiplyModPrime(smallType a, smallType b)
-{return multiplicationModPrime[a][b];}
-smallType subtractModPrime(smallType a, smallType b);
+inline RSSSmallType addModPrime(RSSSmallType a, RSSSmallType b)
+{
+	RSSSmallType ret;
+	ret.first = additionModPrime[a.first][b.first];
+	ret.second = additionModPrime[a.second][b.second]; 
+	return ret;
+}
+
+inline smallType subModPrime(smallType a, smallType b)
+{return subtractModPrime[a][b];}
+
+
+inline RSSSmallType subConstModPrime(RSSSmallType a, const smallType r)
+{
+	RSSSmallType ret;
+	switch(partyNum)
+	{
+		case PARTY_A: a.first = subtractModPrime[a.first][r];
+					  break;       
+		case PARTY_C: a.second = subtractModPrime[a.second][r];
+					  break;
+	}		
+	return ret;
+}
+
+// inline smallType addModPrime(smallType a, smallType b)
+// {return additionModPrime[a][b];}
+// inline smallType multiplyModPrime(smallType a, smallType b)
+// {return multiplicationModPrime[a][b];}
+inline RSSSmallType XORPublicModPrime(RSSSmallType a, bool r)
+{
+	RSSSmallType ret;
+	if (r == 0)
+		ret = a;
+	else
+	{
+		switch(partyNum)
+		{
+			case PARTY_A: ret.first = subtractModPrime[1][a.first];
+						  ret.second = subtractModPrime[0][a.second];
+						  break;       
+			case PARTY_B: ret.first = subtractModPrime[0][a.first];
+						  ret.second = subtractModPrime[0][a.second];
+						  break;
+			case PARTY_C: ret.first = subtractModPrime[0][a.first];
+						  ret.second = subtractModPrime[1][a.second];
+						  break;
+		}
+	}
+	return ret;
+}
+
+
+// smallType subtractModPrime(smallType a, smallType b);
 inline smallType wrapAround(myType a, myType b)
 {return (a > MINUS_ONE - b);}
 void wrapAround(const vector<myType> &a, const vector<myType> &b, 

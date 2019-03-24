@@ -19,6 +19,7 @@ bool alreadyMeasuringRounds = false;
 
 //For faster modular operations
 extern smallType additionModPrime[PRIME_NUMBER][PRIME_NUMBER];
+extern smallType subtractModPrime[PRIME_NUMBER][PRIME_NUMBER];
 extern smallType multiplicationModPrime[PRIME_NUMBER][PRIME_NUMBER];
 
 RSSVectorMyType trainData, testData;
@@ -41,6 +42,7 @@ void parseInputs(int argc, char* argv[])
 		for (int j = 0; j < PRIME_NUMBER; ++j)
 		{
 			additionModPrime[i][j] = (i + j) % PRIME_NUMBER;
+			subtractModPrime[i][j] = (i - j) % PRIME_NUMBER;
 			multiplicationModPrime[i][j] = (i * j) % PRIME_NUMBER;
 		}
 

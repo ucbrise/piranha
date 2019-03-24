@@ -9,6 +9,7 @@ using namespace Eigen;
 
 
 smallType additionModPrime[PRIME_NUMBER][PRIME_NUMBER];
+smallType subtractModPrime[PRIME_NUMBER][PRIME_NUMBER];
 smallType multiplicationModPrime[PRIME_NUMBER][PRIME_NUMBER];
 
 
@@ -466,17 +467,16 @@ size_t adversary(size_t party)
 	return ret;
 }
 
-smallType subtractModPrime(smallType a, smallType b)
-{
-	if (b == 0)
-		return a;
-	else 
-	{
-		b = (PRIME_NUMBER - b); 
-		return additionModPrime[a][b];
-	}
-}
-
+// smallType subtractModPrime(smallType a, smallType b)
+// {
+// 	if (b == 0)
+// 		return a;
+// 	else 
+// 	{
+// 		b = (PRIME_NUMBER - b); 
+// 		return additionModPrime[a][b];
+// 	}
+// }
 
 void wrapAround(const vector<myType> &a, const vector<myType> &b, 
 				vector<smallType> &c, size_t size)
@@ -518,7 +518,7 @@ void sharesOfBits(vector<smallType> &bit_shares_x_1, vector<smallType> &bit_shar
 			{
 				temp = aes_next->randModPrime();
 				bit_shares_x_1[i*BIT_SIZE + k] = temp;
-				bit_shares_x_2[i*BIT_SIZE + k] = subtractModPrime((x[i] >> (BIT_SIZE - 1 - k) & 1), temp);
+				bit_shares_x_2[i*BIT_SIZE + k] = subtractModPrime[(x[i] >> (BIT_SIZE - 1 - k) & 1)][temp];
 			}
 		}
 	}
@@ -531,7 +531,7 @@ void sharesOfBits(vector<smallType> &bit_shares_x_1, vector<smallType> &bit_shar
 			{
 				temp = aes_indep->randModPrime();
 				bit_shares_x_1[i*BIT_SIZE + k] = temp;
-				bit_shares_x_2[i*BIT_SIZE + k] = subtractModPrime((x[i] >> (BIT_SIZE - 1 - k) & 1), temp);
+				bit_shares_x_2[i*BIT_SIZE + k] = subtractModPrime[(x[i] >> (BIT_SIZE - 1 - k) & 1)][temp];
 			}
 		}
 	}
