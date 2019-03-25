@@ -234,7 +234,19 @@ inline RSSSmallType XORPublicModPrime(RSSSmallType a, bool r)
 // smallType subtractModPrime(smallType a, smallType b);
 inline smallType wrapAround(myType a, myType b)
 {return (a > MINUS_ONE - b);}
+
+inline smallType wrap3(myType a, myType b, myType c)
+{
+	myType temp = a+b;
+	if (wrapAround(a,b))
+		return 1 - wrapAround(temp, c);
+	else 
+		return wrapAround(temp, c);
+}
+
 void wrapAround(const vector<myType> &a, const vector<myType> &b, 
+				vector<smallType> &c, size_t size);
+void wrap3(const RSSVectorMyType &a, const vector<myType> &b, 
 				vector<smallType> &c, size_t size);
 void populateBitsVector(vector<smallType> &vec, string r_type, size_t size);
 void sharesOfBits(vector<smallType> &bit_shares_x_1, vector<smallType> &bit_shares_x_2, 

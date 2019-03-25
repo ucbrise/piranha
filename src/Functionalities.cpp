@@ -102,6 +102,40 @@ void funcAddConstant(RSSVectorMyType &a, const vector<myType> &data)
 	}		
 }
 
+void funcReconstruct(const RSSVectorSmallType &a, vector<smallType> &b, size_t size, string str, bool print)
+{
+	vector<smallType> a_next(size), a_prev(size);
+	for (int i = 0; i < size; ++i)
+	{
+		a_prev[i] = 0;
+		a_next[i] = a[i].first;
+		b[i] = a[i].first;
+		b[i] = b[i] + a[i].second;
+	}
+
+	thread *threads = new thread[2];
+
+	threads[0] = thread(sendVector<smallType>, ref(a_next), nextParty(partyNum), size);
+	threads[1] = thread(receiveVector<smallType>, ref(a_prev), prevParty(partyNum), size);
+
+	for (int i = 0; i < 2; i++)
+		threads[i].join();
+
+	delete[] threads;
+
+	for (int i = 0; i < size; ++i)
+		b[i] = b[i] + a_prev[i];
+
+	if (print)
+	{
+		std::cout << str << ": ";
+		for (int i = 0; i < size; ++i)
+			cout << (int)(b[i]) << " "; 
+		std::cout << std::endl;
+	}
+}
+
+
 void funcReconstruct(const RSSVectorMyType &a, vector<myType> &b, size_t size, string str, bool print)
 {
 	assert(a.size() == size && "a.size mismatch for reconstruct function");
@@ -138,6 +172,8 @@ void funcReconstruct(const RSSVectorMyType &a, vector<myType> &b, size_t size, s
 	}
 #endif
 }
+
+
 
 //Asymmetric protocol for semi-honest setting.
 void funcReconstruct(const vector<myType> &a, vector<myType> &b, size_t size, string str, bool print)
@@ -709,117 +745,66 @@ void funcMultiplyNeighbours(const RSSVectorSmallType &c_1, RSSVectorSmallType &c
 
 
 
-// Convert shares of a in \Z_L to shares in \Z_{L-1} (in place)
-// a \neq L-1
-void funcShareConvertMPC(RSSVectorMyType &a, size_t size)
+//Wrap functionality.
+void funcWrap(RSSVectorMyType &a, RSSVectorSmallType &theta, size_t size)
 {
-	log_print("funcShareConvertMPC");
-
-/******************************** TODO ****************************************/
-	// RSSVectorMyType r(size);
-	// RSSVectorSmallType etaDP(size);
-	// RSSVectorSmallType alpha(size);
-	// RSSVectorSmallType betai(size);
-	// RSSVectorSmallType bit_shares(size*BIT_SIZE);
-	// RSSVectorMyType delta_shares(size);
-	// RSSVectorSmallType etaP(size);
-	// RSSVectorMyType eta_shares(size);
-	// RSSVectorMyType theta_shares(size);
-	// size_t PARTY;
-
-	// if (THREE_PC)
-	// 	PARTY = PARTY_C;
-	// else if (FOUR_PC)
-	// 	PARTY = PARTY_D;
+	log_print("funcWrap");
 	
+	size_t sizeLong = size*BIT_SIZE;
+	RSSVectorMyType x(size), r(size); 
+	RSSVectorSmallType shares_r(sizeLong), alpha(size), beta(size), eta(size), etaPrime(size); 
+	vector<smallType> delta(size); 
+	vector<myType> reconst_x(size);
 
-	// if (PRIMARY)
-	// {
-	// 	RSSVectorMyType r1(size);
-	// 	RSSVectorMyType r2(size);
-	// 	RSSVectorMyType a_tilde(size);
+	PrecomputeObject.getShareConvertObjects(r, shares_r, alpha, size);
+	addVectors<RSSMyType>(a, r, x, size);
+	for (int i = 0; i < size; ++i)
+	{
+		beta[i].first = wrapAround(a[i].first, r[i].first);
+		beta[i].second = wrapAround(a[i].second, r[i].second);
+	}
 
-	// 	populateRandomVector<RSSMyType>(r1, size, "COMMON", "POSITIVE");
-	// 	populateRandomVector<RSSMyType>(r2, size, "COMMON", "POSITIVE");
-	// 	addVectors<myType>(r1, r2, r, size);
+	vector<myType> x_next(size), x_prev(size);
+	for (int i = 0; i < size; ++i)
+	{
+		x_prev[i] = 0;
+		x_next[i] = x[i].first;
+		reconst_x[i] = x[i].first;
+		reconst_x[i] = reconst_x[i] + x[i].second;
+	}
 
-	// 	if (partyNum == PARTY_A)
-	// 		wrapAround(r1, r2, alpha, size);
+	thread *threads = new thread[2];
+	threads[0] = thread(sendVector<myType>, ref(x_next), nextParty(partyNum), size);
+	threads[1] = thread(receiveVector<myType>, ref(x_prev), prevParty(partyNum), size);
+	for (int i = 0; i < 2; i++)
+		threads[i].join();
+	delete[] threads;
 
-	// 	if (partyNum == PARTY_A)
-	// 	{
-	// 		addVectors<myType>(a, r1, a_tilde, size);
-	// 		wrapAround(a, r1, betai, size);
-	// 	}
-	// 	if (partyNum == PARTY_B)
-	// 	{
-	// 		addVectors<myType>(a, r2, a_tilde, size);
-	// 		wrapAround(a, r2, betai, size);	
-	// 	}
+	for (int i = 0; i < size; ++i)
+		reconst_x[i] = reconst_x[i] + x_prev[i];
 
-	// 	populateBitsVector(etaDP, "COMMON", size);
-	// 	sendVector<RSSMyType>(a_tilde, PARTY_C, size);
-	// }
+	wrap3(x, x_prev, delta, size); // All parties have delta
+	PrecomputeObject.getRandomBitShares(eta, size);
+	funcPrivateCompareMPC(shares_r, x, eta, etaPrime, size, BIT_SIZE);
 
-
-	// if (partyNum == PARTY_C)
-	// {
-	// 	RSSVectorMyType x(size);
-	// 	RSSVectorSmallType delta(size);
-	// 	RSSVectorMyType a_tilde_1(size);	
-	// 	RSSVectorMyType a_tilde_2(size);	
-	// 	RSSVectorSmallType bit_shares_x_1(size*BIT_SIZE);
-	// 	RSSVectorSmallType bit_shares_x_2(size*BIT_SIZE);
-	// 	RSSVectorMyType delta_shares_1(size);
-	// 	RSSVectorMyType delta_shares_2(size);
-
-	// 	receiveVector<RSSMyType>(a_tilde_1, PARTY_A, size);
-	// 	receiveVector<RSSMyType>(a_tilde_2, PARTY_B, size);
-	// 	addVectors<RSSMyType>(a_tilde_1, a_tilde_2, x, size);
-	// 	wrapAround(a_tilde_1, a_tilde_2, delta, size);
-	// 	sharesOfBits(bit_shares_x_1, bit_shares_x_2, x, size, "INDEP");
-
-	// 	sendVector<RSSSmallType>(bit_shares_x_1, PARTY_A, size*BIT_SIZE);
-	// 	sendVector<RSSSmallType>(bit_shares_x_2, PARTY_B, size*BIT_SIZE);
-	// 	sharesModuloOdd<smallType>(delta_shares_1, delta_shares_2, delta, size, "INDEP");
-	// 	sendVector<RSSMyType>(delta_shares_1, PARTY_A, size);
-	// 	sendVector<RSSMyType>(delta_shares_2, PARTY_B, size);	
-	// }
-
-	// if (PRIMARY)
-	// {
-	// 	receiveVector<RSSSmallType>(bit_shares, PARTY_C, size*BIT_SIZE);
-	// 	receiveVector<RSSMyType>(delta_shares, PARTY_C, size);
-	// }
-
-	// funcPrivateCompareMPC(bit_shares, r, etaDP, etaP, size, BIT_SIZE);
-
-	// if (partyNum == PARTY)
-	// {
-	// 	RSSVectorMyType eta_shares_1(size);
-	// 	RSSVectorMyType eta_shares_2(size);
-
-	// 	for (size_t i = 0; i < size; ++i)
-	// 		etaP[i] = 1 - etaP[i];
-
-	// 	sharesModuloOdd<smallType>(eta_shares_1, eta_shares_2, etaP, size, "INDEP");
-	// 	sendVector<RSSMyType>(eta_shares_1, PARTY_A, size);
-	// 	sendVector<RSSMyType>(eta_shares_2, PARTY_B, size);
-	// }
-
-	// if (PRIMARY)
-	// {
-	// 	receiveVector<RSSMyType>(eta_shares, PARTY, size);
-	// 	funcXORModuloOdd2PC(etaDP, eta_shares, theta_shares, size);
-	// 	addModuloOdd<myType, smallType>(theta_shares, betai, theta_shares, size);
-	// 	subtractModuloOdd<myType, myType>(theta_shares, delta_shares, theta_shares, size);
-
-	// 	if (partyNum == PARTY_A)
-	// 		subtractModuloOdd<myType, smallType>(theta_shares, alpha, theta_shares, size);
-
-	// 	subtractModuloOdd<myType, myType>(a, theta_shares, a, size);
-	// }
-/******************************** TODO ****************************************/	
+	for (int i = 0; i < size; ++i)
+	{
+		if (partyNum == PARTY_A)
+		{
+			theta[i].first = beta[i].first ^ delta[i] ^ alpha[i].first ^ eta[i].first ^ etaPrime[i].first;
+			theta[i].second = beta[i].second ^ alpha[i].second ^ eta[i].second ^ etaPrime[i].second;
+		}
+		else if (partyNum == PARTY_B)
+		{
+			theta[i].first = beta[i].first ^ delta[i] ^ alpha[i].first ^ eta[i].first ^ etaPrime[i].first;
+			theta[i].second = beta[i].second ^ alpha[i].second ^ eta[i].second ^ etaPrime[i].second;
+		}
+		else if (partyNum == PARTY_C)
+		{
+			theta[i].first = beta[i].first ^ alpha[i].first ^ eta[i].first ^ etaPrime[i].first;
+			theta[i].second = beta[i].second ^ delta[i] ^ alpha[i].second ^ eta[i].second ^ etaPrime[i].second;
+		}
+	}
 }
 
 

@@ -152,12 +152,28 @@ int main(int argc, char** argv)
 	// whichNetwork = "Debug Mat-Mul";
 	// debugDotProd();
 
-	whichNetwork = "PrivateCompare";
-	size_t size = 1;
-	size_t sizeLong = size*64;
-	RSSVectorSmallType share_m(sizeLong, make_pair(1,1)), beta(size, make_pair(0,0)), betaPrime(size);
-	RSSVectorMyType r(size, make_pair(1,1)); 
-	funcPrivateCompareMPC(share_m, r, beta, betaPrime, size, 64);
+	// whichNetwork = "PrivateCompare";
+	// size_t size = 1;
+	// size_t sizeLong = size*64;
+	// RSSVectorSmallType share_m(sizeLong, make_pair(1,1)), beta(size, make_pair(0,0)), betaPrime(size);
+	// RSSVectorMyType r(size, make_pair(1,1)); 
+	// funcPrivateCompareMPC(share_m, r, beta, betaPrime, size, 64);
+
+	whichNetwork = "Wrap";
+	size_t size = 2;
+	RSSVectorMyType a(size);
+	RSSVectorSmallType theta(size);
+	vector<smallType> b(size);
+
+	a[0] = make_pair(1 << 63, 1 << 63);
+	a[1] = make_pair(0, 0);
+
+	funcWrap(a, theta, size);
+	funcReconstruct(theta, b, size, "Theta", true);
+
+	// RSSVectorSmallType share_m(sizeLong, make_pair(1,1)), beta(size, make_pair(0,0)), betaPrime(size);
+	// RSSVectorMyType r(size, make_pair(1,1)); 
+	// funcPrivateCompareMPC(share_m, r, beta, betaPrime, size, 64);	
 
 	// whichNetwork += " test";
 	// test(network);

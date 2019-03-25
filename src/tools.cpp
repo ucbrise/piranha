@@ -485,6 +485,12 @@ void wrapAround(const vector<myType> &a, const vector<myType> &b,
 		c[i] = wrapAround(a[i], b[i]);
 }
 
+void wrap3(const RSSVectorMyType &a, const vector<myType> &b, 
+				vector<smallType> &c, size_t size)
+{
+	for (size_t i = 0; i < size; ++i)
+		c[i] = wrap3(a[i].first, a[i].second, b[i]);
+}
 
 void populateBitsVector(vector<smallType> &vec, string r_type, size_t size)
 {

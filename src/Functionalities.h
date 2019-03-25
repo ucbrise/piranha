@@ -17,6 +17,7 @@ void funcXORModuloOdd2PC(RSSVectorSmallType &bit, RSSVectorMyType &shares, RSSVe
 void funcAddMyTypeAndRSS(RSSVectorMyType &a, vector<myType> &b, RSSVectorMyType &c, size_t size);
 void funcAddConstant(RSSVectorMyType &vec, const vector<myType> &data);
 void funcReconstruct(const RSSVectorMyType &a, vector<myType> &b, size_t size, string str, bool print);
+void funcReconstruct(const RSSVectorSmallType &a, vector<smallType> &b, size_t size, string str, bool print);
 void funcReconstruct(const vector<myType> &a, vector<myType> &b, size_t size, string str, bool print);
 void funcReconstructBit2PC(const RSSVectorSmallType &a, size_t size, string str);
 void funcConditionalSet2PC(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorSmallType &c, 
@@ -31,6 +32,7 @@ void funcPrivateCompareMPC(const RSSVectorSmallType &share_m, const RSSVectorMyT
 							  size_t size, size_t dim);
 void funcCrunchMultiply(const RSSVectorSmallType &c, RSSVectorSmallType &betaPrime, size_t size, size_t dim);
 void funcMultiplyNeighbours(const RSSVectorSmallType &c_1, RSSVectorSmallType &c_2, size_t size);
+void funcWrap(RSSVectorMyType &a, RSSVectorSmallType &theta, size_t size);
 void funcShareConvertMPC(RSSVectorMyType &a, size_t size);
 void funcComputeMSB4PC(const RSSVectorMyType &a, RSSVectorSmallType &b, size_t size);
 void funcComputeMSB3PC(const RSSVectorMyType &a, RSSVectorMyType &b, size_t size);
