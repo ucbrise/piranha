@@ -152,38 +152,21 @@ int main(int argc, char** argv)
 	// whichNetwork = "Debug Mat-Mul";
 	// debugDotProd();
 
-	// whichNetwork = "PrivateCompare";
-	// size_t size = 1;
-	// size_t sizeLong = size*64;
-	// RSSVectorSmallType share_m(sizeLong, make_pair(1,1)), beta(size, make_pair(0,0)), betaPrime(size);
-	// RSSVectorMyType r(size, make_pair(1,1)); 
-	// funcPrivateCompareMPC(share_m, r, beta, betaPrime, size, 64);
+	whichNetwork = "Debug PrivateCompare";
+	debugPC();
 
-	whichNetwork = "Wrap";
-	size_t size = 2;
-	RSSVectorMyType a(size);
-	RSSVectorSmallType theta(size);
-	vector<smallType> b(size);
-
-	a[0] = make_pair(1 << 63, 1 << 63);
-	a[1] = make_pair(0, 0);
-
-	funcWrap(a, theta, size);
-	funcReconstruct(theta, b, size, "Theta", true);
-
-	// RSSVectorSmallType share_m(sizeLong, make_pair(1,1)), beta(size, make_pair(0,0)), betaPrime(size);
-	// RSSVectorMyType r(size, make_pair(1,1)); 
-	// funcPrivateCompareMPC(share_m, r, beta, betaPrime, size, 64);	
+	//whichNetwork = "Debug Wrap";
+	// debugWrap();
 
 	// whichNetwork += " test";
 	// test(network);
 
 
 	end_m(whichNetwork);
-	cout << "----------------------------------" << endl;  	
-	cout << NUM_OF_PARTIES << "PC code, P" << partyNum << endl;
-	cout << NUM_ITERATIONS << " iterations, " << whichNetwork << ", batch size " << MINI_BATCH_SIZE << endl;
-	cout << "----------------------------------" << endl << endl;  
+	cout << "----------------------------------------" << endl;  	
+	cout << "Run details: " << NUM_OF_PARTIES << "PC code, P" << partyNum << ", " << NUM_ITERATIONS << 
+			" iterations," << endl << "Running " << whichNetwork << ", batch size " << MINI_BATCH_SIZE << endl;
+	cout << "----------------------------------------" << endl << endl;  
 
 
 /****************************** CLEAN-UP ******************************/ 
@@ -195,8 +178,7 @@ int main(int argc, char** argv)
 	delete l1;
 	delete l2;
 	// delete l3;
-	// delete network;
-	// if (partyNum != PARTY_S)
+	delete network;
 	deleteObjects();
 
 	return 0;

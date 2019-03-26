@@ -87,30 +87,80 @@ void funcAddMyTypeAndRSS(RSSVectorMyType &a, vector<myType> &b, RSSVectorMyType 
 	}
 }
 
-//Here, data is plaintext data. It is converted to fixed point inside this function.
-void funcAddConstant(RSSVectorMyType &a, const vector<myType> &data)
+//Fixed-point data has to be processed outside this function.
+void funcGetShares(RSSVectorMyType &a, const vector<myType> &data)
 {
+	size_t size = a.size();
+
 	if (partyNum == PARTY_A)
 	{
-		for (size_t i = 0; i < a.size(); ++i)
+		for (int i = 0; i < size; ++i)
+		{
 			a[i].first = data[i];
+			a[i].second = 0;
+		}
+	}
+	else if (partyNum == PARTY_B)
+	{
+		for (int i = 0; i < size; ++i)
+		{
+			a[i].first = 0;
+			a[i].second = 0;
+		}
 	}
 	else if (partyNum == PARTY_C)
 	{
-		for (size_t i = 0; i < a.size(); ++i)
+		for (int i = 0; i < size; ++i)
+		{
+			a[i].first = 0;
 			a[i].second = data[i];
-	}		
+		}
+	}
+}
+
+
+void funcGetShares(RSSVectorSmallType &a, const vector<smallType> &data)
+{
+	size_t size = a.size();
+	
+	if (partyNum == PARTY_A)
+	{
+		for (int i = 0; i < size; ++i)
+		{
+			a[i].first = data[i];
+			a[i].second = 0;
+		}
+	}
+	else if (partyNum == PARTY_B)
+	{
+		for (int i = 0; i < size; ++i)
+		{
+			a[i].first = 0;
+			a[i].second = 0;
+		}
+	}
+	else if (partyNum == PARTY_C)
+	{
+		for (int i = 0; i < size; ++i)
+		{
+			a[i].first = 0;
+			a[i].second = data[i];
+		}
+	}
 }
 
 void funcReconstruct(const RSSVectorSmallType &a, vector<smallType> &b, size_t size, string str, bool print)
 {
+	log_print("Reconst: RSSSmallType, smallType");
+
 	vector<smallType> a_next(size), a_prev(size);
 	for (int i = 0; i < size; ++i)
 	{
+		// cout << "a.first " << (int)a[i].first << " " << (int)a[i].second << endl;
 		a_prev[i] = 0;
 		a_next[i] = a[i].first;
 		b[i] = a[i].first;
-		b[i] = b[i] + a[i].second;
+		b[i] = additionModPrime[b[i]][a[i].second];
 	}
 
 	thread *threads = new thread[2];
@@ -124,20 +174,32 @@ void funcReconstruct(const RSSVectorSmallType &a, vector<smallType> &b, size_t s
 	delete[] threads;
 
 	for (int i = 0; i < size; ++i)
-		b[i] = b[i] + a_prev[i];
+		b[i] = additionModPrime[b[i]][a_prev[i]];
 
 	if (print)
 	{
-		std::cout << str << ": ";
+		std::cout << str << ": \t";
 		for (int i = 0; i < size; ++i)
 			cout << (int)(b[i]) << " "; 
 		std::cout << std::endl;
 	}
+	// if (print)
+	// {
+	// 	std::cout << str << ": ";
+	// 	for (int i = 0; i < size/64; ++i)
+	// 	{
+	// 		for (int j = 0; j < 64; ++j)
+	// 			cout << (int)(b[i*64+j]) << " "; 
+	// 		cout << endl;
+	// 	}
+	// 	std::cout << std::endl;
+	// }
 }
 
 
 void funcReconstruct(const RSSVectorMyType &a, vector<myType> &b, size_t size, string str, bool print)
 {
+	log_print("Reconst: RSSMyType, myType");
 	assert(a.size() == size && "a.size mismatch for reconstruct function");
 
 	vector<myType> a_next(size), a_prev(size);
@@ -162,7 +224,6 @@ void funcReconstruct(const RSSVectorMyType &a, vector<myType> &b, size_t size, s
 	for (int i = 0; i < size; ++i)
 		b[i] = b[i] + a_prev[i];
 
-#if (LOG_DEBUG)
 	if (print)
 	{
 		std::cout << str << ": ";
@@ -170,14 +231,13 @@ void funcReconstruct(const RSSVectorMyType &a, vector<myType> &b, size_t size, s
 			print_linear(b[i], "SIGNED");
 		std::cout << std::endl;
 	}
-#endif
 }
-
 
 
 //Asymmetric protocol for semi-honest setting.
 void funcReconstruct(const vector<myType> &a, vector<myType> &b, size_t size, string str, bool print)
 {
+	log_print("Reconst: myType, myType");
 	assert(a.size() == size && "a.size mismatch for reconstruct function");
 
 	vector<myType> temp_A(size,0), temp_B(size, 0);
@@ -198,7 +258,6 @@ void funcReconstruct(const vector<myType> &a, vector<myType> &b, size_t size, st
 	if (partyNum == PARTY_A or partyNum == PARTY_B)
 		receiveVector<myType>(b, PARTY_C, size);
 
-#if (LOG_DEBUG)
 	if (print)
 	{
 		std::cout << str << ": ";
@@ -206,7 +265,6 @@ void funcReconstruct(const vector<myType> &a, vector<myType> &b, size_t size, st
 			print_linear(b[i], "SIGNED");
 		std::cout << std::endl;
 	}
-#endif
 }
 
 //Symmetric variant of the reconstruct protocol.
@@ -483,21 +541,23 @@ void funcDotProductMPC(const RSSVectorSmallType &a, const RSSVectorSmallType &b,
 	vector<smallType> temp3(size, 0), recv(size, 0);
 	for (int i = 0; i < size; ++i)
 	{
-		temp3[i] = addModPrime[temp3[i]][multiplicationModPrime[a[i].first][b[i].first]];
-		temp3[i] = addModPrime[temp3[i]][multiplicationModPrime[a[i].first][b[i].second]];
-		temp3[i] = addModPrime[temp3[i]][multiplicationModPrime[a[i].second][b[i].first]];
+		// cout << "(" << i << ") \t a[i].first " << (int)a[i].first << " b[i].first " << (int)b[i].first << " a[i].second " 
+		// 		<< (int)a[i].second << " b[i].second " << (int)b[i].second << endl;
+		temp3[i] = multiplicationModPrime[a[i].first][b[i].first];
+		temp3[i] = additionModPrime[temp3[i]][multiplicationModPrime[a[i].first][b[i].second]];
+		temp3[i] = additionModPrime[temp3[i]][multiplicationModPrime[a[i].second][b[i].first]];
 	}
 
 	//Add random shares of 0 locally
 	thread *threads = new thread[2];
 
-	threads[0] = thread(sendVector<smallType>, ref(temp3), nextParty(partyNum), size);
-	threads[1] = thread(receiveVector<smallType>, ref(recv), prevParty(partyNum), size);
+	threads[0] = thread(sendVector<smallType>, ref(temp3), prevParty(partyNum), size);
+	threads[1] = thread(receiveVector<smallType>, ref(recv), nextParty(partyNum), size);
 
 	for (int i = 0; i < 2; i++)
 		threads[i].join();
 
-	delete[] threads;
+	delete[] threads; 
 
 	for (int i = 0; i < size; ++i)
 	{
@@ -584,7 +644,7 @@ void parallelPC(smallType* c, size_t start, size_t end, int t,
 
 
 // Private Compare functionality
-void funcPrivateCompareMPC(const RSSVectorSmallType &share_m, const RSSVectorMyType &r, 
+void funcPrivateCompareMPC(const RSSVectorSmallType &share_m, const vector<myType> &r, 
 							const RSSVectorSmallType &beta, RSSVectorSmallType &betaPrime, 
 							size_t size, size_t dim)
 {
@@ -594,36 +654,44 @@ void funcPrivateCompareMPC(const RSSVectorSmallType &share_m, const RSSVectorMyT
 	size_t index3, index2;
 	RSSVectorSmallType c(sizeLong), diff(sizeLong), twoBetaMinusOne(sizeLong), xMinusR(sizeLong);
 	RSSSmallType a, tempM, tempN;
-	myType valueX;
 	smallType bit_r;
 
 	//Computing x[i] - r[i]
 	for (int index2 = 0; index2 < size; ++index2)
 	{
+		//Computing 2Beta-1
+		twoBetaMinusOne[index2*dim] = subConstModPrime(beta[index2], 1);
+		// cout << (int)twoBetaMinusOne[index2*dim].first << " " << (int)twoBetaMinusOne[index2*dim].second << endl;
+		twoBetaMinusOne[index2*dim] = addModPrime(twoBetaMinusOne[index2*dim], beta[index2]);
+		// cout << (int)twoBetaMinusOne[index2*dim].first << " " << (int)twoBetaMinusOne[index2*dim].second << endl;
+
+
+		// cout << "bit_r" << endl;
 		for (size_t k = 0; k < dim; ++k)
 		{
 			index3 = index2*dim + k;
-			bit_r = (smallType)((valueX >> (63-k)) & 1);
-			diff[index3] = share_m[index3];
-			//Computing 2Beta-1
-			twoBetaMinusOne[index3] = subConstModPrime(beta[index2], 1);
-			twoBetaMinusOne[index3] = addModPrime(twoBetaMinusOne[index3], beta[index2]);
+			twoBetaMinusOne[index3] = twoBetaMinusOne[index2*dim];
 
+			bit_r = (smallType)((r[index2] >> (63-k)) & 1);
+			diff[index3] = share_m[index3];
+					
 			if (bit_r == 1)
-			{
-				switch(partyNum)
-				{
-					case PARTY_A: diff[index3].first = subtractModPrime[diff[index3].first][1];
-								  break;       
-					case PARTY_C: diff[index3].second = subtractModPrime[diff[index3].second][1];
-								  break;
-				}			
-			}
+				diff[index3] = subConstModPrime(diff[index3], 1);
+
+			// cout << (int) bit_r << " ";
 		}
+		// cout << endl << endl;
 	}
+
+	// vector<smallType> reconst(sizeLong);
+	// funcReconstruct(twoBetaMinusOne, reconst, sizeLong, "reconst_2beta-1", true);
+	// funcReconstruct(diff, reconst, sizeLong, "reconst_diff", true);
 
 	//(-1)^beta * x[i] - r[i]
 	funcDotProductMPC(diff, twoBetaMinusOne, xMinusR, sizeLong);
+	// funcReconstruct(xMinusR, reconst, sizeLong, "reconst_x-r", true);
+
+
 
 	for (int index2 = 0; index2 < size; ++index2)
 	{
@@ -634,7 +702,7 @@ void funcPrivateCompareMPC(const RSSVectorSmallType &share_m, const RSSVectorMyT
 			c[index3] = a;
 			tempM = share_m[index3];
 
-			bit_r = (smallType)((valueX >> (63-k)) & 1);
+			bit_r = (smallType)((r[index2] >> (63-k)) & 1);
 
 			tempN = XORPublicModPrime(tempM, bit_r);
 			a = addModPrime(a, tempN);
@@ -785,7 +853,7 @@ void funcWrap(RSSVectorMyType &a, RSSVectorSmallType &theta, size_t size)
 
 	wrap3(x, x_prev, delta, size); // All parties have delta
 	PrecomputeObject.getRandomBitShares(eta, size);
-	funcPrivateCompareMPC(shares_r, x, eta, etaPrime, size, BIT_SIZE);
+	funcPrivateCompareMPC(shares_r, reconst_x, eta, etaPrime, size, BIT_SIZE);
 
 	for (int i = 0; i < size; ++i)
 	{
@@ -1261,37 +1329,46 @@ void funcMaxIndexMPC(RSSVectorMyType &a, const RSSVectorMyType &maxIndex,
 }
 
 
-// extern CommunicationObject commObject;
-// void aggregateCommunication()
-// {
-// 	vector<myType> vec(4, 0), temp(4, 0);
-// 	vec[0] = commObject.getSent();
-// 	vec[1] = commObject.getRecv();
-// 	vec[2] = commObject.getRoundsSent();
-// 	vec[3] = commObject.getRoundsRecv();
 
-// 	if (partyNum == PARTY_B or partyNum == PARTY_C)
-// 		sendVector<myType>(vec, PARTY_A, 4);
+/****************************************************************/
+/* 							DEBUG 								*/
+/****************************************************************/
+void debugMatMul()
+{
+	// size_t rows = 1000; 
+	// size_t common_dim = 1000;
+	// size_t columns = 1000;
+	// size_t transpose_a = 0, transpose_b = 0;
 
-// 	if (partyNum == PARTY_A)
-// 	{
-// 		receiveVector<myType>(temp, PARTY_B, 4);
-// 		addVectors<myType>(vec, temp, vec, 4);
-// 		receiveVector<myType>(temp, PARTY_C, 4);
-// 		addVectors<myType>(vec, temp, vec, 4);
-// 	}
+	// RSSVectorMyType a(rows*common_dim, make_pair(1,1)), 
+	// 				b(common_dim*columns, make_pair(1,1)), c(rows*columns);
 
-// 	if (partyNum == PARTY_A)
-// 	{
-// 		cout << "------------------------------------" << endl;
-// 		cout << "Total communication: " << (float)vec[0]/1000000 << "MB (sent) and " << (float)vec[1]/1000000 << "MB (recv)\n";
-// 		cout << "Total calls: " << vec[2] << " (sends) and " << vec[3] << " (recvs)" << endl;
-// 		cout << "------------------------------------" << endl;
-// 	}
-// }
+	// funcMatMulMPC(a, b, c, rows, common_dim, columns, transpose_a, transpose_b);
 
+/******************************** TODO ****************************************/	
+	size_t rows = 3; 
+	size_t common_dim = 2;
+	size_t columns = 3;
+	size_t transpose_a = 0, transpose_b = 0;
 
-/******************************** Debug ********************************/
+	RSSVectorMyType a(rows*common_dim), b(common_dim*columns), c(rows*columns);
+	vector<myType> a_reconst(rows*columns), b_reconst(common_dim*columns), c_reconst(rows*columns); 
+
+	vector<myType> data_a = {floatToMyType(3),floatToMyType(4),
+							 floatToMyType(5),floatToMyType(6),
+							 floatToMyType(7),floatToMyType(8)};
+	vector<myType> data_b = {floatToMyType(4),floatToMyType(5),floatToMyType(6),
+							 floatToMyType(7),floatToMyType(8),floatToMyType(9)};
+	funcGetShares(a, data_a);
+	funcGetShares(b, data_b);
+
+	funcReconstruct(a, a_reconst, rows*common_dim, "a", true);
+	funcReconstruct(b, b_reconst, common_dim*columns, "b", true);
+	funcMatMulMPC(a, b, c, rows, common_dim, columns, transpose_a, transpose_b);
+	funcReconstruct(c, c_reconst, rows*columns, "c", true);
+/******************************** TODO ****************************************/	
+}
+
 void debugDotProd()
 {
 	/****************************** myType ***************************/
@@ -1324,64 +1401,59 @@ void debugDotProd()
 	funcDotProductMPC(a, b, c, size);
 }
 
-void debugComputeMSB()
-{
-
-/******************************** TODO ****************************************/		
-	// size_t size = 10;
-	// RSSVectorMyType a(size, 0);
-
-	// if (partyNum == PARTY_A)
-	// 	for (size_t i = 0; i < size; ++i)
-	// 		a[i] = i - 5;
-
-	// if (THREE_PC)
-	// {
-	// 	RSSVectorMyType c(size);
-	// 	funcComputeMSB3PC(a, c, size);
-
-	// 	if (PRIMARY)
-	// 		funcReconstruct2PC(c, size, "c");
-	// }
-/******************************** TODO ****************************************/	
-}
 
 void debugPC()
 {
+	vector<myType> plain_m{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+	vector<myType> plain_r{ 10, 9, 8, 7, 6, 5, 4, 3, 2, 1}; 
+	vector<smallType> plain_beta{ 1, 0, 1, 0, 0, 0, 1, 1, 0, 1};
+	size_t size = plain_m.size();
+	size_t sizeLong = size*BIT_SIZE;
+	assert(plain_r.size() == plain_m.size() && "Error in debugPC");
 
-/******************************** TODO ****************************************/	
-	// size_t size = 10;
-	// RSSVectorMyType r(size);
-	// RSSVectorSmallType bit_shares(size*BIT_SIZE, 0);
-	
-	// for (size_t i = 0; i < size; ++i)
-	// 	r[i] = 5+i;
+	RSSVectorSmallType beta(size), betaPrime(size), shares_m(sizeLong);
+	vector<smallType> reconst_betaP(size);
+	funcGetShares(beta, plain_beta);
 
-	// if (partyNum == PARTY_A)
-	// 	for (size_t i = 0; i < size; ++i)
-	// 		for (size_t j = 0; j < BIT_SIZE; ++j)
-	// 			if (j == BIT_SIZE - 1 - i)
-	// 				bit_shares[i*BIT_SIZE + j] = 1;
+	vector<smallType> bits_of_m(sizeLong);
+	for (int i = 0; i < size; ++i)
+		for (int j = 0; j < BIT_SIZE; ++j)
+			bits_of_m[i*BIT_SIZE + j] = (smallType)((plain_m[i] >> (BIT_SIZE-1-j)) & 1);
 
-	// RSSVectorSmallType beta(size);
-	// RSSVectorSmallType betaPrime(size);
+	funcGetShares(shares_m, bits_of_m);
+	funcPrivateCompareMPC(shares_m, plain_r, beta, betaPrime, size, BIT_SIZE);
+	funcReconstruct(betaPrime, reconst_betaP, size, "BetaPrime", true);
 
-	// if (PRIMARY)
-	// 	populateBitsVector(beta, "COMMON", size);
+	cout << "Beta: \t\t";
+	for (int i = 0; i < size; ++i)
+		cout << (int)plain_beta[i] << " ";
+	cout << endl;
+	cout << "m: \t\t";
+	for (int i = 0; i < size; ++i)
+		cout << (int)plain_m[i] << " ";
+	cout << endl;
+	cout << "r: \t\t";
+	for (int i = 0; i < size; ++i)
+		cout << (int)plain_r[i] << " ";
+	cout << endl;
+	cout << "m-r: \t\t";
+	for (int i = 0; i < size; ++i)
+		cout << (int)plain_m[i] - (int)plain_r[i] << " ";
+	cout << endl;
+}
 
-	// funcPrivateCompareMPC(bit_shares, r, beta, betaPrime, size, BIT_SIZE);
+void debugWrap()
+{
+	// size_t size = 2;
+	// RSSVectorMyType a(size);
+	// RSSVectorSmallType theta(size);
+	// vector<smallType> b(size);
 
-	// if (PRIMARY)
-	// 	for (size_t i = 0; i < size; ++i)
-	// 		cout << (int) beta[i] << endl; 
+	// a[0] = make_pair(1 << 63, 1 << 63);
+	// a[1] = make_pair(0, 0);
 
-	// if (partyNum == PARTY_D)
-	// {
-	// 	for (size_t i = 0; i < size; ++i)
-	// 		cout << (int)(1 << i) << " " << (int) r[i] << " "
-	// 			 << (int) betaPrime[i] << endl; 
-	// }
-/******************************** TODO ****************************************/	
+	// funcWrap(a, theta, size);
+	// funcReconstruct(theta, b, size, "Theta", true);
 }
 
 void debugDivision()
@@ -1471,42 +1543,6 @@ void debugSS()
 }
 
 
-void debugMatMul()
-{
-	// size_t rows = 1000; 
-	// size_t common_dim = 1000;
-	// size_t columns = 1000;
-	// size_t transpose_a = 0, transpose_b = 0;
-
-	// RSSVectorMyType a(rows*common_dim, make_pair(1,1)), 
-	// 				b(common_dim*columns, make_pair(1,1)), c(rows*columns);
-
-	// funcMatMulMPC(a, b, c, rows, common_dim, columns, transpose_a, transpose_b);
-
-/******************************** TODO ****************************************/	
-	size_t rows = 3; 
-	size_t common_dim = 2;
-	size_t columns = 3;
-	size_t transpose_a = 0, transpose_b = 0;
-
-	RSSVectorMyType a(rows*common_dim, make_pair(0,0)), 
-					b(common_dim*columns, make_pair(0,0)), c(rows*columns);
-	vector<myType> a_reconst(rows*columns), b_reconst(common_dim*columns), c_reconst(rows*columns); 
-
-	vector<myType> data_a = {floatToMyType(3),floatToMyType(4),
-							 floatToMyType(5),floatToMyType(6),
-							 floatToMyType(7),floatToMyType(8)};
-	vector<myType> data_b = {floatToMyType(4),floatToMyType(5),floatToMyType(6),
-							 floatToMyType(7),floatToMyType(8),floatToMyType(9)};
-	funcAddConstant(a, data_a);
-	funcAddConstant(b, data_b);
-
-	funcReconstruct(a, a_reconst, rows*common_dim, "a", true);
-	funcReconstruct(b, b_reconst, common_dim*columns, "b", true);
-	funcMatMulMPC(a, b, c, rows, common_dim, columns, transpose_a, transpose_b);
-	funcReconstruct(c, c_reconst, rows*columns, "c", true);
-/******************************** TODO ****************************************/	
-}
 
 void debugReLUPrime()
 {

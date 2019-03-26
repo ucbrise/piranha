@@ -192,12 +192,12 @@ inline smallType subModPrime(smallType a, smallType b)
 
 inline RSSSmallType subConstModPrime(RSSSmallType a, const smallType r)
 {
-	RSSSmallType ret;
+	RSSSmallType ret = a;
 	switch(partyNum)
 	{
-		case PARTY_A: a.first = subtractModPrime[a.first][r];
+		case PARTY_A: ret.first = subtractModPrime[a.first][r];
 					  break;       
-		case PARTY_C: a.second = subtractModPrime[a.second][r];
+		case PARTY_C: ret.second = subtractModPrime[a.second][r];
 					  break;
 	}		
 	return ret;

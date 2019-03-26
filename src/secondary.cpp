@@ -41,9 +41,9 @@ void parseInputs(int argc, char* argv[])
 	for (int i = 0; i < PRIME_NUMBER; ++i)
 		for (int j = 0; j < PRIME_NUMBER; ++j)
 		{
-			additionModPrime[i][j] = (i + j) % PRIME_NUMBER;
-			subtractModPrime[i][j] = (i - j) % PRIME_NUMBER;
-			multiplicationModPrime[i][j] = (i * j) % PRIME_NUMBER;
+			additionModPrime[i][j] = ((i + j) % PRIME_NUMBER);
+			subtractModPrime[i][j] = ((PRIME_NUMBER + i - j) % PRIME_NUMBER);
+			multiplicationModPrime[i][j] = ((i * j) % PRIME_NUMBER); //How come you give the right answer multiplying in 8-bits??
 		}
 
 	loadData();	

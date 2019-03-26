@@ -15,7 +15,8 @@ extern void end_communication(string str);
 void funcTruncate2PC(RSSVectorMyType &a, size_t power, size_t size, size_t party_1, size_t party_2);
 void funcXORModuloOdd2PC(RSSVectorSmallType &bit, RSSVectorMyType &shares, RSSVectorMyType &output, size_t size);
 void funcAddMyTypeAndRSS(RSSVectorMyType &a, vector<myType> &b, RSSVectorMyType &c, size_t size);
-void funcAddConstant(RSSVectorMyType &vec, const vector<myType> &data);
+void funcGetShares(RSSVectorMyType &a, const vector<myType> &data);
+void funcGetShares(RSSVectorSmallType &a, const vector<smallType> &data);
 void funcReconstruct(const RSSVectorMyType &a, vector<myType> &b, size_t size, string str, bool print);
 void funcReconstruct(const RSSVectorSmallType &a, vector<smallType> &b, size_t size, string str, bool print);
 void funcReconstruct(const vector<myType> &a, vector<myType> &b, size_t size, string str, bool print);
@@ -27,7 +28,7 @@ void funcMatMulMPC(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVector
 			 	size_t transpose_a, size_t transpose_b);
 void funcDotProductMPC(const RSSVectorMyType &a, const RSSVectorMyType &b, 
 					   RSSVectorMyType &c, size_t size);
-void funcPrivateCompareMPC(const RSSVectorSmallType &share_m, const RSSVectorMyType &r, 
+void funcPrivateCompareMPC(const RSSVectorSmallType &share_m, const vector<myType> &r, 
 							  const RSSVectorSmallType &beta, RSSVectorSmallType &betaPrime, 
 							  size_t size, size_t dim);
 void funcCrunchMultiply(const RSSVectorSmallType &c, RSSVectorSmallType &betaPrime, size_t size, size_t dim);
@@ -52,8 +53,8 @@ void aggregateCommunication();
 
 //Debug
 void debugDotProd();
-void debugComputeMSB();
 void debugPC();
+void debugWrap();
 void debugDivision();
 void debugMax();
 void debugSS();
