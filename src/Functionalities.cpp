@@ -1447,7 +1447,10 @@ void debugWrap()
 	RSSVectorSmallType theta(size);
 	vector<smallType> b(size);
 
-	a[0] = make_pair(LARGEST_NEG, LARGEST_NEG);
+	myType interesting = LARGEST_NEG/3;
+	interesting = (interesting << 2) + (myType)3;
+
+	a[0] = make_pair(interesting, interesting);
 	a[1] = make_pair(0, 0);
 
 	funcWrap(a, theta, size);
