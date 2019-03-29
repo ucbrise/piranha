@@ -645,7 +645,7 @@ void parallelPC(smallType* c, size_t start, size_t end, int t,
 
 // Private Compare functionality
 void funcPrivateCompareMPC(const RSSVectorSmallType &share_m, const vector<myType> &r, 
-							const RSSVectorSmallType &beta, RSSVectorSmallType &betaPrime, 
+							const RSSVectorSmallType &beta, vector<smallType> &betaPrime, 
 							size_t size, size_t dim)
 {
 	log_print("funcPrivateCompareMPC");
@@ -732,7 +732,7 @@ void funcPrivateCompareMPC(const RSSVectorSmallType &share_m, const vector<myTyp
 }
 
 //Multiply each group of 64 with a random number in Z_p* and reconstruct output in betaPrime.
-void funcCrunchMultiply(const RSSVectorSmallType &c, RSSVectorSmallType &betaPrime, size_t size, size_t dim)
+void funcCrunchMultiply(const RSSVectorSmallType &c, vector<smallType> &betaPrime, size_t size, size_t dim)
 {
 	size_t sizeLong = size*dim;
 	RSSVectorSmallType c_0(sizeLong/2, make_pair(0,0)), c_1(sizeLong/4, make_pair(0,0)), 
@@ -771,15 +771,8 @@ void funcCrunchMultiply(const RSSVectorSmallType &c, RSSVectorSmallType &betaPri
 
 	for (int i = 0; i < size; ++i)
 	{
-		betaPrime[i].first = 0;
-		betaPrime[i].second = 0;
 		if (reconst[i] == 0)
-		{
-			if (partyNum == PARTY_A)
-				betaPrime[i].first = 1;
-			else if (partyNum == PARTY_C)
-				betaPrime[i].second = 1;
-		}
+			betaPrime[i] = 1;
 	}
 }
 
@@ -820,8 +813,8 @@ void funcWrap(RSSVectorMyType &a, RSSVectorSmallType &theta, size_t size)
 	
 	size_t sizeLong = size*BIT_SIZE;
 	RSSVectorMyType x(size), r(size); 
-	RSSVectorSmallType shares_r(sizeLong), alpha(size), beta(size), eta(size), etaPrime(size); 
-	vector<smallType> delta(size); 
+	RSSVectorSmallType shares_r(sizeLong), alpha(size), beta(size), eta(size); 
+	vector<smallType> delta(size), etaPrime(size); 
 	vector<myType> reconst_x(size);
 
 	PrecomputeObject.getShareConvertObjects(r, shares_r, alpha, size);
@@ -829,7 +822,9 @@ void funcWrap(RSSVectorMyType &a, RSSVectorSmallType &theta, size_t size)
 	for (int i = 0; i < size; ++i)
 	{
 		beta[i].first = wrapAround(a[i].first, r[i].first);
+		x[i].first = a[i].first + r[i].first;
 		beta[i].second = wrapAround(a[i].second, r[i].second);
+		x[i].second = a[i].second + r[i].second;
 	}
 
 	vector<myType> x_next(size), x_prev(size);
@@ -859,18 +854,18 @@ void funcWrap(RSSVectorMyType &a, RSSVectorSmallType &theta, size_t size)
 	{
 		if (partyNum == PARTY_A)
 		{
-			theta[i].first = beta[i].first ^ delta[i] ^ alpha[i].first ^ eta[i].first ^ etaPrime[i].first;
-			theta[i].second = beta[i].second ^ alpha[i].second ^ eta[i].second ^ etaPrime[i].second;
+			theta[i].first = beta[i].first ^ delta[i] ^ alpha[i].first ^ eta[i].first ^ etaPrime[i];
+			theta[i].second = beta[i].second ^ alpha[i].second ^ eta[i].second;
 		}
 		else if (partyNum == PARTY_B)
 		{
-			theta[i].first = beta[i].first ^ delta[i] ^ alpha[i].first ^ eta[i].first ^ etaPrime[i].first;
-			theta[i].second = beta[i].second ^ alpha[i].second ^ eta[i].second ^ etaPrime[i].second;
+			theta[i].first = beta[i].first ^ delta[i] ^ alpha[i].first ^ eta[i].first;
+			theta[i].second = beta[i].second ^ alpha[i].second ^ eta[i].second;
 		}
 		else if (partyNum == PARTY_C)
 		{
-			theta[i].first = beta[i].first ^ alpha[i].first ^ eta[i].first ^ etaPrime[i].first;
-			theta[i].second = beta[i].second ^ delta[i] ^ alpha[i].second ^ eta[i].second ^ etaPrime[i].second;
+			theta[i].first = beta[i].first ^ alpha[i].first ^ eta[i].first;
+			theta[i].second = beta[i].second ^ delta[i] ^ alpha[i].second ^ eta[i].second ^ etaPrime[i];
 		}
 	}
 }
@@ -1411,8 +1406,8 @@ void debugPC()
 	size_t sizeLong = size*BIT_SIZE;
 	assert(plain_r.size() == plain_m.size() && "Error in debugPC");
 
-	RSSVectorSmallType beta(size), betaPrime(size), shares_m(sizeLong);
-	vector<smallType> reconst_betaP(size);
+	RSSVectorSmallType beta(size), shares_m(sizeLong);
+	vector<smallType> reconst_betaP(size), betaPrime(size);
 	funcGetShares(beta, plain_beta);
 
 	vector<smallType> bits_of_m(sizeLong);
@@ -1422,8 +1417,11 @@ void debugPC()
 
 	funcGetShares(shares_m, bits_of_m);
 	funcPrivateCompareMPC(shares_m, plain_r, beta, betaPrime, size, BIT_SIZE);
-	funcReconstruct(betaPrime, reconst_betaP, size, "BetaPrime", true);
-
+	
+	cout << "BetaPrime: \t ";
+	for (int i = 0; i < size; ++i)
+		cout << (int)betaPrime[i] << " ";
+	cout << endl;
 	cout << "Beta: \t\t";
 	for (int i = 0; i < size; ++i)
 		cout << (int)plain_beta[i] << " ";
@@ -1444,16 +1442,16 @@ void debugPC()
 
 void debugWrap()
 {
-	// size_t size = 2;
-	// RSSVectorMyType a(size);
-	// RSSVectorSmallType theta(size);
-	// vector<smallType> b(size);
+	size_t size = 2;
+	RSSVectorMyType a(size);
+	RSSVectorSmallType theta(size);
+	vector<smallType> b(size);
 
-	// a[0] = make_pair(1 << 63, 1 << 63);
-	// a[1] = make_pair(0, 0);
+	a[0] = make_pair(LARGEST_NEG, LARGEST_NEG);
+	a[1] = make_pair(0, 0);
 
-	// funcWrap(a, theta, size);
-	// funcReconstruct(theta, b, size, "Theta", true);
+	funcWrap(a, theta, size);
+	funcReconstruct(theta, b, size, "Theta", true);
 }
 
 void debugDivision()

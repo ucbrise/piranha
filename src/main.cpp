@@ -11,7 +11,6 @@
 
 
 
-
 int partyNum;
 AESObject* aes_indep;
 AESObject* aes_next;
@@ -152,11 +151,11 @@ int main(int argc, char** argv)
 	// whichNetwork = "Debug Mat-Mul";
 	// debugDotProd();
 
-	whichNetwork = "Debug PrivateCompare";
-	debugPC();
+	// whichNetwork = "Debug PrivateCompare";
+	// debugPC();
 
-	//whichNetwork = "Debug Wrap";
-	// debugWrap();
+	whichNetwork = "Debug Wrap";
+	debugWrap();
 
 	// whichNetwork += " test";
 	// test(network);
