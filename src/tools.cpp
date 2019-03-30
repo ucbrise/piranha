@@ -3,7 +3,8 @@
 #include <stdint.h>
 #include <mutex> 
 #include <bitset>
-#include <Eigen/Dense>
+#include "EigenMatMul.h"
+
 using namespace std;
 using namespace Eigen;
 
@@ -331,22 +332,22 @@ void print_linear(myType var, string type)
 		cout << var << " ";	
 }
 
-void matrixMultEigen(const vector<myType> &a, const vector<myType> &b, vector<myType> &c, 
+void matrixMultRSS(const RSSVectorMyType &a, const RSSVectorMyType &b, vector<myType> &temp3, 
 					size_t rows, size_t common_dim, size_t columns,
 				 	size_t transpose_a, size_t transpose_b)
 {
-	Matrix<uint64_t, Dynamic, Dynamic> eigen_a(rows, common_dim);
-	Matrix<uint64_t, Dynamic, Dynamic> eigen_b(common_dim, columns);
-	Matrix<uint64_t, Dynamic, Dynamic> eigen_c(rows, columns);
+#if (!USING_EIGEN)
+/********************************* Triple For Loop *********************************/
+	RSSVectorMyType triple_a(rows*common_dim), triple_b(common_dim*columns);
 
 	for (size_t i = 0; i < rows; ++i)
 	{
 		for (size_t j = 0; j < common_dim; ++j)
 		{
 			if (transpose_a)
-				eigen_a(i, j) = a[j*rows + i];
+				triple_a(i, j) = a[j*rows + i];
 			else
-				eigen_a(i, j) = a[i*common_dim + j];
+				triple_a(i, j) = a[i*common_dim + j];
 		}
 	}
 
@@ -355,9 +356,62 @@ void matrixMultEigen(const vector<myType> &a, const vector<myType> &b, vector<my
 		for (size_t j = 0; j < columns; ++j)
 		{
 			if (transpose_b)
-				eigen_b(i, j) = b[j*common_dim + i];	
+				triple_b(i, j) = b[j*common_dim + i];	
 			else
-				eigen_b(i, j) = b[i*columns + j];	
+				triple_b(i, j) = b[i*columns + j];	
+		}
+	}
+
+	for (int i = 0; i < rows; ++i)
+	{
+		for (int j = 0; j < columns; ++j)
+		{
+			temp[i*columns + j] = 0;
+			for (int k = 0; k < common_dim; ++k)
+			{
+				temp3[i*columns + j] += triple_a[i*common_dim + k].first * triple_b[k*columns + j].first +
+									    triple_a[i*common_dim + k].first * triple_b[k*columns + j].second +
+									    triple_a[i*common_dim + k].second * triple_b[k*columns + j].first;
+			}
+		}
+	}
+/********************************* Triple For Loop *********************************/	
+#endif
+#if (USING_EIGEN)
+/********************************* WITH EIGEN Mat-Mul *********************************/
+	eigenMatrix eigen_a(rows, common_dim), eigen_b(common_dim, columns), eigen_c(rows, columns);
+
+	for (size_t i = 0; i < rows; ++i)
+	{
+		for (size_t j = 0; j < common_dim; ++j)
+		{
+			if (transpose_a)
+			{
+				eigen_a.m_share[0](i, j) = a[j*rows + i].first;
+				eigen_a.m_share[1](i, j) = a[j*rows + i].second;
+			}
+			else
+			{
+				eigen_a.m_share[0](i, j) = a[i*common_dim + j].first;
+				eigen_a.m_share[1](i, j) = a[i*common_dim + j].second;
+			}
+		}
+	}
+
+	for (size_t i = 0; i < common_dim; ++i)
+	{
+		for (size_t j = 0; j < columns; ++j)
+		{
+			if (transpose_b)
+			{
+				eigen_b.m_share[0](i, j) = b[j*common_dim + i].first;	
+				eigen_b.m_share[1](i, j) = b[j*common_dim + i].second;	
+			}
+			else
+			{
+				eigen_b.m_share[0](i, j) = b[i*columns + j].first;	
+				eigen_b.m_share[1](i, j) = b[i*columns + j].second;	
+			}
 		}
 	}
 
@@ -365,7 +419,9 @@ void matrixMultEigen(const vector<myType> &a, const vector<myType> &b, vector<my
 
 	for (size_t i = 0; i < rows; ++i)
 		for (size_t j = 0; j < columns; ++j)
-				c[i*columns + j] = eigen_c(i,j);
+				temp3[i*columns + j] = eigen_c.m_share[0](i,j);
+/********************************* WITH EIGEN Mat-Mul *********************************/
+#endif
 }
 
 

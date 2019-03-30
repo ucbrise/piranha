@@ -4,11 +4,9 @@
 #include "Precompute.h"
 #include <algorithm>    // std::rotate
 #include <thread>
-#include "EigenMatMul.h"
 
 // extern inline smallType subModPrime(smallType a, smallType b);
 
-#define USING_EIGEN true
 using namespace std;
 extern Precompute PrecomputeObject;
 
@@ -375,68 +373,9 @@ void funcMatMulMPC(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVector
 	size_t final_size = rows*columns;
 	vector<myType> temp3(final_size, 0), diffReconst(final_size, 0);
 
-#if (!USING_EIGEN)
-/********************************* Triple For Loop *********************************/
-	for (int i = 0; i < rows; ++i)
-	{
-		for (int j = 0; j < columns; ++j)
-		{
-			// temp[i*columns + j] = 0;
-			for (int k = 0; k < common_dim; ++k)
-			{
-				temp3[i*columns + j] += a[i*common_dim + k].first * b[k*columns + j].first +
-									    a[i*common_dim + k].first * b[k*columns + j].second +
-									    a[i*common_dim + k].second * b[k*columns + j].first;
-			}
-		}
-	}
-/********************************* Triple For Loop *********************************/	
-#endif
-#if (USING_EIGEN)
-/********************************* WITH EIGEN Mat-Mul *********************************/
-	eigenMatrix eigen_a(rows, common_dim), eigen_b(common_dim, columns), eigen_c(rows, columns);
 
-	for (size_t i = 0; i < rows; ++i)
-	{
-		for (size_t j = 0; j < common_dim; ++j)
-		{
-			if (transpose_a)
-			{
-				eigen_a.m_share[0](i, j) = a[j*rows + i].first;
-				eigen_a.m_share[1](i, j) = a[j*rows + i].second;
-			}
-			else
-			{
-				eigen_a.m_share[0](i, j) = a[i*common_dim + j].first;
-				eigen_a.m_share[1](i, j) = a[i*common_dim + j].second;
-			}
-		}
-	}
+	matrixMultRSS(a, b, temp3, rows, common_dim, columns, transpose_a, transpose_b);
 
-	for (size_t i = 0; i < common_dim; ++i)
-	{
-		for (size_t j = 0; j < columns; ++j)
-		{
-			if (transpose_b)
-			{
-				eigen_b.m_share[0](i, j) = b[j*common_dim + i].first;	
-				eigen_b.m_share[1](i, j) = b[j*common_dim + i].second;	
-			}
-			else
-			{
-				eigen_b.m_share[0](i, j) = b[i*columns + j].first;	
-				eigen_b.m_share[1](i, j) = b[i*columns + j].second;	
-			}
-		}
-	}
-
-	eigen_c = eigen_a * eigen_b;
-
-	for (size_t i = 0; i < rows; ++i)
-		for (size_t j = 0; j < columns; ++j)
-				temp3[i*columns + j] = eigen_c.m_share[0](i,j);
-/********************************* WITH EIGEN Mat-Mul *********************************/
-#endif
 
 	RSSVectorMyType r(final_size), rPrime(final_size);
 	PrecomputeObject.getDividedShares(r, rPrime, FLOAT_PRECISION, final_size);
@@ -1448,7 +1387,7 @@ void debugWrap()
 	vector<smallType> b(size);
 
 	myType interesting = LARGEST_NEG/3;
-	interesting = (interesting << 2) + (myType)3;
+	interesting = (interesting << 2) + (myType)2;
 
 	a[0] = make_pair(interesting, interesting);
 	a[1] = make_pair(0, 0);

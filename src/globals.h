@@ -26,7 +26,7 @@
 #define STRING_BUFFER_SIZE 256
 #define true 1
 #define false 0
-#define DEBUG_CONST 16
+#define DEBUG_CONST 10
 #define DEBUG_INDEX 0
 #define DEBUG_PRINT "SIGNED"
 #define CPP_ASSEMBLY 1
@@ -42,6 +42,7 @@
 #define PARTY_C 2
 #define PARTY_D 3
 
+#define USING_EIGEN true
 #define PRIME_NUMBER 67
 #define FLOAT_PRECISION 0
 #define PRIMARY (partyNum == PARTY_A or partyNum == PARTY_B)

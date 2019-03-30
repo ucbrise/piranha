@@ -161,7 +161,9 @@ void print128_num(__m128i var);
 
 void print_myType(myType var, string message, string type);
 void print_linear(myType var, string type);
-
+void matrixMultRSS(const RSSVectorMyType &a, const RSSVectorMyType &b, vector<myType> &temp3, 
+					size_t rows, size_t common_dim, size_t columns,
+				 	size_t transpose_a, size_t transpose_b);
 
 // void matrixMultEigen(const vector<myType> &a, const vector<myType> &b, vector<myType> &c, 
 // 					size_t rows, size_t common_dim, size_t columns,
