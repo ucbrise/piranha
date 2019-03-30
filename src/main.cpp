@@ -157,8 +157,11 @@ int main(int argc, char** argv)
 	// whichNetwork = "Debug Wrap";
 	// debugWrap();
 
-	whichNetwork = "Debug ReluPrime";
-	debugReLUPrime();
+	// whichNetwork = "Debug ReLUPrime";
+	// debugReLUPrime();
+
+	whichNetwork = "Debug ReLU";
+	debugReLU();
 
 	// whichNetwork += " test";
 	// test(network);

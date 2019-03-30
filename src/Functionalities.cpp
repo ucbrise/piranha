@@ -888,16 +888,24 @@ void funcRELUPrime(const RSSVectorMyType &a, RSSVectorSmallType &b, size_t size)
 }
 
 //PARTY_A, PARTY_B hold shares in a, want shares of RELU in b.
-void funcRELUMPC(const RSSVectorMyType &a, RSSVectorMyType &b, size_t size)
+void funcRELU(const RSSVectorMyType &a, RSSVectorMyType &b, size_t size)
 {
-	log_print("funcRELUMPC");
+	log_print("funcRELU");
 
-/******************************** TODO ****************************************/
-	// RSSVectorMyType reluPrime(size);
+	RSSVectorSmallType temp(size);
+	funcRELUPrime(a, temp, size);
 
-	// funcRELUPrime(a, reluPrime, size);
-	// funcSelectShares3PC(a, reluPrime, b, size);
-/******************************** TODO ****************************************/
+	vector<smallType> reconst_temp(size);
+	funcReconstructBit(temp, reconst_temp, size);
+	for (int i = 0; i < size; ++i)
+	{
+		b[i].first  = ((myType)temp[i].first) << (BIT_SIZE-1);
+		b[i].second = ((myType)temp[i].second) << (BIT_SIZE-1);
+	}
+	vector<myType> reconst_b(size);
+	funcReconstruct(b, reconst_b, size, "reconst_b", true);
+
+	funcDotProduct(a, b, b, size);
 }
 
 
@@ -1348,6 +1356,30 @@ void debugReLUPrime()
 
 	funcRELUPrime(a, b, size);
 	funcReconstructBit(b, reconst_b, size);
+}
+
+
+void debugReLU()
+{
+	vector<myType> data_a {0,1,2,3,4,5,6,7};
+	size_t size = data_a.size();
+	RSSVectorMyType a(size), b(size);
+	vector<myType> reconst_b(size);
+
+	funcGetShares(a, data_a);
+	for (int i = 0; i < size; ++i)
+	{
+		a[i].first = a[i].first << 61;
+		a[i].second = a[i].second << 61;
+	}
+
+	print_myType(a[0].first, "a[0]", "BITS");
+	print_myType(a[1].first, "a[1]", "BITS");
+	print_myType(a[2].first, "a[2]", "BITS");
+	print_myType(a[3].first, "a[3]", "BITS");
+
+	funcRELU(a, b, size);
+	funcReconstruct(b, reconst_b, size, "ReLU", true);
 }
 
 

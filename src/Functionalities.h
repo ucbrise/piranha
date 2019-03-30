@@ -38,7 +38,7 @@ void funcSelectShares4PC(const RSSVectorMyType &a, const RSSVectorSmallType &b, 
 void funcSelectShares3PC(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyType &c, size_t size);
 void funcRELUPrime4PC(const RSSVectorMyType &a, RSSVectorSmallType &b, size_t size);
 void funcRELUPrime(const RSSVectorMyType &a, RSSVectorMyType &b, size_t size);
-void funcRELUMPC(const RSSVectorMyType &a, RSSVectorMyType &b, size_t size);
+void funcRELU(const RSSVectorMyType &a, RSSVectorMyType &b, size_t size);
 void funcDivisionMPC(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyType &quotient, 
 						size_t size);
 void funcMaxMPC(RSSVectorMyType &a, RSSVectorMyType &max, RSSVectorMyType &maxIndex, 
@@ -54,6 +54,7 @@ void debugDotProd();
 void debugPC();
 void debugWrap();
 void debugReLUPrime();
+void debugReLU();
 void debugDivision();
 void debugMax();
 void debugSS();
