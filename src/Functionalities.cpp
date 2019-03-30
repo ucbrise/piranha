@@ -222,13 +222,13 @@ void funcReconstructBit(const RSSVectorSmallType &a, vector<smallType> &b, size_
 	for (int i = 0; i < size; ++i)
 		b[i] = b[i] ^ a_prev[i];
 
-	if (print)
-	{
-		std::cout << "B: \t";
-		for (int i = 0; i < size; ++i)
-			cout << (int)(b[i]) << " "; 
-		std::cout << std::endl;
-	}
+	// if (print)
+	// {
+	// 	std::cout << "B: \t";
+	// 	for (int i = 0; i < size; ++i)
+	// 		cout << (int)(b[i]) << " "; 
+	// 	std::cout << std::endl;
+	// }
 }
 
 
@@ -468,6 +468,8 @@ void funcDotProduct(const RSSVectorMyType &a, const RSSVectorMyType &b,
 				    a[i].first * b[i].second +
 				    a[i].second * b[i].first;
 	}
+
+	// funcReconstruct(temp3, diffReconst, size, "temp", true);
 
 	RSSVectorMyType r(size), rPrime(size);
 	PrecomputeObject.getDividedShares(r, rPrime, FLOAT_PRECISION, size);
@@ -892,20 +894,45 @@ void funcRELU(const RSSVectorMyType &a, RSSVectorMyType &b, size_t size)
 {
 	log_print("funcRELU");
 
-	RSSVectorSmallType temp(size);
-	funcRELUPrime(a, temp, size);
+	RSSVectorSmallType temp(size), c(size), bXORc(size);
+	RSSVectorMyType m_c(size);
+	vector<smallType> reconst_b(size);
 
-	vector<smallType> reconst_temp(size);
-	funcReconstructBit(temp, reconst_temp, size);
+	funcRELUPrime(a, temp, size);
+	PrecomputeObject.getSelectorBitShares(c, m_c, size);
+
 	for (int i = 0; i < size; ++i)
 	{
-		b[i].first  = ((myType)temp[i].first) << (BIT_SIZE-1);
-		b[i].second = ((myType)temp[i].second) << (BIT_SIZE-1);
+		bXORc[i].first  = c[i].first ^ temp[i].first;
+		bXORc[i].second = c[i].second ^ temp[i].second;
 	}
-	vector<myType> reconst_b(size);
-	funcReconstruct(b, reconst_b, size, "reconst_b", true);
 
-	funcDotProduct(a, b, b, size);
+	funcReconstructBit(bXORc, reconst_b, size);
+	for (int i = 0; i < size; ++i)
+	{
+		if (reconst_b[i] == 0)
+		{
+			if (partyNum == PARTY_A)
+			{
+				m_c[i].first = (myType)1 - m_c[i].first;
+				m_c[i].second = - m_c[i].second;
+			}
+			else if (partyNum == PARTY_B)
+			{
+				m_c[i].first = - m_c[i].first;
+				m_c[i].second = - m_c[i].second;
+			}
+			else if (partyNum == PARTY_C)
+			{
+				m_c[i].first = - m_c[i].first;
+				m_c[i].second = (myType)1 - m_c[i].second;
+			}
+		}
+	}
+
+	// vector<myType> reconst_m_c(size);
+	// funcReconstruct(m_c, reconst_m_c, size, "m_c", true);
+	funcDotProduct(a, m_c, b, size);
 }
 
 
@@ -1333,7 +1360,10 @@ void debugWrap()
 	a[1] = make_pair(0, 0);
 
 	funcWrap(a, theta, size);
+
+#if (LOG_DEBUG)
 	funcReconstruct(theta, b, size, "Theta", true);
+#endif
 }
 
 
@@ -1355,7 +1385,9 @@ void debugReLUPrime()
 	print_myType(a[1].first, "interesting", "BITS");
 
 	funcRELUPrime(a, b, size);
+#if (LOG_DEBUG)
 	funcReconstructBit(b, reconst_b, size);
+#endif
 }
 
 
@@ -1367,19 +1399,21 @@ void debugReLU()
 	vector<myType> reconst_b(size);
 
 	funcGetShares(a, data_a);
-	for (int i = 0; i < size; ++i)
+	for (int i = size/2; i < size; ++i)
 	{
 		a[i].first = a[i].first << 61;
 		a[i].second = a[i].second << 61;
 	}
 
-	print_myType(a[0].first, "a[0]", "BITS");
-	print_myType(a[1].first, "a[1]", "BITS");
-	print_myType(a[2].first, "a[2]", "BITS");
-	print_myType(a[3].first, "a[3]", "BITS");
+	// print_myType(a[0].first, "a[0]", "BITS");
+	// print_myType(a[1].first, "a[1]", "BITS");
+	// print_myType(a[4].first, "a[4]", "BITS");
+	// print_myType(a[5].first, "a[5]", "BITS");
 
 	funcRELU(a, b, size);
+#if (LOG_DEBUG)
 	funcReconstruct(b, reconst_b, size, "ReLU", true);
+#endif
 }
 
 

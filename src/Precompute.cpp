@@ -29,6 +29,17 @@ void Precompute::getRandomBitShares(RSSVectorSmallType &a, size_t size)
 }
 
 
+void Precompute::getSelectorBitShares(RSSVectorSmallType &c, RSSVectorMyType &m_c, size_t size)
+{
+	assert(c.size() == size && "size mismatch for getSelectorBitShares");
+	assert(m_c.size() == size && "size mismatch for getSelectorBitShares");
+	for(auto &it : c)
+		it = std::make_pair(0,0);
+
+	for(auto &it : m_c)
+		it = std::make_pair(0,0);
+}
+
 // void getRefreshShares(RSSVectorMyType &a, size_t size)
 // {
 // 	assert(a.size() == size && "size mismatch for refreshing shares");
