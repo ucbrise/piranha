@@ -23,24 +23,21 @@ void funcReconstruct(const vector<myType> &a, vector<myType> &b, size_t size, st
 void funcReconstructBit2PC(const RSSVectorSmallType &a, size_t size, string str);
 void funcConditionalSet2PC(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorSmallType &c, 
 							RSSVectorMyType &u, RSSVectorMyType &v, size_t size);
-void funcMatMulMPC(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyType &c, 
+void funcMatMul(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyType &c, 
 				size_t rows, size_t common_dim, size_t columns,
 			 	size_t transpose_a, size_t transpose_b);
-void funcDotProductMPC(const RSSVectorMyType &a, const RSSVectorMyType &b, 
+void funcDotProduct(const RSSVectorMyType &a, const RSSVectorMyType &b, 
 					   RSSVectorMyType &c, size_t size);
-void funcPrivateCompareMPC(const RSSVectorSmallType &share_m, const vector<myType> &r, 
+void funcPrivateCompare(const RSSVectorSmallType &share_m, const vector<myType> &r, 
 							  const RSSVectorSmallType &beta, vector<smallType> &betaPrime, 
 							  size_t size, size_t dim);
 void funcCrunchMultiply(const RSSVectorSmallType &c, vector<smallType> &betaPrime, size_t size, size_t dim);
 void funcMultiplyNeighbours(const RSSVectorSmallType &c_1, RSSVectorSmallType &c_2, size_t size);
-void funcWrap(RSSVectorMyType &a, RSSVectorSmallType &theta, size_t size);
-void funcShareConvertMPC(RSSVectorMyType &a, size_t size);
-void funcComputeMSB4PC(const RSSVectorMyType &a, RSSVectorSmallType &b, size_t size);
-void funcComputeMSB3PC(const RSSVectorMyType &a, RSSVectorMyType &b, size_t size);
+void funcWrap(const RSSVectorMyType &a, RSSVectorSmallType &theta, size_t size);
 void funcSelectShares4PC(const RSSVectorMyType &a, const RSSVectorSmallType &b, RSSVectorMyType &c, size_t size);
 void funcSelectShares3PC(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyType &c, size_t size);
 void funcRELUPrime4PC(const RSSVectorMyType &a, RSSVectorSmallType &b, size_t size);
-void funcRELUPrime3PC(const RSSVectorMyType &a, RSSVectorMyType &b, size_t size);
+void funcRELUPrime(const RSSVectorMyType &a, RSSVectorMyType &b, size_t size);
 void funcRELUMPC(const RSSVectorMyType &a, RSSVectorMyType &b, size_t size);
 void funcDivisionMPC(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyType &quotient, 
 						size_t size);
@@ -52,14 +49,14 @@ void aggregateCommunication();
 
 
 //Debug
+void debugMatMul();
 void debugDotProd();
 void debugPC();
 void debugWrap();
+void debugReLUPrime();
 void debugDivision();
 void debugMax();
 void debugSS();
-void debugMatMul();
-void debugReLUPrime();
 void debugMaxIndex();
 
 //Test

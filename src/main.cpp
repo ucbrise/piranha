@@ -154,8 +154,11 @@ int main(int argc, char** argv)
 	// whichNetwork = "Debug PrivateCompare";
 	// debugPC();
 
-	whichNetwork = "Debug Wrap";
-	debugWrap();
+	// whichNetwork = "Debug Wrap";
+	// debugWrap();
+
+	whichNetwork = "Debug ReluPrime";
+	debugReLUPrime();
 
 	// whichNetwork += " test";
 	// test(network);

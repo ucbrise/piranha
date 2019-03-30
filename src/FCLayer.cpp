@@ -90,7 +90,7 @@ void FCLayer::forwardMPC(const RSSVectorMyType &inputActivation)
 
 	//Matrix Multiplication
 /******************************** TODO ****************************************/	
-	// funcMatMulMPC(inputActivation, weights, zetas, 
+	// funcMatMul(inputActivation, weights, zetas, 
 	// 			  rows, common_dim, columns, 
 	// 			  0, 0);
 
@@ -100,7 +100,7 @@ void FCLayer::forwardMPC(const RSSVectorMyType &inputActivation)
 	// 		for(size_t c = 0; c < columns; ++c)
 	// 			zetas[r*columns + c] += biases[c];
 
-	// funcRELUPrime3PC(zetas, reluPrimeLarge, size);
+	// funcRELUPrime(zetas, reluPrimeLarge, size);
 	// funcSelectShares3PC(zetas, reluPrimeLarge, activations, size);
 /******************************** TODO ****************************************/
 }
@@ -123,7 +123,7 @@ void FCLayer::computeDeltaMPC(RSSVectorMyType& prevDelta)
 	funcSelectShares3PC(temp, reluPrimeLarge, temp, tempSize);
 
 /******************************** TODO ****************************************/
-	// funcMatMulMPC(temp, weights, prevDelta, 
+	// funcMatMul(temp, weights, prevDelta, 
 	// 			  rows, common_dim, columns, 0, 1);
 /******************************** TODO ****************************************/
 }
@@ -157,7 +157,7 @@ void FCLayer::updateEquationsMPC(const RSSVectorMyType& prevActivations)
 	RSSVectorMyType deltaWeight(size);
 
 /******************************** TODO ****************************************/
-	// funcMatMulMPC(prevActivations, deltas, deltaWeight, 
+	// funcMatMul(prevActivations, deltas, deltaWeight, 
 	// 				rows, common_dim, columns, 1, 0);
 /******************************** TODO ****************************************/
 

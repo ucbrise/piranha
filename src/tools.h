@@ -179,6 +179,9 @@ size_t prevParty(size_t party);
 size_t partner(size_t party);
 size_t adversary(size_t party);
 
+inline smallType getMSB(myType a)
+{return ((smallType)((a >> (BIT_SIZE - 1)) & 1));}
+
 
 inline RSSSmallType addModPrime(RSSSmallType a, RSSSmallType b)
 {
@@ -290,6 +293,11 @@ template <typename T,typename U>
 std::pair<T,U> operator-(const std::pair<T,U> & l,const std::pair<T,U> & r) {   
     return {l.first-r.first,l.second-r.second};
 }
+
+template <typename T>                                                   
+std::pair<T,T> operator<<(const std::pair<T,T> & l, const int shift) {   
+    return {l.first << shift, l.second << shift};
+}   
 
 // Template functions
 template<typename T>
