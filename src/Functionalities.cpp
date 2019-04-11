@@ -507,6 +507,60 @@ void funcDotProduct(const RSSVectorMyType &a, const RSSVectorMyType &b,
 }
 
 
+// Term by term multiplication of 64-bit vectors overriding precision
+void funcDotProduct(const RSSVectorMyType &a, const RSSVectorMyType &b, 
+						   RSSVectorMyType &c, size_t size, size_t precision) 
+{
+	log_print("funcDotProduct");
+	assert(a.size() == size && "Matrix a incorrect for Mat-Mul");
+	assert(b.size() == size && "Matrix b incorrect for Mat-Mul");
+	assert(c.size() == size && "Matrix c incorrect for Mat-Mul");
+
+
+	vector<myType> temp3(size, 0), diffReconst(size, 0);
+	for (int i = 0; i < size; ++i)
+	{
+		temp3[i] += a[i].first * b[i].first +
+				    a[i].first * b[i].second +
+				    a[i].second * b[i].first;
+	}
+
+	RSSVectorMyType r(size), rPrime(size);
+	PrecomputeObject.getDividedShares(r, rPrime, precision, size);
+	for (int i = 0; i < size; ++i)
+		temp3[i] = temp3[i] - rPrime[i].first;
+	
+	funcReconstruct(temp3, diffReconst, size, "Dot-product diff reconst", false);
+	dividePlainSA(diffReconst, (1 << precision));
+	if (partyNum == PARTY_A)
+	{
+		for (int i = 0; i < size; ++i)
+		{
+			c[i].first = r[i].first + diffReconst[i];
+			c[i].second = r[i].second;
+		}
+	}
+
+	if (partyNum == PARTY_B)
+	{
+		for (int i = 0; i < size; ++i)
+		{
+			c[i].first = r[i].first;
+			c[i].second = r[i].second;
+		}
+	}
+
+	if (partyNum == PARTY_C)
+	{
+		for (int i = 0; i < size; ++i)
+		{
+			c[i].first = r[i].first;
+			c[i].second = r[i].second + diffReconst[i];
+		}
+	}
+}
+
+
 // Term by term multiplication of mod 67 vectors 
 void funcDotProduct(const RSSVectorSmallType &a, const RSSVectorSmallType &b, 
 							 RSSVectorSmallType &c, size_t size) 
@@ -544,6 +598,7 @@ void funcDotProduct(const RSSVectorSmallType &a, const RSSVectorSmallType &b,
 		c[i].second = recv[i];
 	}
 }
+
 
 //Thread function for parallel private compare
 void parallelPC(smallType* c, size_t start, size_t end, int t, 
@@ -937,187 +992,39 @@ void funcRELU(const RSSVectorMyType &a, RSSVectorMyType &b, size_t size)
 
 
 //All parties start with shares of a number in a and b and the quotient is in quotient.
+//alpha is the order of divisiors, 2^alpha < b < 2^{alpha+1}.
 void funcDivisionMPC(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyType &quotient, 
 							size_t size)
 {
 	log_print("funcDivisionMPC");
 
-/******************************** TODO ****************************************/
-	// if (THREE_PC)
-	// {
-	// 	RSSVectorMyType varQ(size, 0); 
-	// 	RSSVectorMyType varP(size, 0); 
-	// 	RSSVectorMyType varD(size, 0); 
-	// 	RSSVectorMyType tempZeros(size, 0);
-	// 	RSSVectorMyType varB(size, 0);
-	// 	RSSVectorMyType input_1(size, 0), input_2(size, 0); 
+	size_t alpha = 3;
+	size_t precision = alpha + FLOAT_PRECISION + 1;
+	const myType constTwoPointNine = ((myType)(2.9142 * (1 << precision)));
+	const myType constOne = ((myType)(1 * (1 << precision)));
 
-	// 	for (size_t i = 0; i < size; ++i)
-	// 	{
-	// 		varP[i] = 0;
-	// 		quotient[i] = 0;
-	// 	}
+	vector<myType> data_twoPointNine(size, constTwoPointNine), data_one(size, constOne), reconst(size);
+	RSSVectorMyType ones(size), twoPointNine(size), twoX(size), w0(size), xw0(size), 
+					epsilon0(size), epsilon1(size), termOne(size), termTwo(size), answer(size);
+	funcGetShares(twoPointNine, data_twoPointNine);
+	funcGetShares(ones, data_one);
 
-	// 	for (size_t looper = 1; looper < FLOAT_PRECISION+1; ++looper)
-	// 	{
-	// 		if (PRIMARY)
-	// 		{
-	// 			for (size_t i = 0; i < size; ++i)
-	// 				input_1[i] = -b[i];
+	multiplyByScalar(b, 2, twoX);
+	subtractVectors<RSSMyType>(twoPointNine, twoX, w0, size);
+	funcDotProduct(b, w0, xw0, size, precision); 
+	subtractVectors<RSSMyType>(ones, xw0, epsilon0, size);
+	if (PRECISE_DIVISION)
+		funcDotProduct(epsilon0, epsilon0, epsilon1, size, precision);
+	addVectors(ones, epsilon0, termOne, size);
+	if (PRECISE_DIVISION)
+		addVectors(ones, epsilon1, termTwo, size);
+	funcDotProduct(w0, termOne, answer, size, precision);
+	if (PRECISE_DIVISION)
+		funcDotProduct(answer, termTwo, answer, size, precision);
 
-	// 			funcTruncate2PC(input_1, looper, size, PARTY_A, PARTY_B);
-	// 			addVectors<myType>(input_1, a, input_1, size);
-	// 			subtractVectors<myType>(input_1, varP, input_1, size);
-	// 		}
-	// 		funcRELUPrime(input_1, varB, size);
-
-	// 		//Get the required shares of y/2^i and 2^FLOAT_PRECISION/2^i in input_1 and input_2
-	// 		for (size_t i = 0; i < size; ++i)
-	// 				input_1[i] = b[i];
-
-	// 		if (PRIMARY)
-	// 			funcTruncate2PC(input_1, looper, size, PARTY_A, PARTY_B);
-
-	// 		if (partyNum == PARTY_A)
-	// 			for (size_t i = 0; i < size; ++i)
-	// 				input_2[i] = (1 << FLOAT_PRECISION);
-
-	// 		if (partyNum == PARTY_B)
-	// 			for (size_t i = 0; i < size; ++i)
-	// 				input_2[i] = 0;
-
-	// 		if (PRIMARY)
-	// 			funcTruncate2PC(input_2, looper, size, PARTY_A, PARTY_B);
-
-	// 		// funcSelectShares3PC(input_1, varB, varD, size);
-	// 		// funcSelectShares3PC(input_2, varB, varQ, size);
-
-	// 		RSSVectorMyType A_one(size, 0), B_one(size, 0), C_one(size, 0);
-	// 		RSSVectorMyType A_two(size, 0), B_two(size, 0), C_two(size, 0);
-
-	// 		if (HELPER)
-	// 		{
-	// 			RSSVectorMyType A1_one(size, 0), A2_one(size, 0), 
-	// 						   B1_one(size, 0), B2_one(size, 0), 
-	// 						   C1_one(size, 0), C2_one(size, 0);
-
-	// 			RSSVectorMyType A1_two(size, 0), A2_two(size, 0), 
-	// 						   B1_two(size, 0), B2_two(size, 0), 
-	// 						   C1_two(size, 0), C2_two(size, 0);
-
-	// 			populateRandomVector<RSSMyType>(A1_one, size, "INDEP", "POSITIVE");
-	// 			populateRandomVector<RSSMyType>(A2_one, size, "INDEP", "POSITIVE");
-	// 			populateRandomVector<RSSMyType>(B1_one, size, "INDEP", "POSITIVE");
-	// 			populateRandomVector<RSSMyType>(B2_one, size, "INDEP", "POSITIVE");
-	// 			populateRandomVector<RSSMyType>(A1_two, size, "INDEP", "POSITIVE");
-	// 			populateRandomVector<RSSMyType>(A2_two, size, "INDEP", "POSITIVE");
-	// 			populateRandomVector<RSSMyType>(B1_two, size, "INDEP", "POSITIVE");
-	// 			populateRandomVector<RSSMyType>(B2_two, size, "INDEP", "POSITIVE");
-
-
-	// 			addVectors<myType>(A1_one, A2_one, A_one, size);
-	// 			addVectors<myType>(B1_one, B2_one, B_one, size);
-	// 			addVectors<myType>(A1_two, A2_two, A_two, size);
-	// 			addVectors<myType>(B1_two, B2_two, B_two, size);
-
-	// 			for (size_t i = 0; i < size; ++i)
-	// 				C_one[i] = A_one[i] * B_one[i];
-
-	// 			for (size_t i = 0; i < size; ++i)
-	// 				C_two[i] = A_two[i] * B_two[i];
-
-	// 			splitIntoShares(C_one, C1_one, C2_one, size);
-	// 			splitIntoShares(C_two, C1_two, C2_two, size);
-
-	// 			sendSixVectors<myType>(A1_one, B1_one, C1_one, A1_two, B1_two, C1_two, PARTY_A, size, size, size, size, size, size);
-	// 			sendSixVectors<myType>(A2_one, B2_one, C2_one, A2_two, B2_two, C2_two, PARTY_B, size, size, size, size, size, size);
-	// 		}
-
-	// 		if (PRIMARY)
-	// 		{
-	// 			receiveSixVectors<myType>(A_one, B_one, C_one, A_two, B_two, C_two, PARTY_C, size, size, size, size, size, size);
-				
-	// 			RSSVectorMyType E_one(size), F_one(size), temp_E_one(size), temp_F_one(size);
-	// 			RSSVectorMyType E_two(size), F_two(size), temp_E_two(size), temp_F_two(size);
-	// 			myType temp_one, temp_two;
-
-	// 			subtractVectors<myType>(input_1, A_one, E_one, size);
-	// 			subtractVectors<myType>(varB, B_one, F_one, size);
-	// 			subtractVectors<myType>(input_2, A_two, E_two, size);
-	// 			subtractVectors<myType>(varB, B_two, F_two, size);
-
-
-	// 			thread *threads = new thread[2];
-
-	// 			threads[0] = thread(sendFourVectors<myType>, ref(E_one), ref(F_one), ref(E_two), ref(F_two), adversary(partyNum), size, size, size, size);
-	// 			threads[1] = thread(receiveFourVectors<myType>, ref(temp_E_one), ref(temp_F_one), ref(temp_E_two), ref(temp_F_two), adversary(partyNum), size, size, size, size);
-
-	// 			for (int i = 0; i < 2; i++)
-	// 				threads[i].join();
-
-	// 			delete[] threads;
-
-	// 			//HEREEEEEEE
-	// 			// if (partyNum == PARTY_A)
-	// 			// 	sendFourVectors<myType>(E_one, F_one, E_two, F_two, adversary(partyNum), size, size, size, size);
-	// 			// else
-	// 			// 	receiveFourVectors<myType>(temp_E_one, temp_F_one, temp_E_two, temp_F_two, adversary(partyNum), size, size, size, size);	
-
-	// 			// if (partyNum == PARTY_B)
-	// 			// 	sendFourVectors<myType>(E_one, F_one, E_two, F_two, adversary(partyNum), size, size, size, size);
-	// 			// else
-	// 			// 	receiveFourVectors<myType>(temp_E_one, temp_F_one, temp_E_two, temp_F_two, adversary(partyNum), size, size, size, size);	
-
-
-	// 			// sendTwoVectors<myType>(E_one, F_one, adversary(partyNum), size, size);
-	// 			// receiveTwoVectors<myType>(temp_E_one, temp_F_one, adversary(partyNum), size, size);
-	// 			// sendTwoVectors<myType>(E_two, F_two, adversary(partyNum), size, size);
-	// 			// receiveTwoVectors<myType>(temp_E_two, temp_F_two, adversary(partyNum), size, size);
-
-
-	// 			addVectors<myType>(E_one, temp_E_one, E_one, size);
-	// 			addVectors<myType>(F_one, temp_F_one, F_one, size);
-	// 			addVectors<myType>(E_two, temp_E_two, E_two, size);
-	// 			addVectors<myType>(F_two, temp_F_two, F_two, size);
-
-	// 			for (size_t i = 0; i < size; ++i)
-	// 			{
-	// 				varD[i] = input_1[i] * F_one[i];
-	// 				temp_one = E_one[i] * varB[i];
-	// 				varD[i] = varD[i] + temp_one;
-
-	// 				if (partyNum == PARTY_A)
-	// 				{
-	// 					temp_one = E_one[i] * F_one[i];
-	// 					varD[i] = varD[i] - temp_one;
-	// 				}
-	// 			}
-				
-	// 			for (size_t i = 0; i < size; ++i)
-	// 			{
-	// 				varQ[i] = input_2[i] * F_two[i];
-	// 				temp_two = E_two[i] * varB[i];
-	// 				varQ[i] = varQ[i] + temp_two;
-
-	// 				if (partyNum == PARTY_A)
-	// 				{
-	// 					temp_two = E_two[i] * F_two[i];
-	// 					varQ[i] = varQ[i] - temp_two;
-	// 				}
-	// 			}
-
-	// 			addVectors<myType>(varD, C_one, varD, size);
-	// 			funcTruncate2PC(varD, FLOAT_PRECISION, size, PARTY_A, PARTY_B);
-
-	// 			addVectors<myType>(varQ, C_two, varQ, size);
-	// 			funcTruncate2PC(varQ, FLOAT_PRECISION, size, PARTY_A, PARTY_B);
-	// 		}
-
-	// 		addVectors<myType>(varP, varD, varP, size);
-	// 		addVectors<myType>(quotient, varQ, quotient, size);
-	// 	}
-	// }
-/******************************** TODO ****************************************/	
+	RSSVectorMyType scaledA(size);
+	multiplyByScalar(a, (1 << (alpha + 1)), scaledA);
+	funcDotProduct(answer, scaledA, quotient, size, (precision + 2*alpha + 2));	
 }
 
 
@@ -1419,7 +1326,23 @@ void debugReLU()
 
 void debugDivision()
 {
+	vector<myType> data_a = {1<<13}, data_b = {4<<13};
+	size_t size = data_a.size();
+	RSSVectorMyType a(size), b(size), quotient(size);
+	vector<myType> reconst(size);
 
+	funcGetShares(a, data_a);
+	funcGetShares(b, data_b);
+	funcDivisionMPC(a, b, quotient, size);
+
+#if (LOG_DEBUG)
+	funcReconstruct(a, reconst, size, "a", true);
+	funcReconstruct(b, reconst, size, "b", true);
+	funcReconstruct(quotient, reconst, size, "Quotient", true);
+	print_myType(reconst[0], "Quotient[0]", "FLOAT");
+#endif	
+	
+	
 /******************************** TODO ****************************************/
 	// size_t size = 10;
 	// RSSVectorMyType numerator(size);

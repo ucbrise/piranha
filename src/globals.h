@@ -44,7 +44,8 @@
 
 #define USING_EIGEN true
 #define PRIME_NUMBER 67
-#define FLOAT_PRECISION 0
+#define FLOAT_PRECISION 13
+#define PRECISE_DIVISION false
 #define PRIMARY (partyNum == PARTY_A or partyNum == PARTY_B)
 #define	NON_PRIMARY (partyNum == PARTY_C or partyNum == PARTY_D)
 #define HELPER (partyNum == PARTY_C)

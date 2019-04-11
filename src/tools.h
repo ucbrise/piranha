@@ -282,8 +282,11 @@ void convolutionReshapeBackprop(const vector<myType> &vec, vector<myType> &vecOu
 								size_t strideY, size_t strideX, 
 								size_t C, size_t D, size_t B);
 
+void multiplyByScalar(const RSSVectorMyType &a, size_t scalar, RSSVectorMyType &b);
 
 
+
+// Template functions
 template <typename T,typename U>                                                   
 std::pair<T,U> operator+(const std::pair<T,U> & l,const std::pair<T,U> & r) {   
     return {l.first+r.first,l.second+r.second};
@@ -299,7 +302,6 @@ std::pair<T,T> operator<<(const std::pair<T,T> & l, const int shift) {
     return {l.first << shift, l.second << shift};
 }   
 
-// Template functions
 template<typename T>
 void populateRandomVector(vector<T> &vec, size_t size,  string r_type, string neg_type);
 

@@ -846,3 +846,14 @@ void maxPoolReshape(const vector<myType> &vec, vector<myType> &vecShaped,
 							vecShaped[counter++] = vec[loc + a*iw + b];
 				}
 }
+
+
+void multiplyByScalar(const RSSVectorMyType &a, size_t scalar, RSSVectorMyType &b)
+{
+	size_t size = a.size();
+	for (int i = 0; i < size; ++i)
+	{
+		b[i].first  = a[i].first * scalar;
+		b[i].second  = a[i].second * scalar;
+	}
+}

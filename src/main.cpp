@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <string>
 #include "AESObject.h"
@@ -160,8 +159,11 @@ int main(int argc, char** argv)
 	// whichNetwork = "Debug ReLUPrime";
 	// debugReLUPrime();
 
-	whichNetwork = "Debug ReLU";
-	debugReLU();
+	// whichNetwork = "Debug ReLU";
+	// debugReLU();
+
+	whichNetwork = "Debug Division";
+	debugDivision();
 
 	// whichNetwork += " test";
 	// test(network);
