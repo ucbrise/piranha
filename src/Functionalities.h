@@ -31,8 +31,6 @@ void funcDotProduct(const RSSVectorMyType &a, const RSSVectorMyType &b,
 void funcPrivateCompare(const RSSVectorSmallType &share_m, const vector<myType> &r, 
 							  const RSSVectorSmallType &beta, vector<smallType> &betaPrime, 
 							  size_t size, size_t dim);
-void funcCrunchMultiply(const RSSVectorSmallType &c, vector<smallType> &betaPrime, size_t size, size_t dim);
-void funcMultiplyNeighbours(const RSSVectorSmallType &c_1, RSSVectorSmallType &c_2, size_t size);
 void funcWrap(const RSSVectorMyType &a, RSSVectorSmallType &theta, size_t size);
 void funcSelectShares4PC(const RSSVectorMyType &a, const RSSVectorSmallType &b, RSSVectorMyType &c, size_t size);
 void funcSelectShares3PC(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyType &c, size_t size);
