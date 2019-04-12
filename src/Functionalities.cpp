@@ -695,12 +695,8 @@ void funcPrivateCompare(const RSSVectorSmallType &share_m, const vector<myType> 
 	{
 		//Computing 2Beta-1
 		twoBetaMinusOne[index2*dim] = subConstModPrime(beta[index2], 1);
-		// cout << (int)twoBetaMinusOne[index2*dim].first << " " << (int)twoBetaMinusOne[index2*dim].second << endl;
 		twoBetaMinusOne[index2*dim] = addModPrime(twoBetaMinusOne[index2*dim], beta[index2]);
-		// cout << (int)twoBetaMinusOne[index2*dim].first << " " << (int)twoBetaMinusOne[index2*dim].second << endl;
 
-
-		// cout << "bit_r" << endl;
 		for (size_t k = 0; k < dim; ++k)
 		{
 			index3 = index2*dim + k;
@@ -711,20 +707,11 @@ void funcPrivateCompare(const RSSVectorSmallType &share_m, const vector<myType> 
 					
 			if (bit_r == 1)
 				diff[index3] = subConstModPrime(diff[index3], 1);
-
-			// cout << (int) bit_r << " ";
 		}
-		// cout << endl << endl;
 	}
-
-	// vector<smallType> reconst(sizeLong);
-	// funcReconstruct(twoBetaMinusOne, reconst, sizeLong, "reconst_2beta-1", true);
-	// funcReconstruct(diff, reconst, sizeLong, "reconst_diff", true);
 
 	//(-1)^beta * x[i] - r[i]
 	funcDotProduct(diff, twoBetaMinusOne, xMinusR, sizeLong);
-	// funcReconstruct(xMinusR, reconst, sizeLong, "reconst_x-r", true);
-
 
 
 	for (int index2 = 0; index2 < size; ++index2)
