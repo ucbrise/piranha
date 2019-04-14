@@ -144,8 +144,8 @@ int main(int argc, char** argv)
 	// testMaxPoolDerivative(24, 24, 2, 2, 16, NUM_ITERATIONS);
 	// testMaxPoolDerivative(8, 8, 4, 4, 50, NUM_ITERATIONS);
 
-	// whichNetwork += " train";
-	// train(network, config);
+	whichNetwork += " train";
+	train(network, config);
 
 	// whichNetwork = "Debug Mat-Mul";
 	// debugDotProd();
@@ -168,8 +168,8 @@ int main(int argc, char** argv)
 	// whichNetwork = "Debug SelectShares";
 	// debugSS();
 
-	whichNetwork = "Debug MaxIndex";
-	debugMaxIndex();
+	// whichNetwork = "Debug MaxIndex";
+	// debugMaxIndex();
 
 	// whichNetwork += " test";
 	// test(network);

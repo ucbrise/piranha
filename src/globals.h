@@ -30,7 +30,7 @@
 #define DEBUG_INDEX 0
 #define DEBUG_PRINT "SIGNED"
 #define CPP_ASSEMBLY 1
-#define MNIST false
+#define MNIST true
 #define PARALLEL true
 #define NO_CORES 4
 

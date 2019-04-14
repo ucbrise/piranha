@@ -414,8 +414,6 @@ void funcMatMul(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyT
 	assert(a.size() == rows*common_dim && "Matrix a incorrect for Mat-Mul");
 	assert(b.size() == common_dim*columns && "Matrix b incorrect for Mat-Mul");
 	assert(c.size() == rows*columns && "Matrix c incorrect for Mat-Mul");
-	assert(transpose_a == 0 && "Currently transpose_a off");
-	assert(transpose_b == 0 && "Currently transpose_b off");
 
 #if (LOG_DEBUG)
 	cout << "Rows, Common_dim, Columns: " << rows << "x" << common_dim << "x" << columns << endl;
