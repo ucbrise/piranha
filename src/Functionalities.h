@@ -12,11 +12,12 @@ extern void end_communication(string str);
 
 
 
-void funcTruncate2PC(RSSVectorMyType &a, size_t power, size_t size, size_t party_1, size_t party_2);
+void funcTruncate(RSSVectorMyType &a, size_t power, size_t size);
 void funcXORModuloOdd2PC(RSSVectorSmallType &bit, RSSVectorMyType &shares, RSSVectorMyType &output, size_t size);
 void funcAddMyTypeAndRSS(RSSVectorMyType &a, vector<myType> &b, RSSVectorMyType &c, size_t size);
 void funcGetShares(RSSVectorMyType &a, const vector<myType> &data);
 void funcGetShares(RSSVectorSmallType &a, const vector<smallType> &data);
+void funcReconstructBit(const RSSVectorSmallType &a, vector<smallType> &b, size_t size, string str, bool print);
 void funcReconstruct(const RSSVectorMyType &a, vector<myType> &b, size_t size, string str, bool print);
 void funcReconstruct(const RSSVectorSmallType &a, vector<smallType> &b, size_t size, string str, bool print);
 void funcReconstruct(const vector<myType> &a, vector<myType> &b, size_t size, string str, bool print);
@@ -27,16 +28,18 @@ void funcMatMul(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyT
 				size_t rows, size_t common_dim, size_t columns,
 			 	size_t transpose_a, size_t transpose_b);
 void funcDotProduct(const RSSVectorMyType &a, const RSSVectorMyType &b, 
-					   RSSVectorMyType &c, size_t size);
+					   RSSVectorMyType &c, size_t size, bool truncation, size_t precision);
+void funcDotProduct(const RSSVectorSmallType &a, const RSSVectorSmallType &b, 
+							 RSSVectorSmallType &c, size_t size);
 void funcPrivateCompare(const RSSVectorSmallType &share_m, const vector<myType> &r, 
 							  const RSSVectorSmallType &beta, vector<smallType> &betaPrime, 
 							  size_t size, size_t dim);
 void funcWrap(const RSSVectorMyType &a, RSSVectorSmallType &theta, size_t size);
 void funcSelectShares4PC(const RSSVectorMyType &a, const RSSVectorSmallType &b, RSSVectorMyType &c, size_t size);
-void funcSelectShares3PC(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyType &c, size_t size);
+void funcSelectShares(const RSSVectorMyType &a, const RSSVectorSmallType &b, RSSVectorMyType &selected, size_t size);
 void funcRELUPrime4PC(const RSSVectorMyType &a, RSSVectorSmallType &b, size_t size);
-void funcRELUPrime(const RSSVectorMyType &a, RSSVectorMyType &b, size_t size);
-void funcRELU(const RSSVectorMyType &a, RSSVectorMyType &b, size_t size);
+void funcRELUPrime(const RSSVectorMyType &a, RSSVectorSmallType &b, size_t size);
+void funcRELU(const RSSVectorMyType &a, RSSVectorSmallType &temp, RSSVectorMyType &b, size_t size);
 void funcDivisionMPC(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyType &quotient, 
 							size_t size);
 void funcMaxMPC(RSSVectorMyType &a, RSSVectorMyType &max, RSSVectorMyType &maxIndex, 

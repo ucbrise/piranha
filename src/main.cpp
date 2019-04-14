@@ -150,8 +150,8 @@ int main(int argc, char** argv)
 	// whichNetwork = "Debug Mat-Mul";
 	// debugDotProd();
 
-	whichNetwork = "Debug PrivateCompare";
-	debugPC();
+	// whichNetwork = "Debug PrivateCompare";
+	// debugPC();
 
 	// whichNetwork = "Debug Wrap";
 	// debugWrap();
@@ -164,6 +164,9 @@ int main(int argc, char** argv)
 
 	// whichNetwork = "Debug Division";
 	// debugDivision();
+
+	whichNetwork = "SelectShares Debug";
+	debugSS();
 
 	// whichNetwork += " test";
 	// test(network);

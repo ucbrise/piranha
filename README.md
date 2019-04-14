@@ -63,6 +63,10 @@ make abcFile
 
 ### Additional Resources
 ---
+#### General Information
+
+* Derivative of ReLU is actually the MSB in the entire code i.e., 0 for positives, 1 for negatives.
+
 #### Neural Networks
 
 #### Debugging

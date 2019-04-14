@@ -29,6 +29,8 @@ void Precompute::getRandomBitShares(RSSVectorSmallType &a, size_t size)
 }
 
 
+//m_0 is random shares of 0, m_1 is random shares of 1 in RSSMyType. 
+//This function generates random bits c and corresponding RSSMyType values m_c
 void Precompute::getSelectorBitShares(RSSVectorSmallType &c, RSSVectorMyType &m_c, size_t size)
 {
 	assert(c.size() == size && "size mismatch for getSelectorBitShares");

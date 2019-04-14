@@ -19,7 +19,7 @@ private:
 	RSSVectorMyType deltas;
 	RSSVectorMyType weights;
 	RSSVectorMyType biases;
-	RSSVectorMyType reluPrimeLarge;
+	RSSVectorSmallType reluPrime;
 
 
 public:
@@ -41,7 +41,7 @@ public:
 
 private:
 	//MPC
-	void forwardMPC(const RSSVectorMyType& inputActivation);
+	// void forwardMPC(const RSSVectorMyType& inputActivation);
 	void computeDeltaMPC(RSSVectorMyType& prevDelta);
 	void updateEquationsMPC(const RSSVectorMyType& prevActivations);
 	void maxMPC(RSSVectorMyType &a, RSSVectorMyType &max, RSSVectorMyType &maxIndex, 
