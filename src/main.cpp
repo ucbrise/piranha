@@ -165,8 +165,11 @@ int main(int argc, char** argv)
 	// whichNetwork = "Debug Division";
 	// debugDivision();
 
-	whichNetwork = "SelectShares Debug";
-	debugSS();
+	// whichNetwork = "Debug SelectShares";
+	// debugSS();
+
+	whichNetwork = "Debug MaxIndex";
+	debugMaxIndex();
 
 	// whichNetwork += " test";
 	// test(network);

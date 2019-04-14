@@ -974,8 +974,8 @@ void funcWrap(const RSSVectorMyType &a, RSSVectorSmallType &theta, size_t size)
 }
 
 
-// 3PC SelectShares: c contains shares of selector bit (encoded in myType). 
-// a,b,c are shared across PARTY_A, PARTY_B
+// Set c[i] = a[i] if b[i] = 0
+// Set c[i] = 0    if b[i] = 1
 void funcSelectShares(const RSSVectorMyType &a, const RSSVectorSmallType &b, 
 								RSSVectorMyType &selected, size_t size)
 {
@@ -996,7 +996,7 @@ void funcSelectShares(const RSSVectorMyType &a, const RSSVectorSmallType &b,
 
 	if (partyNum == PARTY_A)
 		for (int i = 0; i < size; ++i)
-			if (reconst_b[i] == 1)
+			if (reconst_b[i] == 0)
 			{
 				m_c[i].first = (myType)1 - m_c[i].first;
 				m_c[i].second = - m_c[i].second;
@@ -1004,7 +1004,7 @@ void funcSelectShares(const RSSVectorMyType &a, const RSSVectorSmallType &b,
 
 	if (partyNum == PARTY_B)
 		for (int i = 0; i < size; ++i)
-			if (reconst_b[i] == 1)
+			if (reconst_b[i] == 0)
 			{
 				m_c[i].first = - m_c[i].first;
 				m_c[i].second = - m_c[i].second;
@@ -1012,12 +1012,12 @@ void funcSelectShares(const RSSVectorMyType &a, const RSSVectorSmallType &b,
 
 	if (partyNum == PARTY_C)
 		for (int i = 0; i < size; ++i)
-			if (reconst_b[i] == 1)
+			if (reconst_b[i] == 0)
 			{
 				m_c[i].first = - m_c[i].first;
 				m_c[i].second = (myType)1 - m_c[i].second;
 			}
-			
+
 	funcDotProduct(a, m_c, selected, size, false, 0);
 }
 
@@ -1505,41 +1505,11 @@ void debugSS()
 
 	funcSelectShares(a, b, selection, size);
 
-// #if (LOG_DEBUG)
+#if (LOG_DEBUG)
 	funcReconstruct(a, reconst, size, "a", true);
 	funcReconstructBit(b, bits, size, "b", true);
 	funcReconstruct(selection, reconst, size, "Sel'd", true);
-// #endif	
-
-
-/******************************** TODO ****************************************/	
-	// size_t size = 10;
-	// RSSVectorMyType inputs(size, 0), outputs(size, 0);
-
-	// if (THREE_PC)
-	// {
-	// 	RSSVectorMyType selector(size, 0);
-
-	// 	if (partyNum == PARTY_A)
-	// 		for (size_t i = 0; i < size; ++i)
-	// 			selector[i] = (myType)(aes_indep->getBit() << FLOAT_PRECISION);
-
-	// 	if (PRIMARY)
-	// 		funcReconstruct2PC(selector, size, "selector");
-
-	// 	if (partyNum == PARTY_A)
-	// 		for (size_t i = 0; i < size; ++i)
-	// 			inputs[i] = (myType)aes_indep->get8Bits();
-
-	// 	funcSelectShares3PC(inputs, selector, outputs, size);
-
-	// 	if (PRIMARY)
-	// 	{
-	// 		funcReconstruct2PC(inputs, size, "inputs");
-	// 		funcReconstruct2PC(outputs, size, "outputs");
-	// 	}
-	// }
-/******************************** TODO ****************************************/	
+#endif	
 }
 
 
@@ -1547,45 +1517,23 @@ void debugSS()
 
 void debugMaxIndex()
 {
+	size_t rows = 5;
+	size_t columns = 3;
+	size_t size = rows*columns;
+	vector<myType> data = {1,2,3,
+						   3,1,2,
+						   1,5,3,
+						   5,1,6,
+						   6,3,9}, reconst(size);
+	RSSVectorMyType a(size), max(rows), maxIndex(rows);
+	funcGetShares(a, data);
+	funcMaxMPC(a, max, maxIndex, rows, columns);
 
-/******************************** TODO ****************************************/
-	// size_t rows = 10;
-	// size_t columns = 4;
-
-	// RSSVectorMyType maxIndex(rows, 0);
-	// if (partyNum == PARTY_A)
-	// 	for (size_t i = 0; i < rows; ++i)
-	// 		maxIndex[i] = (aes_indep->get8Bits())%columns;
-
-	// RSSVectorMyType a(rows*columns);	
-	// funcMaxIndexMPC(a, maxIndex, rows, columns);
-
-	// if (PRIMARY)
-	// {
-	// 	funcReconstruct2PC(maxIndex, maxIndex.size(), "maxIndex");
-		
-	// 	RSSVectorMyType temp(rows*columns);
-	// 	if (partyNum == PARTY_B)
-	// 		sendVector<RSSMyType>(a, PARTY_A, rows*columns);
-
-	// 	if (partyNum == PARTY_A)
-	// 	{
-	// 		receiveVector<RSSMyType>(temp, PARTY_B, rows*columns);
-	// 		addVectors<myType>(temp, a, temp, rows*columns);
-		
-	// 		cout << "a: " << endl;
-	// 		for (size_t i = 0; i < rows; ++i)
-	// 		{
-	// 			for (int j = 0; j < columns; ++j)
-	// 			{
-	// 				print_linear(temp[i*columns + j], DEBUG_PRINT);
-	// 			}
-	// 			cout << endl;
-	// 		}
-	// 		cout << endl;
-	// 	}
-	// }
-/******************************** TODO ****************************************/	
+#if (LOG_DEBUG)
+	funcReconstruct(a, reconst, size, "a", true);
+	funcReconstruct(max, reconst, rows, "val", true);
+	funcReconstruct(maxIndex, reconst, rows, "Idx", true);
+#endif	
 }
 
 
