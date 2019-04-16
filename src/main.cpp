@@ -82,7 +82,7 @@ int main(int argc, char** argv)
 
 /****************************** RUN NETWORK/BENCHMARKS ******************************/ 
 	start_m();
-	whichNetwork = "Debugging mode";
+	// whichNetwork = "Debugging mode";
 
 	// RSSVectorMyType sameer;
 	// int size = 2;
