@@ -64,8 +64,8 @@ void FCLayer::forward(const RSSVectorMyType &inputActivation)
 		for(size_t c = 0; c < columns; ++c)
 			zetas[r*columns + c] = zetas[r*columns + c] + biases[c];
 
-	cout << "ReLU: \t\t" << funcTime(funcRELU, zetas, reluPrime, activations, size) << endl;
-	// funcRELU(zetas, reluPrime, activations, size);
+	// cout << "ReLU: \t\t" << funcTime(funcRELU, zetas, reluPrime, activations, size) << endl;
+	funcRELU(zetas, reluPrime, activations, size);
 }
 
 

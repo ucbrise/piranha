@@ -896,6 +896,7 @@ void funcPrivateCompare(const RSSVectorSmallType &share_m, const vector<myType> 
 	}
 
 	//TODO 7 rounds of multiplication
+	// cout << "CM: \t\t" << funcTime(funcCrunchMultiply, c, betaPrime, size, dim) << endl;
 	funcCrunchMultiply(c, betaPrime, size, dim);	
 }
 
@@ -943,6 +944,8 @@ void funcWrap(const RSSVectorMyType &a, RSSVectorSmallType &theta, size_t size)
 
 	wrap3(x, x_prev, delta, size); // All parties have delta
 	PrecomputeObject.getRandomBitShares(eta, size);
+
+	// cout << "PC: \t\t" << funcTime(funcPrivateCompare, shares_r, reconst_x, eta, etaPrime, size, BIT_SIZE) << endl;
 	funcPrivateCompare(shares_r, reconst_x, eta, etaPrime, size, BIT_SIZE);
 
 	if (partyNum == PARTY_A)
@@ -1030,7 +1033,9 @@ void funcRELUPrime(const RSSVectorMyType &a, RSSVectorSmallType &b, size_t size)
 	for (int i = 0; i < size; ++i)
 		twoA[i] = a[i] << 1;
 
+	// cout << "Wrap: \t\t" << funcTime(funcWrap, twoA, theta, size) << endl;
 	funcWrap(twoA, theta, size);
+
 
 	for (int i = 0; i < size; ++i)
 	{
@@ -1048,8 +1053,8 @@ void funcRELU(const RSSVectorMyType &a, RSSVectorSmallType &temp, RSSVectorMyTyp
 	RSSVectorMyType m_c(size);
 	vector<smallType> reconst_b(size);
 
-	cout << "ReLU': \t\t" << funcTime(funcRELUPrime, a, temp, size) << endl;
-	// funcRELUPrime(a, temp, size);
+	// cout << "ReLU': \t\t" << funcTime(funcRELUPrime, a, temp, size) << endl;
+	funcRELUPrime(a, temp, size);
 	PrecomputeObject.getSelectorBitShares(c, m_c, size);
 
 	for (int i = 0; i < size; ++i)
