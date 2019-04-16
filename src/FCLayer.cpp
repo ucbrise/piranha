@@ -54,11 +54,10 @@ void FCLayer::forward(const RSSVectorMyType &inputActivation)
 	size_t common_dim = conf.inputDim;
 	size_t size = rows*columns;
 
-	cout << "Mat: \t\t" << funcTime(funcMatMul, inputActivation, weights, zetas, 
-				rows, common_dim, columns, 0, 0) << endl;
-
-	// funcMatMul(inputActivation, weights, zetas, 
-	// 			rows, common_dim, columns, 0, 0);
+	// cout << "Mat: \t\t" << funcTime(funcMatMul, inputActivation, weights, zetas, 
+	// 			rows, common_dim, columns, 0, 0) << endl;
+	funcMatMul(inputActivation, weights, zetas, 
+				rows, common_dim, columns, 0, 0);
 
 	for(size_t r = 0; r < rows; ++r)
 		for(size_t c = 0; c < columns; ++c)
