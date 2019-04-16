@@ -340,41 +340,41 @@ void matrixMultRSS(const RSSVectorMyType &a, const RSSVectorMyType &b, vector<my
 /********************************* Triple For Loop *********************************/
 	RSSVectorMyType triple_a(rows*common_dim), triple_b(common_dim*columns);
 
-	for (size_t i = 0; i < rows; ++i)
-	{
-		for (size_t j = 0; j < common_dim; ++j)
-		{
-			if (transpose_a)
-				triple_a(i, j) = a[j*rows + i];
-			else
-				triple_a(i, j) = a[i*common_dim + j];
-		}
-	}
-
-	for (size_t i = 0; i < common_dim; ++i)
-	{
-		for (size_t j = 0; j < columns; ++j)
-		{
-			if (transpose_b)
-				triple_b(i, j) = b[j*common_dim + i];	
-			else
-				triple_b(i, j) = b[i*columns + j];	
-		}
-	}
-
-	for (int i = 0; i < rows; ++i)
-	{
-		for (int j = 0; j < columns; ++j)
-		{
-			temp[i*columns + j] = 0;
-			for (int k = 0; k < common_dim; ++k)
-			{
-				temp3[i*columns + j] += triple_a[i*common_dim + k].first * triple_b[k*columns + j].first +
-									    triple_a[i*common_dim + k].first * triple_b[k*columns + j].second +
-									    triple_a[i*common_dim + k].second * triple_b[k*columns + j].first;
-			}
-		}
-	}
+    for (size_t i = 0; i < rows; ++i)
+    {
+        for (size_t j = 0; j < common_dim; ++j)
+        {
+            if (transpose_a)
+                triple_a[i*common_dim + j] = a[j*rows + i];
+            else
+                triple_a[i*common_dim + j] = a[i*common_dim + j];
+        }
+    }
+ 
+    for (size_t i = 0; i < common_dim; ++i)
+    {
+        for (size_t j = 0; j < columns; ++j)
+        {
+            if (transpose_b)
+                triple_b[i*columns + j] = b[j*common_dim + i];  
+            else
+                triple_b[i*columns + j] = b[i*columns + j]; 
+        }
+    }
+ 
+    for (int i = 0; i < rows; ++i)
+    {
+        for (int j = 0; j < columns; ++j)
+        {
+            temp[i*columns + j] = 0;
+            for (int k = 0; k < common_dim; ++k)
+            {
+                temp3[i*columns + j] += triple_a[i*common_dim + k].first * triple_b[k*columns + j].first +
+                                        triple_a[i*common_dim + k].first * triple_b[k*columns + j].second +
+                                        triple_a[i*common_dim + k].second * triple_b[k*columns + j].first;
+            }
+        }
+    }
 /********************************* Triple For Loop *********************************/	
 #endif
 #if (USING_EIGEN)
