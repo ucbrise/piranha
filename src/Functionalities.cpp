@@ -1048,7 +1048,8 @@ void funcRELU(const RSSVectorMyType &a, RSSVectorSmallType &temp, RSSVectorMyTyp
 	RSSVectorMyType m_c(size);
 	vector<smallType> reconst_b(size);
 
-	funcRELUPrime(a, temp, size);
+	cout << "ReLU': \t\t" << funcTime(funcRELUPrime, a, temp, size) << endl;
+	// funcRELUPrime(a, temp, size);
 	PrecomputeObject.getSelectorBitShares(c, m_c, size);
 
 	for (int i = 0; i < size; ++i)
