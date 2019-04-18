@@ -37,13 +37,4 @@ public:
 	//Getters
 	RSSVectorMyType* getActivation() {return &activations;};
 	RSSVectorMyType* getDelta() {return &deltas;};
-
-
-private:
-	//MPC
-	// void forwardMPC(const RSSVectorMyType& inputActivation);
-	void computeDeltaMPC(RSSVectorMyType& prevDelta);
-	void updateEquationsMPC(const RSSVectorMyType& prevActivations);
-	void maxMPC(RSSVectorMyType &a, RSSVectorMyType &max, RSSVectorMyType &maxIndex, 
-							size_t rows, size_t columns);
 };

@@ -270,10 +270,10 @@ void XORVectors(const vector<smallType> &a, const vector<smallType> &b,
 myType multiplyMyTypes(myType a, myType b, size_t shift);
 void log_print(string str);
 void error(string str);
-void convolutionReshape(const vector<myType> &vec, vector<myType> &vecShaped,
+void convolutionReshape(const RSSVectorMyType &vec, RSSVectorMyType &vecShaped,
 						size_t ih, size_t iw, size_t C, size_t B,  
 						size_t fh, size_t fw, size_t sy, size_t sx);
-void maxPoolReshape(const vector<myType> &vec, vector<myType> &vecShaped,
+void maxPoolReshape(const RSSVectorMyType &vec, RSSVectorMyType &vecShaped,
 						size_t ih, size_t iw, size_t D, size_t B,  
 						size_t fh, size_t fw, size_t sy, size_t sx);
 void convolutionReshapeBackprop(const vector<myType> &vec, vector<myType> &vecOut, 

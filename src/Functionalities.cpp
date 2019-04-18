@@ -579,6 +579,38 @@ void funcDotProduct(const RSSVectorSmallType &a, const RSSVectorSmallType &b,
 }
 
 
+// Term by term multiplication boolean shares
+void funcDotProductBits(const RSSVectorSmallType &a, const RSSVectorSmallType &b, 
+							 RSSVectorSmallType &c, size_t size) 
+{
+	log_print("funcDotProductBits");
+	assert(a.size() == size && "Matrix a incorrect for Mat-Mul");
+	assert(b.size() == size && "Matrix b incorrect for Mat-Mul");
+	assert(c.size() == size && "Matrix c incorrect for Mat-Mul");
+
+	vector<smallType> temp3(size, 0), recv(size, 0);
+	for (int i = 0; i < size; ++i)
+	{
+		temp3[i] = (a[i].first * b[i].first) ^ 
+				   (a[i].first * b[i].second) ^ 
+				   (a[i].second * b[i].first);
+	}
+
+	//Add random shares of 0 locally
+	thread *threads = new thread[2];
+	threads[0] = thread(sendVector<smallType>, ref(temp3), prevParty(partyNum), size);
+	threads[1] = thread(receiveVector<smallType>, ref(recv), nextParty(partyNum), size);
+	for (int i = 0; i < 2; i++)
+		threads[i].join();
+	delete[] threads; 
+
+	for (int i = 0; i < size; ++i)
+	{
+		c[i].first = temp3[i];
+		c[i].second = recv[i];
+	}
+}
+
 
 //Multiply index 2i, 2i+1 of the first vector into the second one. The second vector is half the size.
 void funcMultiplyNeighbours(const RSSVectorSmallType &c_1, RSSVectorSmallType &c_2, size_t size)
@@ -980,7 +1012,7 @@ void funcWrap(const RSSVectorMyType &a, RSSVectorSmallType &theta, size_t size)
 void funcSelectShares(const RSSVectorMyType &a, const RSSVectorSmallType &b, 
 								RSSVectorMyType &selected, size_t size)
 {
-	log_print("funcSelectShares3PC");
+	log_print("funcSelectShares");
 
 	RSSVectorSmallType c(size), bXORc(size);
 	RSSVectorMyType m_c(size);
@@ -1020,6 +1052,41 @@ void funcSelectShares(const RSSVectorMyType &a, const RSSVectorSmallType &b,
 			}
 
 	funcDotProduct(a, m_c, selected, size, false, 0);
+}
+
+//Within each group of columns, select a0 or a1 depending on value of bit b into answer.
+//loopCounter is used to offset a1 by loopCounter*rows*columns
+//answer = ((a0 \oplus a1) b ) \oplus a0
+void funcSelectBitShares(const RSSVectorSmallType &a0, const RSSVectorSmallType &a1, 
+						 const RSSVectorSmallType &b, RSSVectorSmallType &answer, 
+						 size_t rows, size_t columns, size_t loopCounter)
+{
+	log_print("funcSelectBitShares");
+	size_t size = rows*columns;
+	assert(a0.size() == rows*columns && "a0 size incorrect");
+	assert(a1.size() == (columns)*rows*columns && "a1 size incorrect");
+	assert(b.size() == rows && "a1 size incorrect");
+
+	RSSVectorSmallType bRepeated(rows*columns), tempXOR(rows*columns);
+	for (int i = 0; i < rows; ++i)
+		for (size_t j = 0; j < columns; ++j)
+			bRepeated[i*columns + j] = b[i];
+
+	for (int i = 0; i < rows; ++i)
+		for (size_t j = 0; j < columns; ++j)
+		{
+			tempXOR[i*columns+j].first = a0[i*columns+j].first ^ 
+										   a1[loopCounter*rows*columns+i*columns+j].first;
+   			tempXOR[i*columns+j].second = a0[i*columns+j].second ^ 
+										   a1[loopCounter*rows*columns+i*columns+j].second;
+		}
+
+	funcDotProductBits(tempXOR, bRepeated, answer, size);
+	for (int i = 0; i < size; ++i)
+	{
+		answer[i].first = answer[i].first ^ a0[i].first;
+		answer[i].second = answer[i].second ^ a0[i].second;
+	}
 }
 
 
@@ -1096,10 +1163,10 @@ void funcRELU(const RSSVectorMyType &a, RSSVectorSmallType &temp, RSSVectorMyTyp
 
 //All parties start with shares of a number in a and b and the quotient is in quotient.
 //alpha is the order of divisiors, 2^alpha < b < 2^{alpha+1}.
-void funcDivisionMPC(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyType &quotient, 
+void funcDivision(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyType &quotient, 
 							size_t size)
 {
-	log_print("funcDivisionMPC");
+	log_print("funcDivision");
 
 	size_t alpha = 3;
 	size_t precision = alpha + FLOAT_PRECISION + 1;
@@ -1137,19 +1204,25 @@ void funcDivisionMPC(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVect
 //the maximum value.
 //PARTY_A, PARTY_B start with the shares in a and {A,B} and {C,D} have the results in 
 //max and maxIndex.
-void funcMaxMPC(RSSVectorMyType &a, RSSVectorMyType &max, RSSVectorMyType &maxIndex, 
+void funcMaxpool(RSSVectorMyType &a, RSSVectorMyType &max, RSSVectorMyType &maxIndex, 
 							size_t rows, size_t columns)
 {
-	log_print("funcMaxMPC");
+	log_print("funcMaxpool");
+	assert(columns < 64 && "Pooling size has to be smaller than 8*8");
 
-	RSSVectorMyType diff(rows), diffIndex(rows), indexShares(rows*columns, std::make_pair(0,0));
+	RSSVectorMyType diff(rows), diffIndex(rows), indexShares(rows*columns), dmpShares(rows*columns);
 	RSSVectorSmallType rp(rows);
-	vector<myType> temp(rows*columns);
+	vector<myType> temp(rows*columns), dmpTemp(rows*columns);
 
 	for (size_t i = 0; i < rows; ++i)
 		for (size_t j = 0; j < columns; ++j)
 			temp[i*columns + j] = j;
 	funcGetShares(indexShares, temp);
+
+	// for (size_t i = 0; i < rows; ++i)
+	// 	for (size_t j = 0; j < columns; ++j)
+	// 		dmpTemp[i*columns + j] = (floatToMyType(1) << j);
+	// funcGetShares(dmpShares, dmpTemp);
 
 	for (size_t i = 0; i < rows; ++i)
 	{
@@ -1180,13 +1253,13 @@ void funcMaxMPC(RSSVectorMyType &a, RSSVectorMyType &max, RSSVectorMyType &maxIn
 
 //MaxIndex is of size rows. a is of size rows*columns.
 //a will be set to 0's except at maxIndex (in every set of column)
-void funcMaxIndexMPC(RSSVectorMyType &a, const RSSVectorMyType &maxIndex, 
+void funcMaxpoolPrime(RSSVectorMyType &a, const RSSVectorMyType &maxIndex, 
 						size_t rows, size_t columns)
 {
-	log_print("funcMaxIndexMPC");
+	log_print("funcMaxpoolPrime");
 
 /******************************** TODO ****************************************/
-	assert(((1 << (BIT_SIZE-1)) % columns) == 0 && "funcMaxIndexMPC works only for power of 2 columns");
+	assert(((1 << (BIT_SIZE-1)) % columns) == 0 && "funcMaxpoolPrime works only for power of 2 columns");
 	assert(columns < 257 && "This implementation does not support larger than 257 columns");
 	
 	// RSSVectorSmallType random(rows);
@@ -1434,7 +1507,7 @@ void debugDivision()
 
 	funcGetShares(a, data_a);
 	funcGetShares(b, data_b);
-	funcDivisionMPC(a, b, quotient, size);
+	funcDivision(a, b, quotient, size);
 
 #if (LOG_DEBUG)
 	funcReconstruct(a, reconst, size, "a", true);
@@ -1456,7 +1529,7 @@ void debugDivision()
 	// for (size_t i = 0; i < size; ++i)
 	// 	denominator[i] = 50*size;
 
-	// funcDivisionMPC(numerator, denominator, quotient, size);
+	// funcDivision(numerator, denominator, quotient, size);
 
 	// if (PRIMARY)
 	// {
@@ -1467,8 +1540,25 @@ void debugDivision()
 /******************************** TODO ****************************************/	
 }
 
-void debugMax()
+void debugSSBits()
 {
+	size_t rows = 5;
+	size_t columns = 2;
+	vector<smallType> a0 = {1,0,0,1,1,1,0,1,1,0};
+	vector<smallType> a1 = {0,1,1,0,0,0,1,0,0,0,	1,0,0,1,1,1,0,1,1,0};
+	vector<smallType> rp = {1,1,0,0,0};
+	RSSVectorSmallType x(rows*columns), y(rows*columns*columns), z(rows), answer(rows*columns);
+	funcGetShares(x, a0);
+	funcGetShares(y, a1);
+	funcGetShares(z, rp);
+
+	funcReconstructBit(x, a1, x.size(), "x", true);
+	funcReconstructBit(y, a1, y.size(), "y", true);
+	funcReconstructBit(z, a1, z.size(), "z", true);
+	funcSelectBitShares(x, y, z, answer, rows, columns, 0);
+	funcReconstructBit(answer, a1, answer.size(), "a", true);
+	funcSelectBitShares(x, y, z, answer, rows, columns, 1);
+	funcReconstructBit(answer, a1, answer.size(), "a", true);
 
 /******************************** TODO ****************************************/
 	// size_t rows = 1;
@@ -1514,6 +1604,8 @@ void debugSS()
 	funcReconstructBit(b, bits, size, "b", true);
 	funcReconstruct(selection, reconst, size, "Sel'd", true);
 #endif	
+
+
 }
 
 
@@ -1531,7 +1623,7 @@ void debugMaxIndex()
 						   6,3,9}, reconst(size);
 	RSSVectorMyType a(size), max(rows), maxIndex(rows);
 	funcGetShares(a, data);
-	funcMaxMPC(a, max, maxIndex, rows, columns);
+	funcMaxpool(a, max, maxIndex, rows, columns);
 
 #if (LOG_DEBUG)
 	funcReconstruct(a, reconst, size, "a", true);
@@ -1688,7 +1780,7 @@ void testMaxPoolDerivative(size_t p_range, size_t q_range, size_t px, size_t py,
 	// 			thatMatrixTemp[i*px*py + maxIndex[i]] = 1;
 
 	// 	if (MPC)
-	// 		funcMaxIndexMPC(thatMatrixTemp, maxIndex, size_delta, px*py);
+	// 		funcMaxpoolPrime(thatMatrixTemp, maxIndex, size_delta, px*py);
 		
 
 	// 	//Reshape thatMatrix

@@ -75,7 +75,7 @@ void NeuralNetwork::computeDelta()
 
 //DIVISION CODE BEGINS HERE
 /******************************** TODO ****************************************/
-//	funcDivisionMPC(*(layers[LL]->getActivation()), rowSum, quotient, size);
+//	funcDivision(*(layers[LL]->getActivation()), rowSum, quotient, size);
 /******************************** TODO ****************************************/
 //DIVISION CODE ENDS HERE
 
