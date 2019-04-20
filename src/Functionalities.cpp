@@ -1297,61 +1297,61 @@ void funcMaxpool(RSSVectorMyType &a, RSSVectorMyType &max, RSSVectorMyType &maxI
 
 //MaxIndex is of size rows. a is of size rows*columns.
 //a will be set to 0's except at maxIndex (in every set of column)
-void funcMaxpoolPrime(RSSVectorMyType &a, const RSSVectorMyType &maxIndex, 
-						size_t rows, size_t columns)
-{
-	log_print("funcMaxpoolPrime");
+// void funcMaxpoolPrime(RSSVectorMyType &a, const RSSVectorMyType &maxIndex, 
+// 						size_t rows, size_t columns)
+// {
+// 	log_print("funcMaxpoolPrime");
 
-/******************************** TODO ****************************************/
-	assert(((1 << (BIT_SIZE-1)) % columns) == 0 && "funcMaxpoolPrime works only for power of 2 columns");
-	assert(columns < 257 && "This implementation does not support larger than 257 columns");
+// /******************************** TODO ****************************************/
+// 	assert(((1 << (BIT_SIZE-1)) % columns) == 0 && "funcMaxpoolPrime works only for power of 2 columns");
+// 	assert(columns < 257 && "This implementation does not support larger than 257 columns");
 	
-	// RSSVectorSmallType random(rows);
+// 	// RSSVectorSmallType random(rows);
 
-	// if (PRIMARY)
-	// {
-	// 	RSSVectorSmallType toSend(rows);
-	// 	for (size_t i = 0; i < rows; ++i)
-	// 		toSend[i] = (smallType)maxIndex[i] % columns;
+// 	// if (PRIMARY)
+// 	// {
+// 	// 	RSSVectorSmallType toSend(rows);
+// 	// 	for (size_t i = 0; i < rows; ++i)
+// 	// 		toSend[i] = (smallType)maxIndex[i] % columns;
 		
-	// 	populateRandomVector<RSSSmallType>(random, rows, "COMMON", "POSITIVE");
-	// 	if (partyNum == PARTY_A)
-	// 		addVectors<smallType>(toSend, random, toSend, rows);
+// 	// 	populateRandomVector<RSSSmallType>(random, rows, "COMMON", "POSITIVE");
+// 	// 	if (partyNum == PARTY_A)
+// 	// 		addVectors<smallType>(toSend, random, toSend, rows);
 
-	// 	sendVector<RSSSmallType>(toSend, PARTY_C, rows);
-	// }
+// 	// 	sendVector<RSSSmallType>(toSend, PARTY_C, rows);
+// 	// }
 
-	// if (partyNum == PARTY_C)
-	// {
-	// 	RSSVectorSmallType index(rows), temp(rows);
-	// 	RSSVectorMyType vector(rows*columns, 0), share_1(rows*columns), share_2(rows*columns);
-	// 	receiveVector<RSSSmallType>(index, PARTY_A, rows);
-	// 	receiveVector<RSSSmallType>(temp, PARTY_B, rows);
-	// 	addVectors<RSSSmallType>(index, temp, index, rows);
+// 	// if (partyNum == PARTY_C)
+// 	// {
+// 	// 	RSSVectorSmallType index(rows), temp(rows);
+// 	// 	RSSVectorMyType vector(rows*columns, 0), share_1(rows*columns), share_2(rows*columns);
+// 	// 	receiveVector<RSSSmallType>(index, PARTY_A, rows);
+// 	// 	receiveVector<RSSSmallType>(temp, PARTY_B, rows);
+// 	// 	addVectors<RSSSmallType>(index, temp, index, rows);
 
-	// 	for (size_t i = 0; i < rows; ++i)
-	// 		index[i] = index[i] % columns;
+// 	// 	for (size_t i = 0; i < rows; ++i)
+// 	// 		index[i] = index[i] % columns;
 
-	// 	for (size_t i = 0; i < rows; ++i)
-	// 		vector[i*columns + index[i]] = 1;
+// 	// 	for (size_t i = 0; i < rows; ++i)
+// 	// 		vector[i*columns + index[i]] = 1;
 
-	// 	splitIntoShares(vector, share_1, share_2, rows*columns);
-	// 	sendVector<RSSMyType>(share_1, PARTY_A, rows*columns);
-	// 	sendVector<RSSMyType>(share_2, PARTY_B, rows*columns);
-	// }
+// 	// 	splitIntoShares(vector, share_1, share_2, rows*columns);
+// 	// 	sendVector<RSSMyType>(share_1, PARTY_A, rows*columns);
+// 	// 	sendVector<RSSMyType>(share_2, PARTY_B, rows*columns);
+// 	// }
 
-	// if (PRIMARY)
-	// {
-	// 	receiveVector<RSSMyType>(a, PARTY_C, rows*columns);
-	// 	size_t offset = 0;
-	// 	for (size_t i = 0; i < rows; ++i)
-	// 	{
-	// 		rotate(a.begin()+offset, a.begin()+offset+(random[i] % columns), a.begin()+offset+columns);
-	// 		offset += columns;
-	// 	}
-	// }
-/******************************** TODO ****************************************/	
-}
+// 	// if (PRIMARY)
+// 	// {
+// 	// 	receiveVector<RSSMyType>(a, PARTY_C, rows*columns);
+// 	// 	size_t offset = 0;
+// 	// 	for (size_t i = 0; i < rows; ++i)
+// 	// 	{
+// 	// 		rotate(a.begin()+offset, a.begin()+offset+(random[i] % columns), a.begin()+offset+columns);
+// 	// 		offset += columns;
+// 	// 	}
+// 	// }
+// /******************************** TODO ****************************************/	
+// }
 
 
 

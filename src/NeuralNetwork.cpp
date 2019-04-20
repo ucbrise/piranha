@@ -73,24 +73,7 @@ void NeuralNetwork::computeDelta()
 		for (size_t j = 0; j < columns; ++j)
 			rowSum[i*columns + j] = rowSum[i*columns];
 
-//DIVISION CODE BEGINS HERE
-/******************************** TODO ****************************************/
-//	funcDivision(*(layers[LL]->getActivation()), rowSum, quotient, size);
-/******************************** TODO ****************************************/
-//DIVISION CODE ENDS HERE
-
-//WITHOUT DIVISION BEGINS HERE
-	// for (size_t i = 0; i < rows; ++i)
-	// 	for (size_t j = 0; j < columns; ++j)
-	// 		quotient[i * columns + j] += (*(layers[LL]->getActivation()))[i * columns + j];
-
-	// if (STANDALONE)
-	// 	for (size_t i = 0; i < quotient.size(); ++i)
-	// 		quotient[i] *= reluPrimeSmall[i];
-
-	// if (MPC)
-	// 	error("Implement multiplication by reluPrime here");
-//WITHOUT DIVISION ENDS HERE
+	funcDivision(*(layers[LL]->getActivation()), rowSum, quotient, size);
 
 	for (size_t i = 0; i < rows; ++i)
 		for (size_t j = 0; j < columns; ++j)
@@ -120,8 +103,9 @@ void NeuralNetwork::predict(RSSVectorMyType &maxIndex)
 	size_t rows = MINI_BATCH_SIZE;
 	size_t columns = LAST_LAYER_SIZE;
 	RSSVectorMyType max(rows);
+	RSSVectorSmallType maxPrime(rows*columns);
 
-	layers[LL]->findMax(*(layers[LL]->getActivation()), max, maxIndex, rows, columns);
+	funcMaxpool(*(layers[LL]->getActivation()), max, maxIndex, maxPrime, rows, columns);
 }
 
 void NeuralNetwork::getAccuracy(const RSSVectorMyType &maxIndex, vector<size_t> &counter)
@@ -131,24 +115,25 @@ void NeuralNetwork::getAccuracy(const RSSVectorMyType &maxIndex, vector<size_t> 
 	size_t rows = MINI_BATCH_SIZE;
 	size_t columns = LAST_LAYER_SIZE;
 	RSSVectorMyType max(rows), groundTruth(rows, make_pair(0,0));
+	RSSVectorSmallType maxPrime(rows*columns);
 
-	layers[LL]->findMax(outputData, max, groundTruth, rows, columns);
 
+	funcMaxpool(outputData, max, groundTruth, maxPrime, rows, columns);
 
 	//Reconstruct things
-	RSSVectorMyType temp_max(rows), temp_groundTruth(rows);
-	if (partyNum == PARTY_B)
-		sendTwoVectors<RSSMyType>(max, groundTruth, PARTY_A, rows, rows);
+/******************************** TODO ****************************************/
+	// RSSVectorMyType temp_max(rows), temp_groundTruth(rows);
+	// if (partyNum == PARTY_B)
+	// 	sendTwoVectors<RSSMyType>(max, groundTruth, PARTY_A, rows, rows);
 
-	if (partyNum == PARTY_A)
-	{
-		receiveTwoVectors<RSSMyType>(temp_max, temp_groundTruth, PARTY_B, rows, rows);
-		addVectors<RSSMyType>(temp_max, max, temp_max, rows);
-/******************************** TODO ****************************************/
+	// if (partyNum == PARTY_A)
+	// {
+	// 	receiveTwoVectors<RSSMyType>(temp_max, temp_groundTruth, PARTY_B, rows, rows);
+	// 	addVectors<RSSMyType>(temp_max, max, temp_max, rows);
 //		dividePlainSA(temp_max, (1 << FLOAT_PRECISION));
+	// 	addVectors<RSSMyType>(temp_groundTruth, groundTruth, temp_groundTruth, rows);	
+	// }
 /******************************** TODO ****************************************/
-		addVectors<RSSMyType>(temp_groundTruth, groundTruth, temp_groundTruth, rows);	
-	}
 
 	for (size_t i = 0; i < MINI_BATCH_SIZE; ++i)
 	{

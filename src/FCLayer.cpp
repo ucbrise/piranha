@@ -122,11 +122,11 @@ void FCLayer::updateEquations(const RSSVectorMyType& prevActivations)
 }
 
 
-void FCLayer::findMax(RSSVectorMyType &a, RSSVectorMyType &max, RSSVectorMyType &maxIndex, 
-							size_t rows, size_t columns)
-{
-	log_print("FC.findMax");
-	assert(true && "Maxpool function should not be called on FCLayer");
-}
+// void FCLayer::findMax(RSSVectorMyType &a, RSSVectorMyType &max, RSSVectorMyType &maxIndex, 
+// 				 RSSVectorSmallType &maxPrime, size_t rows, size_t columns)
+// {
+// 	log_print("FC.findMax");
+// 	assert(true && "Maxpool function should not be called on FCLayer");
+// }
 
 

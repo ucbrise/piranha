@@ -32,7 +32,7 @@ public:
 	void computeDelta(RSSVectorMyType& prevDelta) override;
 	void updateEquations(const RSSVectorMyType& prevActivations) override;
 	void findMax(RSSVectorMyType &a, RSSVectorMyType &max, RSSVectorMyType &maxIndex, 
-							size_t rows, size_t columns) override;
+				 RSSVectorSmallType &maxPrime, size_t rows, size_t columns) override;
 
 	//Getters
 	RSSVectorMyType* getActivation() {return &activations;};
