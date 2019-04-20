@@ -75,6 +75,7 @@ int main(int argc, char** argv)
 /****************************** AES SETUP and SYNC ******************************/ 
 	aes_indep = new AESObject(argv[3]);
 	aes_next = new AESObject(argv[4]);
+	aes_prev = new AESObject(argv[5]);
 
 	initializeCommunication(argv[2], partyNum);
 	synchronize(2000000);
@@ -168,12 +169,11 @@ int main(int argc, char** argv)
 	// whichNetwork = "Debug SelectShares";
 	// debugSS();
 
-	// whichNetwork = "Debug MaxIndex";
-	// debugMaxIndex();
+	whichNetwork = "Debug MaxIndex";
+	debugMaxIndex();
 
-
-	whichNetwork = "Debug SS Bits";
-	debugSSBits();
+	// whichNetwork = "Debug SS Bits";
+	// debugSSBits();
 
 	// whichNetwork += " test";
 	// test(network);

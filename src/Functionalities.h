@@ -46,7 +46,7 @@ void funcRELU(const RSSVectorMyType &a, RSSVectorSmallType &temp, RSSVectorMyTyp
 void funcDivision(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyType &quotient, 
 							size_t size);
 void funcMaxpool(RSSVectorMyType &a, RSSVectorMyType &max, RSSVectorMyType &maxIndex, 
-						size_t rows, size_t columns);
+					RSSVectorSmallType &maxPrime, size_t rows, size_t columns);
 void funcMaxpoolPrime(RSSVectorMyType &a, const RSSVectorMyType &maxIndex, 
 						size_t rows, size_t columns);
 void aggregateCommunication();

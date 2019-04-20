@@ -127,9 +127,6 @@ void FCLayer::findMax(RSSVectorMyType &a, RSSVectorMyType &max, RSSVectorMyType 
 {
 	log_print("FC.findMax");
 	assert(true && "Maxpool function should not be called on FCLayer");
-
-	funcMaxpool(a, max, maxIndex, rows, columns);
 }
-
 
 

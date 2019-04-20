@@ -33,7 +33,7 @@ size_t testLabelsBatchCounter = 0;
 /******************* Main train and test functions *******************/
 void parseInputs(int argc, char* argv[])
 {	
-	if (argc < 5) 
+	if (argc < 6) 
 		print_usage(argv[0]);
 
 	partyNum = atoi(argv[1]);
@@ -92,8 +92,8 @@ void loadData()
 
 	if (partyNum < 3)
 	{
-		filename_train_data_prev = "files/train_data_B";
 		filename_train_data_next = "files/train_data_A";
+		filename_train_data_prev = "files/train_data_B";
 		filename_test_data_next = "files/test_data_A";
 		filename_test_data_prev = "files/test_data_B";
 		filename_train_labels_next = "files/train_labels_A";
@@ -102,7 +102,7 @@ void loadData()
 		filename_test_labels_prev = "files/test_labels_B";
 	}
 
-	float temp_next, temp_prev;
+	float temp_next = 0, temp_prev = 0;
 	ifstream f_next(filename_train_data_next);
 	ifstream f_prev(filename_train_data_prev);
 	for (int i = 0; i < TRAINING_DATA_SIZE * LAYER0; ++i)

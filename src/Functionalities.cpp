@@ -591,9 +591,9 @@ void funcDotProductBits(const RSSVectorSmallType &a, const RSSVectorSmallType &b
 	vector<smallType> temp3(size, 0), recv(size, 0);
 	for (int i = 0; i < size; ++i)
 	{
-		temp3[i] = (a[i].first * b[i].first) ^ 
-				   (a[i].first * b[i].second) ^ 
-				   (a[i].second * b[i].first);
+		temp3[i] = (a[i].first and b[i].first) ^ 
+				   (a[i].first and b[i].second) ^ 
+				   (a[i].second and b[i].first);
 	}
 
 	//Add random shares of 0 locally
@@ -609,6 +609,9 @@ void funcDotProductBits(const RSSVectorSmallType &a, const RSSVectorSmallType &b
 		c[i].first = temp3[i];
 		c[i].second = recv[i];
 	}
+	// cout << (int)c[0].first << " " << (int)c[0].second << " " << 
+	// 		(int)c[1].first << " " << (int)c[1].second << " " << 
+	// 		(int)c[2].first << " " << (int)c[2].second << endl;
 }
 
 
@@ -1065,28 +1068,59 @@ void funcSelectBitShares(const RSSVectorSmallType &a0, const RSSVectorSmallType 
 	size_t size = rows*columns;
 	assert(a0.size() == rows*columns && "a0 size incorrect");
 	assert(a1.size() == (columns)*rows*columns && "a1 size incorrect");
-	assert(b.size() == rows && "a1 size incorrect");
+	assert(b.size() == rows && "b size incorrect");
+	assert(answer.size() == rows*columns && "answers size incorrect");
+	
+	// vector<smallType> reconst(size), x(size);
+	// funcReconstructBit(a0, reconst, size, "a00000", true);
 
-	RSSVectorSmallType bRepeated(rows*columns), tempXOR(rows*columns);
+	RSSVectorSmallType bRepeated(size), tempXOR(size);
 	for (int i = 0; i < rows; ++i)
 		for (size_t j = 0; j < columns; ++j)
 			bRepeated[i*columns + j] = b[i];
 
-	for (int i = 0; i < rows; ++i)
+	// funcReconstructBit(bRepeated, reconst, size, "bReppp", true);
+	// funcReconstructBit(a0, reconst, size, "a00000", true);
+	// cout << (int)a0[0].first << " " << (int)a0[0].second << " " << (int)a0[1].first << " " << 
+	// (int)a0[1].second << endl;
+
+	for (size_t i = 0; i < rows; ++i)
 		for (size_t j = 0; j < columns; ++j)
 		{
-			tempXOR[i*columns+j].first = a0[i*columns+j].first ^ 
-										   a1[loopCounter*rows*columns+i*columns+j].first;
-   			tempXOR[i*columns+j].second = a0[i*columns+j].second ^ 
-										   a1[loopCounter*rows*columns+i*columns+j].second;
+			tempXOR[i*columns+j] = a0[i*columns+j] ^
+								   a1[loopCounter*rows*columns+i*columns+j];
+			// tempXOR[i*columns+j].first = (bool)a0[i*columns+j].first ^
+			// 					   (bool)a1[loopCounter*rows*columns+i*columns+j].first;								   
+			// tempXOR[i*columns+j].second = (bool)a0[i*columns+j].second ^
+			// 					   (bool)a1[loopCounter*rows*columns+i*columns+j].second;					   
 		}
 
+	// funcReconstructBit(a0, reconst, size, "a010101", true);
 	funcDotProductBits(tempXOR, bRepeated, answer, size);
+	// funcReconstructBit(a0, x, size, "a011111", true);
+
+	// funcReconstructBit(tempXOR, reconst, size, "tempXOR", true);
+	// funcReconstructBit(answer, reconst, size, "answer", true);
+	// funcReconstructBit(a0, reconst, size, "a00000", true);
+
+	// cout << (int)a0[0].first << " " << (int)a0[0].second << " " << (int)a0[1].first << " " << 
+	// (int)a0[1].second << endl;
+
+	// for (int i = 0; i < rows; ++i)
+	// 	for (size_t j = 0; j < columns; ++j)
+	// 	{
+	// 		RSSSmallType temp = answer[i*columns + j];
+	// 		answer[i*columns + j] = temp ^ a0[i*columns + j];
+	// 	}
+
 	for (int i = 0; i < size; ++i)
 	{
-		answer[i].first = answer[i].first ^ a0[i].first;
-		answer[i].second = answer[i].second ^ a0[i].second;
+		answer[i] = answer[i] ^ a0[i];
+		// answer[i].first = answer[i].first ^ a0[i].first;
+		// answer[i].second = answer[i].second ^ a0[i].second;
 	}
+	// funcReconstructBit(a0, reconst, size, "a00000", true);
+	// funcReconstructBit(answer, reconst, size, "answer", true);
 }
 
 
@@ -1205,31 +1239,38 @@ void funcDivision(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorM
 //PARTY_A, PARTY_B start with the shares in a and {A,B} and {C,D} have the results in 
 //max and maxIndex.
 void funcMaxpool(RSSVectorMyType &a, RSSVectorMyType &max, RSSVectorMyType &maxIndex, 
-							size_t rows, size_t columns)
+					RSSVectorSmallType &maxPrime, size_t rows, size_t columns)
 {
 	log_print("funcMaxpool");
-	assert(columns < 64 && "Pooling size has to be smaller than 8*8");
+	assert(columns < 256 && "Pooling size has to be smaller than 8-bits");
 
-	RSSVectorMyType diff(rows), diffIndex(rows), indexShares(rows*columns), dmpShares(rows*columns);
-	RSSVectorSmallType rp(rows);
-	vector<myType> temp(rows*columns), dmpTemp(rows*columns);
+	size_t size = rows*columns;
+	RSSVectorMyType diff(rows), diffIndex(rows), indexShares(size);
+	RSSVectorSmallType rp(rows), dmpIndexShares(columns*size);
+	vector<myType> temp(size);
+	vector<smallType> dmpTemp(columns*size, 0);
 
 	for (size_t i = 0; i < rows; ++i)
 		for (size_t j = 0; j < columns; ++j)
 			temp[i*columns + j] = j;
 	funcGetShares(indexShares, temp);
 
-	// for (size_t i = 0; i < rows; ++i)
-	// 	for (size_t j = 0; j < columns; ++j)
-	// 		dmpTemp[i*columns + j] = (floatToMyType(1) << j);
-	// funcGetShares(dmpShares, dmpTemp);
+	for (int loopCounter = 0; loopCounter < columns; ++loopCounter)
+		for (size_t i = 0; i < rows; ++i)
+			dmpTemp[loopCounter*rows*columns + i*columns + loopCounter] = 1;
+	funcGetShares(dmpIndexShares, dmpTemp);
+
+	for (size_t i = 0; i < size; ++i)
+		maxPrime[i] = dmpIndexShares[i];
+
+	// funcReconstructBit(dmpIndexShares, dmpTemp, size*columns, "dmpIndexShares", true);
+	// cout << (int)maxPrime[0].first << " " << (int)maxPrime[0].second << endl;
 
 	for (size_t i = 0; i < rows; ++i)
 	{
 		max[i] = a[i*columns];
 		maxIndex[i] = std::make_pair(0,0);
 	}
-
 
 	for (size_t i = 1; i < columns; ++i)
 	{
@@ -1241,6 +1282,9 @@ void funcMaxpool(RSSVectorMyType &a, RSSVectorMyType &max, RSSVectorMyType &maxI
 
 		funcRELU(diff, rp, max, rows);
 		funcSelectShares(diffIndex, rp, maxIndex, rows);
+		// funcReconstructBit(maxPrime, dmpTemp, size, "maxPrime", true);
+		// funcReconstructBit(rp, dmpTemp, rows, "rp", true);
+		funcSelectBitShares(maxPrime, dmpIndexShares, rp, maxPrime, rows, columns, i);
 
 		for (size_t	j = 0; j < rows; ++j)
 			max[j] = max[j] + a[j*columns + i];
@@ -1542,11 +1586,13 @@ void debugDivision()
 
 void debugSSBits()
 {
-	size_t rows = 5;
-	size_t columns = 2;
-	vector<smallType> a0 = {1,0,0,1,1,1,0,1,1,0};
-	vector<smallType> a1 = {0,1,1,0,0,0,1,0,0,0,	1,0,0,1,1,1,0,1,1,0};
-	vector<smallType> rp = {1,1,0,0,0};
+	size_t rows = 4;
+	size_t columns = 3;
+	vector<smallType> a0 = {1,0,0,1,1,1,0,1,1,0,0,0};
+	vector<smallType> a1 = {0,1,1,0,0,0,1,0,0,0,0,0,
+							1,0,0,1,1,1,0,1,1,0,1,1,
+							1,1,0,1,1,0,0,1,0,1,0,1};
+	vector<smallType> rp = {0,0,1,1};
 	RSSVectorSmallType x(rows*columns), y(rows*columns*columns), z(rows), answer(rows*columns);
 	funcGetShares(x, a0);
 	funcGetShares(y, a1);
@@ -1558,6 +1604,8 @@ void debugSSBits()
 	funcSelectBitShares(x, y, z, answer, rows, columns, 0);
 	funcReconstructBit(answer, a1, answer.size(), "a", true);
 	funcSelectBitShares(x, y, z, answer, rows, columns, 1);
+	funcReconstructBit(answer, a1, answer.size(), "a", true);
+	funcSelectBitShares(x, y, z, answer, rows, columns, 2);
 	funcReconstructBit(answer, a1, answer.size(), "a", true);
 
 /******************************** TODO ****************************************/
@@ -1622,14 +1670,17 @@ void debugMaxIndex()
 						   5,1,6,
 						   6,3,9}, reconst(size);
 	RSSVectorMyType a(size), max(rows), maxIndex(rows);
+	RSSVectorSmallType maxPrime(rows*columns);
+	vector<smallType> reconst_maxPrime(maxPrime.size());
 	funcGetShares(a, data);
-	funcMaxpool(a, max, maxIndex, rows, columns);
+	funcMaxpool(a, max, maxIndex, maxPrime, rows, columns);
 
-#if (LOG_DEBUG)
+// #if (LOG_DEBUG)
 	funcReconstruct(a, reconst, size, "a", true);
 	funcReconstruct(max, reconst, rows, "val", true);
 	funcReconstruct(maxIndex, reconst, rows, "Idx", true);
-#endif	
+	funcReconstructBit(maxPrime, reconst_maxPrime, rows*columns, "maxP", true);
+// #endif	
 }
 
 
