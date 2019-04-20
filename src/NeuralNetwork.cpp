@@ -3,6 +3,7 @@
 #include "tools.h"
 #include "FCLayer.h"
 #include "NeuralNetwork.h"
+#include "Functionalities.h"
 using namespace std;
 
 
@@ -122,7 +123,7 @@ void NeuralNetwork::getAccuracy(const RSSVectorMyType &maxIndex, vector<size_t> 
 
 	//Reconstruct things
 /******************************** TODO ****************************************/
-	// RSSVectorMyType temp_max(rows), temp_groundTruth(rows);
+	RSSVectorMyType temp_max(rows), temp_groundTruth(rows);
 	// if (partyNum == PARTY_B)
 	// 	sendTwoVectors<RSSMyType>(max, groundTruth, PARTY_A, rows, rows);
 
