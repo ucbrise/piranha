@@ -673,10 +673,8 @@ void funcCrunchMultiply(const RSSVectorSmallType &c, vector<smallType> &betaPrim
 
 	threads[0] = thread(sendVector<smallType>, ref(a_next), nextParty(partyNum), size);
 	threads[1] = thread(receiveVector<smallType>, ref(a_prev), prevParty(partyNum), size);
-
 	for (int i = 0; i < 2; i++)
 		threads[i].join();
-
 	delete[] threads;
 
 	for (int i = 0; i < size; ++i)
@@ -1675,12 +1673,12 @@ void debugMaxIndex()
 	funcGetShares(a, data);
 	funcMaxpool(a, max, maxIndex, maxPrime, rows, columns);
 
-// #if (LOG_DEBUG)
+#if (LOG_DEBUG)
 	funcReconstruct(a, reconst, size, "a", true);
 	funcReconstruct(max, reconst, rows, "val", true);
 	funcReconstruct(maxIndex, reconst, rows, "Idx", true);
 	funcReconstructBit(maxPrime, reconst_maxPrime, rows*columns, "maxP", true);
-// #endif	
+#endif	
 }
 
 
@@ -1791,20 +1789,20 @@ void testMaxPool(size_t p_range, size_t q_range, size_t px, size_t py, size_t D,
 {
 
 /******************************** TODO ****************************************/	
-	// size_t B = MINI_BATCH_SIZE;
-	// size_t size_x = p_range*q_range*D*B;
+	size_t B = MINI_BATCH_SIZE;
+	size_t size_x = p_range*q_range*D*B;
 
-	// RSSVectorMyType y(size_x, 0);
-	// RSSVectorMyType maxPoolShaped(size_x, 0);
-	// RSSVectorMyType act(size_x/(px*py), 0);
-	// RSSVectorMyType maxIndex(size_x/(px*py), 0); 
+	RSSVectorMyType y(size_x);
+	RSSVectorMyType maxPoolShaped(size_x);
+	RSSVectorMyType act(size_x/(px*py));
+	RSSVectorMyType maxIndex(size_x/(px*py)); 
+	RSSVectorSmallType maxPrime(size_x); 
 
-	// for (size_t i = 0; i < iter; ++i)
-	// {
-	// 	maxPoolReshape(y, maxPoolShaped, p_range, q_range, D, B, py, px, py, px);
-		
-	// 	funcMaxMPC(maxPoolShaped, act, maxIndex, size_x/(px*py), px*py);
-	// }
+	for (size_t i = 0; i < iter; ++i)
+	{
+		maxPoolReshape(y, maxPoolShaped, p_range, q_range, D, B, py, px, py, px);
+		funcMaxpool(maxPoolShaped, act, maxIndex, maxPrime, size_x/(px*py), px*py);
+	}
 /******************************** TODO ****************************************/	
 }
 

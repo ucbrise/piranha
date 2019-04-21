@@ -29,15 +29,15 @@ int main(int argc, char** argv)
 
 /****************************** SELECT NETWORK ******************************/ 
 	//MINIONN, Network-D in GAZELLE
-	// whichNetwork = "MiniONN/GAZELLE-D";
-	// CNNConfig* l0 = new CNNConfig(16,1,5,5,MINI_BATCH_SIZE,28,28,2,2);
-	// CNNConfig* l1 = new CNNConfig(16,16,5,5,MINI_BATCH_SIZE,12,12,2,2);
-	// FCConfig* l2 = new FCConfig(MINI_BATCH_SIZE, 256, 100);
-	// FCConfig* l3 = new FCConfig(MINI_BATCH_SIZE, 100, 10);
-	// config->addLayer(l0);
-	// config->addLayer(l1);
-	// config->addLayer(l2);
-	// config->addLayer(l3);
+	whichNetwork = "MiniONN/GAZELLE-D";
+	CNNConfig* l0 = new CNNConfig(16,1,5,5,MINI_BATCH_SIZE,28,28,2,2);
+	CNNConfig* l1 = new CNNConfig(16,16,5,5,MINI_BATCH_SIZE,12,12,2,2);
+	FCConfig* l2 = new FCConfig(MINI_BATCH_SIZE, 256, 100);
+	FCConfig* l3 = new FCConfig(MINI_BATCH_SIZE, 100, 10);
+	config->addLayer(l0);
+	config->addLayer(l1);
+	config->addLayer(l2);
+	config->addLayer(l3);
 
 	//LeNet
 	// whichNetwork = "LeNet";
@@ -51,13 +51,13 @@ int main(int argc, char** argv)
 	// config->addLayer(l3);
 
 	//SecureML
-	whichNetwork = "SecureML";
-	FCConfig* l0 = new FCConfig(MINI_BATCH_SIZE, LAYER0, LAYER1); 
-	FCConfig* l1 = new FCConfig(MINI_BATCH_SIZE, LAYER1, LAYER2); 
-	FCConfig* l2 = new FCConfig(MINI_BATCH_SIZE, LAYER2, LAST_LAYER_SIZE); 
-	config->addLayer(l0);
-	config->addLayer(l1);
-	config->addLayer(l2);
+	// whichNetwork = "SecureML";
+	// FCConfig* l0 = new FCConfig(MINI_BATCH_SIZE, LAYER0, LAYER1); 
+	// FCConfig* l1 = new FCConfig(MINI_BATCH_SIZE, LAYER1, LAYER2); 
+	// FCConfig* l2 = new FCConfig(MINI_BATCH_SIZE, LAYER2, LAST_LAYER_SIZE); 
+	// config->addLayer(l0);
+	// config->addLayer(l1);
+	// config->addLayer(l2);
 
 	//Chameleon
 	// whichNetwork = "Sarda";
@@ -84,36 +84,6 @@ int main(int argc, char** argv)
 /****************************** RUN NETWORK/BENCHMARKS ******************************/ 
 	start_m();
 	// whichNetwork = "Debugging mode";
-
-	// RSSVectorMyType sameer;
-	// int size = 2;
-	// for (int i = 0; i < size; ++i)
-	// 	for (int j = 0; j < size; ++j)
-	// 		sameer.push_back(std::make_pair(i*partyNum,j*partyNum));
-
-	// int i = 0;
-	// for (RSSVectorMyType::iterator it = sameer.begin(); it != sameer.end(); it++) {
-	// 	std::cout << "sameer[" << i << "].1st = " << it->first << std::endl;
-	// 	std::cout << "sameer[" << i << "].2nd = " << it->second << std::endl; 
-	// 	i++;
-	// }
-
-	// if (partyNum == PARTY_A)
-	// 	sendVector<RSSMyType>(sameer, PARTY_B, sameer.size());
-	// 	// threadSend<RSSMyType>(sameer, PARTY_B, sameer.size());
-
-	// if (partyNum == PARTY_B)
-	// 	receiveVector<RSSMyType>(sameer, PARTY_A, sameer.size());
-	// 	// threadReceive<RSSMyType>(sameer, PARTY_A, sameer.size());
-
-	// i = 0;
-	// std::cout << "----------------" << std::endl;
-	// for (RSSVectorMyType::iterator it = sameer.begin(); it != sameer.end(); it++) {
-	// 	std::cout << "sameer[" << i << "].1st = " << it->first << std::endl;
-	// 	std::cout << "sameer[" << i << "].2nd = " << it->second << std::endl; 
-	// 	i++;
-	// }
-
 
 	// whichNetwork = "Mat-Mul";
 	// testMatMul(784, 128, 10, NUM_ITERATIONS);
@@ -148,11 +118,14 @@ int main(int argc, char** argv)
 	// whichNetwork += " train";
 	// train(network, config);
 
+	// whichNetwork += " test";
+	// test(network);
+
 	// whichNetwork = "Debug Mat-Mul";
 	// debugDotProd();
 
-	// whichNetwork = "Debug PrivateCompare";
-	// debugPC();
+	whichNetwork = "Debug PrivateCompare";
+	debugPC();
 
 	// whichNetwork = "Debug Wrap";
 	// debugWrap();
@@ -169,14 +142,14 @@ int main(int argc, char** argv)
 	// whichNetwork = "Debug SelectShares";
 	// debugSS();
 
-	whichNetwork = "Debug MaxIndex";
-	debugMaxIndex();
+	// whichNetwork = "Debug Maxpool";
+	// debugMaxIndex();
+
+	// whichNetwork = "Debug MaxIndex";
+	// debugMaxIndex();
 
 	// whichNetwork = "Debug SS Bits";
-	// debugSSBits();
-
-	// whichNetwork += " test";
-	// test(network);
+	// debugSSBits();  
 
 
 	end_m(whichNetwork);
@@ -194,7 +167,7 @@ int main(int argc, char** argv)
 	delete l0;
 	delete l1;
 	delete l2;
-	// delete l3;
+	delete l3;
 	delete network;
 	deleteObjects();
 

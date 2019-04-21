@@ -55,7 +55,7 @@
 
 //Neural Network globals.
 //Batch size has to be a power of two
-#define NUM_LAYERS 4
+#define NUM_LAYERS 5
 #define LL (NUM_LAYERS-2)
 #define LAYER0 784
 #define LAYER1 128
@@ -64,7 +64,7 @@
 #if MNIST
 	#define TRAINING_DATA_SIZE 60000
 	#define TEST_DATA_SIZE 10000
-	#define LOG_MINI_BATCH 7
+	#define LOG_MINI_BATCH 0
 #else
 	#define TRAINING_DATA_SIZE 8
 	#define TEST_DATA_SIZE 8
@@ -81,7 +81,7 @@
 
 //Typedefs and others
 typedef __m128i superLongType;
-typedef uint64_t myType;
+typedef uint32_t myType;
 typedef uint8_t smallType;
 typedef std::pair<myType, myType> RSSMyType;
 typedef std::pair<smallType, smallType> RSSSmallType;

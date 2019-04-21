@@ -47,6 +47,7 @@ void parseInputs(int argc, char* argv[])
 		}
 
 	loadData();	
+	cout << "Loading data done....." << endl;
 }
 
 void train(NeuralNetwork* net, NeuralNetConfig* config)
@@ -204,7 +205,7 @@ void readMiniBatch(NeuralNetwork* net, string phase)
 
 void start_m()
 {
-	cout << endl;
+	// cout << endl;
 	start_time();
 	start_communication();
 }
