@@ -3,6 +3,7 @@
 #include "tools.h"
 #include "FCLayer.h"
 #include "CNNLayer.h"
+#include "ChameleonCNNLayer.h"
 #include "NeuralNetwork.h"
 #include "Functionalities.h"
 using namespace std;
@@ -19,8 +20,8 @@ NeuralNetwork::NeuralNetwork(NeuralNetConfig* config)
 			layers.push_back(new FCLayer(config->layerConf[i]));
 		else if (config->layerConf[i]->type.compare("CNN") == 0)
 			layers.push_back(new CNNLayer(config->layerConf[i]));
-		// else if (config->layerConf[i]->type.compare("ChameleonCNN") == 0)
-		// 	layers.push_back(new CNNLayer(config->layerConf[i]));
+		else if (config->layerConf[i]->type.compare("ChameleonCNN") == 0)
+			layers.push_back(new ChameleonCNNLayer(config->layerConf[i]));
 		else
 			error("Only FC, CNN, and ChameleonCNN layer types currently supported");
 	}

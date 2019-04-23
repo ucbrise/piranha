@@ -29,15 +29,15 @@ int main(int argc, char** argv)
 
 /****************************** SELECT NETWORK ******************************/ 
 	//MINIONN, Network-D in GAZELLE
-	whichNetwork = "MiniONN/GAZELLE-D";
-	CNNConfig* l0 = new CNNConfig(16,1,5,5,MINI_BATCH_SIZE,28,28,2,2);
-	CNNConfig* l1 = new CNNConfig(16,16,5,5,MINI_BATCH_SIZE,12,12,2,2);
-	FCConfig* l2 = new FCConfig(MINI_BATCH_SIZE, 256, 100);
-	FCConfig* l3 = new FCConfig(MINI_BATCH_SIZE, 100, 10);
-	config->addLayer(l0);
-	config->addLayer(l1);
-	config->addLayer(l2);
-	config->addLayer(l3);
+	// whichNetwork = "MiniONN/GAZELLE-D";
+	// CNNConfig* l0 = new CNNConfig(16,1,5,5,MINI_BATCH_SIZE,28,28,2,2);
+	// CNNConfig* l1 = new CNNConfig(16,16,5,5,MINI_BATCH_SIZE,12,12,2,2);
+	// FCConfig* l2 = new FCConfig(MINI_BATCH_SIZE, 256, 100);
+	// FCConfig* l3 = new FCConfig(MINI_BATCH_SIZE, 100, 10);
+	// config->addLayer(l0);
+	// config->addLayer(l1);
+	// config->addLayer(l2);
+	// config->addLayer(l3);
 
 	//LeNet
 	// whichNetwork = "LeNet";
@@ -60,13 +60,13 @@ int main(int argc, char** argv)
 	// config->addLayer(l2);
 
 	//Chameleon
-	// whichNetwork = "Sarda";
-	// ChameleonCNNConfig* l0 = new ChameleonCNNConfig(5,1,5,5,MINI_BATCH_SIZE,28,28,2,2);
-	// FCConfig* l1 = new FCConfig(MINI_BATCH_SIZE, 980, 100);
-	// FCConfig* l2 = new FCConfig(MINI_BATCH_SIZE, 100, 10);
-	// config->addLayer(l0);
-	// config->addLayer(l1);
-	// config->addLayer(l2);
+	whichNetwork = "Sarda";
+	ChameleonCNNConfig* l0 = new ChameleonCNNConfig(5,1,5,5,MINI_BATCH_SIZE,28,28,2,2);
+	FCConfig* l1 = new FCConfig(MINI_BATCH_SIZE, 980, 100);
+	FCConfig* l2 = new FCConfig(MINI_BATCH_SIZE, 100, 10);
+	config->addLayer(l0);
+	config->addLayer(l1);
+	config->addLayer(l2);
 
 	config->checkNetwork();
 	NeuralNetwork* network = new NeuralNetwork(config);
@@ -118,14 +118,14 @@ int main(int argc, char** argv)
 	// whichNetwork += " train";
 	// train(network, config);
 
-	// whichNetwork += " test";
-	// test(network);
+	whichNetwork += " test";
+	test(network);
 
 	// whichNetwork = "Debug Mat-Mul";
 	// debugDotProd();
 
-	whichNetwork = "Debug PrivateCompare";
-	debugPC();
+	// whichNetwork = "Debug PrivateCompare";
+	// debugPC();
 
 	// whichNetwork = "Debug Wrap";
 	// debugWrap();
@@ -167,7 +167,7 @@ int main(int argc, char** argv)
 	delete l0;
 	delete l1;
 	delete l2;
-	delete l3;
+	// delete l3;
 	delete network;
 	deleteObjects();
 

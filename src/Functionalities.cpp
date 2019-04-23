@@ -817,6 +817,10 @@ void funcPrivateCompare(const RSSVectorSmallType &share_m, const vector<myType> 
 {
 	log_print("funcPrivateCompare");
 	assert(dim == BIT_SIZE && "Private Compare assert issue");
+	assert(share_m.size() == size*dim && "Input error share_m");
+	assert(r.size() == size && "Input error r");
+	assert(beta.size() == size && "Input error beta");
+
 	size_t sizeLong = size*dim;
 	size_t index3, index2;
 	RSSVectorSmallType c(sizeLong), diff(sizeLong), twoBetaMinusOne(sizeLong), xMinusR(sizeLong);
@@ -927,6 +931,7 @@ void funcPrivateCompare(const RSSVectorSmallType &share_m, const vector<myType> 
 			}
 		}
 	}
+
 
 	//TODO 7 rounds of multiplication
 	// cout << "CM: \t\t" << funcTime(funcCrunchMultiply, c, betaPrime, size, dim) << endl;
