@@ -609,9 +609,6 @@ void funcDotProductBits(const RSSVectorSmallType &a, const RSSVectorSmallType &b
 		c[i].first = temp3[i];
 		c[i].second = recv[i];
 	}
-	// cout << (int)c[0].first << " " << (int)c[0].second << " " << 
-	// 		(int)c[1].first << " " << (int)c[1].second << " " << 
-	// 		(int)c[2].first << " " << (int)c[2].second << endl;
 }
 
 
@@ -645,12 +642,14 @@ void funcMultiplyNeighbours(const RSSVectorSmallType &c_1, RSSVectorSmallType &c
 }
 
 //Multiply each group of 64 with a random number in Z_p* and reconstruct output in betaPrime.
-void funcCrunchMultiply(const RSSVectorSmallType &c, vector<smallType> &betaPrime, size_t size, size_t dim)
+void funcCrunchMultiply(const RSSVectorSmallType &c, vector<smallType> &betaPrime, size_t size)
 {
-	size_t sizeLong = size*dim;
+	size_t sizeLong = size*BIT_SIZE;
 	RSSVectorSmallType c_0(sizeLong/2, make_pair(0,0)), c_1(sizeLong/4, make_pair(0,0)), 
 					   c_2(sizeLong/8, make_pair(0,0)), c_3(sizeLong/16, make_pair(0,0)), 
-					   c_4(sizeLong/32, make_pair(0,0)), c_5(sizeLong/64, make_pair(0,0));
+					   c_4(sizeLong/32, make_pair(0,0)); 
+	RSSVectorSmallType c_5(sizeLong/64, make_pair(0,0));
+
 	vector<smallType> reconst(size, 0);
 
 	funcMultiplyNeighbours(c, c_0, sizeLong);
@@ -658,16 +657,26 @@ void funcCrunchMultiply(const RSSVectorSmallType &c, vector<smallType> &betaPrim
 	funcMultiplyNeighbours(c_1, c_2, sizeLong/4);
 	funcMultiplyNeighbours(c_2, c_3, sizeLong/8);
 	funcMultiplyNeighbours(c_3, c_4, sizeLong/16);
-	funcMultiplyNeighbours(c_4, c_5, sizeLong/32);
+	if (BIT_SIZE == 64)
+		funcMultiplyNeighbours(c_4, c_5, sizeLong/32);
 
 	vector<smallType> a_next(size), a_prev(size);
-	for (int i = 0; i < size; ++i)
-	{
-		a_prev[i] = 0;
-		a_next[i] = c_5[i].first;
-		reconst[i] = c_5[i].first;
-		reconst[i] = additionModPrime[reconst[i]][c_5[i].second];
-	}
+	if (BIT_SIZE == 64)
+		for (int i = 0; i < size; ++i)
+		{
+			a_prev[i] = 0;
+			a_next[i] = c_5[i].first;
+			reconst[i] = c_5[i].first;
+			reconst[i] = additionModPrime[reconst[i]][c_5[i].second];
+		}
+	else if (BIT_SIZE == 32)
+		for (int i = 0; i < size; ++i)
+		{
+			a_prev[i] = 0;
+			a_next[i] = c_4[i].first;
+			reconst[i] = c_4[i].first;
+			reconst[i] = additionModPrime[reconst[i]][c_4[i].second];
+		}
 
 	thread *threads = new thread[2];
 
@@ -689,7 +698,7 @@ void funcCrunchMultiply(const RSSVectorSmallType &c, vector<smallType> &betaPrim
 
 //Thread function for parallel private compare
 void parallelFirst(smallType* temp3, const RSSSmallType* beta, const myType* r, 
-					const RSSSmallType* share_m, size_t start, size_t end, int t, size_t dim)
+					const RSSSmallType* share_m, size_t start, size_t end, int t)
 {
 	size_t index3, index2;
 	smallType bit_r;
@@ -702,9 +711,9 @@ void parallelFirst(smallType* temp3, const RSSSmallType* beta, const myType* r,
 		twoBetaMinusOne = subConstModPrime(beta[index2], 1);
 		twoBetaMinusOne = addModPrime(twoBetaMinusOne, beta[index2]);
 
-		for (size_t k = 0; k < dim; ++k)
+		for (size_t k = 0; k < BIT_SIZE; ++k)
 		{
-			index3 = index2*dim + k;
+			index3 = index2*BIT_SIZE + k;
 			bit_r = (smallType)((r[index2] >> (63-k)) & 1);
 			diff = share_m[index3];
 					
@@ -720,7 +729,7 @@ void parallelFirst(smallType* temp3, const RSSSmallType* beta, const myType* r,
 }
 
 void parallelSecond(RSSSmallType* c, const smallType* temp3, const smallType* recv, const myType* r, 
-					const RSSSmallType* share_m, size_t start, size_t end, int t, size_t dim)
+					const RSSSmallType* share_m, size_t start, size_t end, int t)
 {
 	size_t index3, index2;
 	smallType bit_r;
@@ -731,9 +740,9 @@ void parallelSecond(RSSSmallType* c, const smallType* temp3, const smallType* re
 		for (int index2 = start; index2 < end; ++index2)
 		{
 			a = make_pair(0, 0);
-			for (size_t k = 0; k < dim; ++k)
+			for (size_t k = 0; k < BIT_SIZE; ++k)
 			{
-				index3 = index2*dim + k;
+				index3 = index2*BIT_SIZE + k;
 				//Complete Dot Product
 				xMinusR.first = temp3[index3];
 				xMinusR.second = recv[index3];
@@ -759,9 +768,9 @@ void parallelSecond(RSSSmallType* c, const smallType* temp3, const smallType* re
 		for (int index2 = start; index2 < end; ++index2)
 		{
 			a = make_pair(0, 0);
-			for (size_t k = 0; k < dim; ++k)
+			for (size_t k = 0; k < BIT_SIZE; ++k)
 			{
-				index3 = index2*dim + k;
+				index3 = index2*BIT_SIZE + k;
 				//Complete Dot Product
 				xMinusR.first = temp3[index3];
 				xMinusR.second = recv[index3];
@@ -786,9 +795,9 @@ void parallelSecond(RSSSmallType* c, const smallType* temp3, const smallType* re
 		for (int index2 = start; index2 < end; ++index2)
 		{
 			a = make_pair(0, 0);
-			for (size_t k = 0; k < dim; ++k)
+			for (size_t k = 0; k < BIT_SIZE; ++k)
 			{
-				index3 = index2*dim + k;
+				index3 = index2*BIT_SIZE + k;
 				//Complete Dot Product
 				xMinusR.first = temp3[index3];
 				xMinusR.second = recv[index3];
@@ -813,15 +822,14 @@ void parallelSecond(RSSSmallType* c, const smallType* temp3, const smallType* re
 // Private Compare functionality
 void funcPrivateCompare(const RSSVectorSmallType &share_m, const vector<myType> &r, 
 							const RSSVectorSmallType &beta, vector<smallType> &betaPrime, 
-							size_t size, size_t dim)
+							size_t size)
 {
 	log_print("funcPrivateCompare");
-	assert(dim == BIT_SIZE && "Private Compare assert issue");
-	assert(share_m.size() == size*dim && "Input error share_m");
+	assert(share_m.size() == size*BIT_SIZE && "Input error share_m");
 	assert(r.size() == size && "Input error r");
 	assert(beta.size() == size && "Input error beta");
 
-	size_t sizeLong = size*dim;
+	size_t sizeLong = size*BIT_SIZE;
 	size_t index3, index2;
 	RSSVectorSmallType c(sizeLong), diff(sizeLong), twoBetaMinusOne(sizeLong), xMinusR(sizeLong);
 	RSSSmallType a, tempM, tempN;
@@ -845,7 +853,7 @@ void funcPrivateCompare(const RSSVectorSmallType &share_m, const vector<myType> 
 				end = size;
 
 			threads[i] = thread(parallelFirst, temp3.data(), beta.data(), r.data(), 
-								share_m.data(), start, end, i, dim);
+								share_m.data(), start, end, i);
 		}
 		for (int i = 0; i < NO_CORES; i++)
 			threads[i].join();
@@ -866,7 +874,7 @@ void funcPrivateCompare(const RSSVectorSmallType &share_m, const vector<myType> 
 				end = size;
 
 			threads[i] = thread(parallelSecond, c.data(), temp3.data(), recv.data(),
-								r.data(), share_m.data(), start, end, i, dim);
+								r.data(), share_m.data(), start, end, i);
 		}
 
 		for (int i = 0; i < NO_CORES; i++)
@@ -878,13 +886,13 @@ void funcPrivateCompare(const RSSVectorSmallType &share_m, const vector<myType> 
 		for (int index2 = 0; index2 < size; ++index2)
 		{
 			//Computing 2Beta-1
-			twoBetaMinusOne[index2*dim] = subConstModPrime(beta[index2], 1);
-			twoBetaMinusOne[index2*dim] = addModPrime(twoBetaMinusOne[index2*dim], beta[index2]);
+			twoBetaMinusOne[index2*BIT_SIZE] = subConstModPrime(beta[index2], 1);
+			twoBetaMinusOne[index2*BIT_SIZE] = addModPrime(twoBetaMinusOne[index2*BIT_SIZE], beta[index2]);
 
-			for (size_t k = 0; k < dim; ++k)
+			for (size_t k = 0; k < BIT_SIZE; ++k)
 			{
-				index3 = index2*dim + k;
-				twoBetaMinusOne[index3] = twoBetaMinusOne[index2*dim];
+				index3 = index2*BIT_SIZE + k;
+				twoBetaMinusOne[index3] = twoBetaMinusOne[index2*BIT_SIZE];
 
 				bit_r = (smallType)((r[index2] >> (63-k)) & 1);
 				diff[index3] = share_m[index3];
@@ -900,9 +908,9 @@ void funcPrivateCompare(const RSSVectorSmallType &share_m, const vector<myType> 
 		for (int index2 = 0; index2 < size; ++index2)
 		{
 			a = make_pair(0, 0);
-			for (size_t k = 0; k < dim; ++k)
+			for (size_t k = 0; k < BIT_SIZE; ++k)
 			{
-				index3 = index2*dim + k;
+				index3 = index2*BIT_SIZE + k;
 				c[index3] = a;
 				tempM = share_m[index3];
 
@@ -935,7 +943,7 @@ void funcPrivateCompare(const RSSVectorSmallType &share_m, const vector<myType> 
 
 	//TODO 7 rounds of multiplication
 	// cout << "CM: \t\t" << funcTime(funcCrunchMultiply, c, betaPrime, size, dim) << endl;
-	funcCrunchMultiply(c, betaPrime, size, dim);	
+	funcCrunchMultiply(c, betaPrime, size);	
 }
 
 

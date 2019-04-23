@@ -118,14 +118,14 @@ int main(int argc, char** argv)
 	// whichNetwork += " train";
 	// train(network, config);
 
-	whichNetwork += " test";
-	test(network);
+	// whichNetwork += " test";
+	// test(network);
 
 	// whichNetwork = "Debug Mat-Mul";
 	// debugDotProd();
 
-	// whichNetwork = "Debug PrivateCompare";
-	// debugPC();
+	whichNetwork = "Debug PrivateCompare";
+	debugPC();
 
 	// whichNetwork = "Debug Wrap";
 	// debugWrap();
