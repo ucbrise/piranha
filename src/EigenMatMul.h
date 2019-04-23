@@ -6,7 +6,7 @@
 #include "globals.h"
 #include <Eigen/Dense>
 using namespace Eigen;
-using eig_mat = Matrix<uint64_t, Dynamic, Dynamic>;
+using eig_mat = Matrix<myType, Dynamic, Dynamic>;
 
 class eigenMatrix {
 public: 

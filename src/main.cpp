@@ -51,22 +51,22 @@ int main(int argc, char** argv)
 	// config->addLayer(l3);
 
 	//SecureML
-	// whichNetwork = "SecureML";
-	// FCConfig* l0 = new FCConfig(MINI_BATCH_SIZE, LAYER0, LAYER1); 
-	// FCConfig* l1 = new FCConfig(MINI_BATCH_SIZE, LAYER1, LAYER2); 
-	// FCConfig* l2 = new FCConfig(MINI_BATCH_SIZE, LAYER2, LAST_LAYER_SIZE); 
-	// config->addLayer(l0);
-	// config->addLayer(l1);
-	// config->addLayer(l2);
-
-	//Chameleon
-	whichNetwork = "Sarda";
-	ChameleonCNNConfig* l0 = new ChameleonCNNConfig(5,1,5,5,MINI_BATCH_SIZE,28,28,2,2);
-	FCConfig* l1 = new FCConfig(MINI_BATCH_SIZE, 980, 100);
-	FCConfig* l2 = new FCConfig(MINI_BATCH_SIZE, 100, 10);
+	whichNetwork = "SecureML";
+	FCConfig* l0 = new FCConfig(MINI_BATCH_SIZE, LAYER0, LAYER1); 
+	FCConfig* l1 = new FCConfig(MINI_BATCH_SIZE, LAYER1, LAYER2); 
+	FCConfig* l2 = new FCConfig(MINI_BATCH_SIZE, LAYER2, LAST_LAYER_SIZE); 
 	config->addLayer(l0);
 	config->addLayer(l1);
 	config->addLayer(l2);
+
+	//Chameleon
+	// whichNetwork = "Sarda";
+	// ChameleonCNNConfig* l0 = new ChameleonCNNConfig(5,1,5,5,MINI_BATCH_SIZE,28,28,2,2);
+	// FCConfig* l1 = new FCConfig(MINI_BATCH_SIZE, 980, 100);
+	// FCConfig* l2 = new FCConfig(MINI_BATCH_SIZE, 100, 10);
+	// config->addLayer(l0);
+	// config->addLayer(l1);
+	// config->addLayer(l2);
 
 	config->checkNetwork();
 	NeuralNetwork* network = new NeuralNetwork(config);
