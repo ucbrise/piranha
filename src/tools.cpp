@@ -310,26 +310,54 @@ void print128_num(__m128i var)
 
 void print_myType(myType var, string message, string type)
 {
-	if (type == "BITS")
-		cout << message << ": " << bitset<64>(var) << endl;
-	else if (type == "FLOAT")
-		cout << message << ": " << (static_cast<int64_t>(var))/(float)(1 << FLOAT_PRECISION) << endl;
-	else if (type == "SIGNED")
-		cout << message << ": " << static_cast<int64_t>(var) << endl;
-	else if (type == "UNSIGNED")
-		cout << message << ": " << var << endl;
+	if (BIT_SIZE == 64)
+	{
+		if (type == "BITS")
+			cout << message << ": " << bitset<BIT_SIZE>(var) << endl;
+		else if (type == "FLOAT")
+			cout << message << ": " << (static_cast<int64_t>(var))/(float)(1 << FLOAT_PRECISION) << endl;
+		else if (type == "SIGNED")
+			cout << message << ": " << static_cast<int64_t>(var) << endl;
+		else if (type == "UNSIGNED")
+			cout << message << ": " << var << endl;
+	}
+	if (BIT_SIZE == 32)
+	{
+		if (type == "BITS")
+			cout << message << ": " << bitset<BIT_SIZE>(var) << endl;
+		else if (type == "FLOAT")
+			cout << message << ": " << (static_cast<int32_t>(var))/(float)(1 << FLOAT_PRECISION) << endl;
+		else if (type == "SIGNED")
+			cout << message << ": " << static_cast<int32_t>(var) << endl;
+		else if (type == "UNSIGNED")
+			cout << message << ": " << var << endl;
+	}
 }
 
 void print_linear(myType var, string type)
 {
-	if (type == "BITS")
-		cout << bitset<64>(var) << " ";
-	else if (type == "FLOAT")
-		cout << (static_cast<int64_t>(var))/(float)(1 << FLOAT_PRECISION) << " ";
-	else if (type == "SIGNED")
-		cout << static_cast<int64_t>(var) << " ";
-	else if (type == "UNSIGNED")
-		cout << var << " ";	
+	if (BIT_SIZE == 64)
+	{
+		if (type == "BITS")
+			cout << bitset<BIT_SIZE>(var) << " ";
+		else if (type == "FLOAT")
+			cout << (static_cast<int64_t>(var))/(float)(1 << FLOAT_PRECISION) << " ";
+		else if (type == "SIGNED")
+			cout << static_cast<int64_t>(var) << " ";
+		else if (type == "UNSIGNED")
+			cout << var << " ";	
+	}
+	if (BIT_SIZE == 32)
+	{
+		if (type == "BITS")
+			cout << bitset<BIT_SIZE>(var) << " ";
+		else if (type == "FLOAT")
+			cout << (static_cast<int32_t>(var))/(float)(1 << FLOAT_PRECISION) << " ";
+		else if (type == "SIGNED")
+			cout << static_cast<int32_t>(var) << " ";
+		else if (type == "UNSIGNED")
+			cout << var << " ";	
+	}
 }
 
 void matrixMultRSS(const RSSVectorMyType &a, const RSSVectorMyType &b, vector<myType> &temp3, 

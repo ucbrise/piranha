@@ -992,7 +992,7 @@ void funcWrap(const RSSVectorMyType &a, RSSVectorSmallType &theta, size_t size)
 	PrecomputeObject.getRandomBitShares(eta, size);
 
 	// cout << "PC: \t\t" << funcTime(funcPrivateCompare, shares_r, reconst_x, eta, etaPrime, size, BIT_SIZE) << endl;
-	funcPrivateCompare(shares_r, reconst_x, eta, etaPrime, size, BIT_SIZE);
+	funcPrivateCompare(shares_r, reconst_x, eta, etaPrime, size);
 
 	if (partyNum == PARTY_A)
 	{
@@ -1457,8 +1457,9 @@ void debugPC()
 			bits_of_m[i*BIT_SIZE + j] = (smallType)((plain_m[i] >> (BIT_SIZE-1-j)) & 1);
 
 	funcGetShares(shares_m, bits_of_m);
-	funcPrivateCompare(shares_m, plain_r, beta, betaPrime, size, BIT_SIZE);
+	funcPrivateCompare(shares_m, plain_r, beta, betaPrime, size);
 	
+#if (!LOG_DEBUG)
 	cout << "BetaPrime: \t ";
 	for (int i = 0; i < size; ++i)
 		cout << (int)betaPrime[i] << " ";
@@ -1479,48 +1480,52 @@ void debugPC()
 	for (int i = 0; i < size; ++i)
 		cout << (int)plain_m[i] - (int)plain_r[i] << " ";
 	cout << endl;
+#endif
 }
 
 void debugWrap()
 {
-	size_t size = 2;
+	size_t size = 5;
 	RSSVectorMyType a(size);
 	RSSVectorSmallType theta(size);
-	vector<smallType> b(size);
+	vector<smallType> reconst(size);
 
 	myType interesting = MINUS_ONE/3;
-	interesting = (interesting << 1) + (myType)1;
-
-	a[0] = make_pair(interesting, interesting);
-	a[1] = make_pair(0, 0);
+	a[0] = make_pair(0,0);
+	a[1] = make_pair(interesting, interesting);
+	interesting += 1;	
+	a[2] = make_pair(interesting, interesting);
+	interesting = ((MINUS_ONE/3) << 1);
+	a[3] = make_pair(interesting, interesting);
+	interesting += 1;	
+	a[4] = make_pair(interesting, interesting);
 
 	funcWrap(a, theta, size);
 
-#if (LOG_DEBUG)
-	funcReconstruct(theta, b, size, "Theta", true);
+#if (!LOG_DEBUG)
+	cout << "a: \t\t ";
+	for (int i = 0; i < size; ++i)
+		cout << (int)3*a[i].first << "(" << (int) a[i].first << ", " << (int)a[i].second << ") ";
+	cout << endl; 
+	funcReconstruct(theta, reconst, size, "Theta", true);
 #endif
 }
 
 
 void debugReLUPrime()
 {
-	size_t size = 2;
+	vector<myType> data_a = {1, 2, -1, -2, 3};
+	size_t size = data_a.size();
 	RSSVectorMyType a(size);
 	RSSVectorSmallType b(size);
+	vector<myType> reconst_a(size);
 	vector<smallType> reconst_b(size);
 
-	myType interesting = MINUS_ONE/3;
-	// myType interesting = LARGEST_NEG - 1;
-	// interesting = (interesting << 1) + (myType)0;
-
-	a[0] = make_pair(interesting, interesting);
-	a[1] = make_pair(1, 1);
-
-	print_myType(a[0].first, "interesting", "BITS");
-	print_myType(a[1].first, "interesting", "BITS");
-
+	funcGetShares(a, data_a);
 	funcRELUPrime(a, b, size);
-#if (LOG_DEBUG)
+
+#if (!LOG_DEBUG)
+	funcReconstruct(a, reconst_a, size, "a", true);
 	funcReconstructBit(b, reconst_b, size, "b", true);
 #endif
 }
@@ -1537,17 +1542,14 @@ void debugReLU()
 	funcGetShares(a, data_a);
 	for (int i = size/2; i < size; ++i)
 	{
-		a[i].first = a[i].first << 61;
-		a[i].second = a[i].second << 61;
+		a[i].first = a[i].first << BIT_SIZE - 3;
+		a[i].second = a[i].second << BIT_SIZE - 3;
 	}
 
-	// print_myType(a[0].first, "a[0]", "BITS");
-	// print_myType(a[1].first, "a[1]", "BITS");
-	// print_myType(a[4].first, "a[4]", "BITS");
-	// print_myType(a[5].first, "a[5]", "BITS");
-
 	funcRELU(a, aPrime, b, size);
-#if (LOG_DEBUG)
+
+#if (!LOG_DEBUG)
+	funcReconstruct(a, data_a, size, "a", true);
 	funcReconstruct(b, reconst_b, size, "ReLU", true);
 #endif
 }
@@ -1564,36 +1566,14 @@ void debugDivision()
 	funcGetShares(b, data_b);
 	funcDivision(a, b, quotient, size);
 
-#if (LOG_DEBUG)
+#if (!LOG_DEBUG)
 	funcReconstruct(a, reconst, size, "a", true);
 	funcReconstruct(b, reconst, size, "b", true);
-	funcReconstruct(quotient, reconst, size, "Quotient", true);
+	funcReconstruct(quotient, reconst, size, "Quot", true);
 	print_myType(reconst[0], "Quotient[0]", "FLOAT");
 #endif	
-	
-	
-/******************************** TODO ****************************************/
-	// size_t size = 10;
-	// RSSVectorMyType numerator(size);
-	// RSSVectorMyType denominator(size);
-	// RSSVectorMyType quotient(size,0);
-	
-	// for (size_t i = 0; i < size; ++i)
-	// 	numerator[i] = 50;
-
-	// for (size_t i = 0; i < size; ++i)
-	// 	denominator[i] = 50*size;
-
-	// funcDivision(numerator, denominator, quotient, size);
-
-	// if (PRIMARY)
-	// {
-	// 	funcReconstruct2PC(numerator, size, "Numerator");
-	// 	funcReconstruct2PC(denominator, size, "Denominator");
-	// 	funcReconstruct2PC(quotient, size, "Quotient");
-	// }
-/******************************** TODO ****************************************/	
 }
+
 
 void debugSSBits()
 {
@@ -1609,37 +1589,20 @@ void debugSSBits()
 	funcGetShares(y, a1);
 	funcGetShares(z, rp);
 
+#if (!LOG_DEBUG)
 	funcReconstructBit(x, a1, x.size(), "x", true);
 	funcReconstructBit(y, a1, y.size(), "y", true);
 	funcReconstructBit(z, a1, z.size(), "z", true);
-	funcSelectBitShares(x, y, z, answer, rows, columns, 0);
-	funcReconstructBit(answer, a1, answer.size(), "a", true);
-	funcSelectBitShares(x, y, z, answer, rows, columns, 1);
-	funcReconstructBit(answer, a1, answer.size(), "a", true);
-	funcSelectBitShares(x, y, z, answer, rows, columns, 2);
-	funcReconstructBit(answer, a1, answer.size(), "a", true);
+#endif	
 
-/******************************** TODO ****************************************/
-	// size_t rows = 1;
-	// size_t columns = 10;
-	// RSSVectorMyType a(rows*columns, 0);
+	for (int i = 0; i < 3; ++i)
+	{
+		funcSelectBitShares(x, y, z, answer, rows, columns, i);
+#if (!LOG_DEBUG)
+		funcReconstructBit(answer, a1, answer.size(), "a", true);
+#endif			
+	}
 
-	// if (partyNum == PARTY_A or partyNum == PARTY_C){
-	// 	a[0] = 0; a[1] = 1; a[2] = 0; a[3] = 4; a[4] = 5; 
-	// 	a[5] = 3; a[6] = 10; a[7] = 6, a[8] = 41; a[9] = 9;
-	// }
-
-	// RSSVectorMyType max(rows), maxIndex(rows);
-	// funcMaxMPC(a, max, maxIndex, rows, columns);
-
-	// if (PRIMARY)
-	// {
-	// 	funcReconstruct2PC(a, columns, "a");
-	// 	funcReconstruct2PC(max, rows, "max");
-	// 	funcReconstruct2PC(maxIndex, rows, "maxIndex");
-	// 	cout << "-----------------" << endl;
-	// }
-/******************************** TODO ****************************************/	
 }
 
 
@@ -1658,19 +1621,17 @@ void debugSS()
 
 	funcSelectShares(a, b, selection, size);
 
-#if (LOG_DEBUG)
+#if (!LOG_DEBUG)
 	funcReconstruct(a, reconst, size, "a", true);
 	funcReconstructBit(b, bits, size, "b", true);
 	funcReconstruct(selection, reconst, size, "Sel'd", true);
 #endif	
-
-
 }
 
 
 
 
-void debugMaxIndex()
+void debugMaxpool()
 {
 	size_t rows = 5;
 	size_t columns = 3;
@@ -1686,7 +1647,7 @@ void debugMaxIndex()
 	funcGetShares(a, data);
 	funcMaxpool(a, max, maxIndex, maxPrime, rows, columns);
 
-#if (LOG_DEBUG)
+#if (!LOG_DEBUG)
 	funcReconstruct(a, reconst, size, "a", true);
 	funcReconstruct(max, reconst, rows, "val", true);
 	funcReconstruct(maxIndex, reconst, rows, "Idx", true);

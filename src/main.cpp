@@ -124,8 +124,8 @@ int main(int argc, char** argv)
 	// whichNetwork = "Debug Mat-Mul";
 	// debugDotProd();
 
-	whichNetwork = "Debug PrivateCompare";
-	debugPC();
+	// whichNetwork = "Debug PrivateCompare";
+	// debugPC();
 
 	// whichNetwork = "Debug Wrap";
 	// debugWrap();
@@ -139,17 +139,15 @@ int main(int argc, char** argv)
 	// whichNetwork = "Debug Division";
 	// debugDivision();
 
+	// whichNetwork = "Debug SS Bits";
+	// debugSSBits();  
+
 	// whichNetwork = "Debug SelectShares";
 	// debugSS();
 
-	// whichNetwork = "Debug Maxpool";
-	// debugMaxIndex();
+	whichNetwork = "Debug Maxpool";
+	debugMaxpool();
 
-	// whichNetwork = "Debug MaxIndex";
-	// debugMaxIndex();
-
-	// whichNetwork = "Debug SS Bits";
-	// debugSSBits();  
 
 
 	end_m(whichNetwork);

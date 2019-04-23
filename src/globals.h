@@ -30,7 +30,7 @@
 #define DEBUG_INDEX 0
 #define DEBUG_PRINT "SIGNED"
 #define CPP_ASSEMBLY 1
-#define MNIST true
+#define MNIST false
 #define PARALLEL true
 #define NO_CORES 4
 
@@ -64,7 +64,7 @@
 #if MNIST
 	#define TRAINING_DATA_SIZE 60000
 	#define TEST_DATA_SIZE 10000
-	#define LOG_MINI_BATCH 0
+	#define LOG_MINI_BATCH 7
 #else
 	#define TRAINING_DATA_SIZE 8
 	#define TEST_DATA_SIZE 8
@@ -81,7 +81,7 @@
 
 //Typedefs and others
 typedef __m128i superLongType;
-typedef uint64_t myType;
+typedef uint32_t myType;
 typedef uint8_t smallType;
 typedef std::pair<myType, myType> RSSMyType;
 typedef std::pair<smallType, smallType> RSSSmallType;

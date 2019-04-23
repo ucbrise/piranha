@@ -13,17 +13,12 @@ extern void end_communication(string str);
 
 
 void funcTruncate(RSSVectorMyType &a, size_t power, size_t size);
-// void funcXORModuloOdd2PC(RSSVectorSmallType &bit, RSSVectorMyType &shares, RSSVectorMyType &output, size_t size);
-// void funcAddMyTypeAndRSS(RSSVectorMyType &a, vector<myType> &b, RSSVectorMyType &c, size_t size);
 void funcGetShares(RSSVectorMyType &a, const vector<myType> &data);
 void funcGetShares(RSSVectorSmallType &a, const vector<smallType> &data);
 void funcReconstructBit(const RSSVectorSmallType &a, vector<smallType> &b, size_t size, string str, bool print);
 void funcReconstruct(const RSSVectorMyType &a, vector<myType> &b, size_t size, string str, bool print);
 void funcReconstruct(const RSSVectorSmallType &a, vector<smallType> &b, size_t size, string str, bool print);
 void funcReconstruct(const vector<myType> &a, vector<myType> &b, size_t size, string str, bool print);
-// void funcReconstructBit2PC(const RSSVectorSmallType &a, size_t size, string str);
-// void funcConditionalSet2PC(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorSmallType &c, 
-							// RSSVectorMyType &u, RSSVectorMyType &v, size_t size);
 void funcMatMul(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyType &c, 
 				size_t rows, size_t common_dim, size_t columns,
 			 	size_t transpose_a, size_t transpose_b);
@@ -33,22 +28,18 @@ void funcDotProduct(const RSSVectorSmallType &a, const RSSVectorSmallType &b,
 							 RSSVectorSmallType &c, size_t size);
 void funcPrivateCompare(const RSSVectorSmallType &share_m, const vector<myType> &r, 
 							  const RSSVectorSmallType &beta, vector<smallType> &betaPrime, 
-							  size_t size, size_t dim);
+							  size_t size);
 void funcWrap(const RSSVectorMyType &a, RSSVectorSmallType &theta, size_t size);
-// void funcSelectShares4PC(const RSSVectorMyType &a, const RSSVectorSmallType &b, RSSVectorMyType &c, size_t size);
 void funcSelectShares(const RSSVectorMyType &a, const RSSVectorSmallType &b, RSSVectorMyType &selected, size_t size);
 void funcSelectBitShares(const RSSVectorSmallType &a0, const RSSVectorSmallType &a1, 
 						 const RSSVectorSmallType &b, RSSVectorSmallType &answer, 
 						 size_t rows, size_t columns, size_t loopCounter);
-// void funcRELUPrime4PC(const RSSVectorMyType &a, RSSVectorSmallType &b, size_t size);
 void funcRELUPrime(const RSSVectorMyType &a, RSSVectorSmallType &b, size_t size);
 void funcRELU(const RSSVectorMyType &a, RSSVectorSmallType &temp, RSSVectorMyType &b, size_t size);
 void funcDivision(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyType &quotient, 
 							size_t size);
 void funcMaxpool(RSSVectorMyType &a, RSSVectorMyType &max, RSSVectorMyType &maxIndex, 
 					RSSVectorSmallType &maxPrime, size_t rows, size_t columns);
-// void funcMaxpoolPrime(RSSVectorMyType &a, const RSSVectorMyType &maxIndex, 
-// 						size_t rows, size_t columns);
 void aggregateCommunication();
 
 
@@ -62,7 +53,8 @@ void debugReLU();
 void debugDivision();
 void debugSSBits();
 void debugSS();
-void debugMaxIndex();
+void debugMaxpool();
+
 
 //Test
 void testMatMul(size_t rows, size_t common_dim, size_t columns, size_t iter);
