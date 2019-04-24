@@ -7,17 +7,17 @@ using namespace std;
 class CNNConfig : public LayerConfig
 {
 public:
-	size_t filters = 0;			//#Output feature maps
-	size_t inputFeatures = 0;	//#Input feature maps
-	size_t filterHeight = 0;
-	size_t filterWidth = 0;
-
-	size_t batchSize = 0;
 	size_t imageHeight = 0;
 	size_t imageWidth = 0;
 
+	size_t inputFeatures = 0;	//#Input feature maps
+	size_t filters = 0;			//#Output feature maps
+	size_t filterHeight = 0;
+	size_t filterWidth = 0;
+
 	size_t poolSizeX = 0;
 	size_t poolSizeY = 0;
+	size_t batchSize = 0;
 
 	CNNConfig(size_t _filters, size_t _inputFeatures, size_t _filterHeight,
 	size_t _filterWidth, size_t _batchSize, size_t _imageHeight,

@@ -41,7 +41,7 @@ void FCLayer::initialize()
 	// 		weights[i] = 0;
 		
 	
-	// fill(biases.begin(), biases.end(), 0);
+	fill(biases.begin(), biases.end(), make_pair(0,0));
 }
 
 
@@ -54,8 +54,6 @@ void FCLayer::forward(const RSSVectorMyType &inputActivation)
 	size_t common_dim = conf.inputDim;
 	size_t size = rows*columns;
 
-	// cout << "Mat: \t\t" << funcTime(funcMatMul, inputActivation, weights, zetas, 
-	// 			rows, common_dim, columns, 0, 0) << endl;
 	funcMatMul(inputActivation, weights, zetas, 
 				rows, common_dim, columns, 0, 0);
 

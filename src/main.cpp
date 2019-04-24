@@ -28,9 +28,9 @@ int main(int argc, char** argv)
 	NeuralNetConfig* config = new NeuralNetConfig(NUM_ITERATIONS);
 
 /****************************** SELECT NETWORK ******************************/ 
-	//MINIONN, Network-D in GAZELLE
-	// whichNetwork = "MiniONN/GAZELLE-D";
-	// CNNConfig* l0 = new CNNConfig(16,1,5,5,MINI_BATCH_SIZE,28,28,2,2);
+	//VGG16
+	// whichNetwork = "VGG16";
+	// PlainCNNConfig* l0 = new PlainCNNConfig(16,1,5,5,MINI_BATCH_SIZE,28,28,2,2);
 	// CNNConfig* l1 = new CNNConfig(16,16,5,5,MINI_BATCH_SIZE,12,12,2,2);
 	// FCConfig* l2 = new FCConfig(MINI_BATCH_SIZE, 256, 100);
 	// FCConfig* l3 = new FCConfig(MINI_BATCH_SIZE, 100, 10);
@@ -38,6 +38,17 @@ int main(int argc, char** argv)
 	// config->addLayer(l1);
 	// config->addLayer(l2);
 	// config->addLayer(l3);
+
+	//MINIONN, Network-D in GAZELLE
+	whichNetwork = "MiniONN/GAZELLE-D";
+	CNNConfig* l0 = new CNNConfig(16,1,5,5,MINI_BATCH_SIZE,28,28,2,2);
+	CNNConfig* l1 = new CNNConfig(16,16,5,5,MINI_BATCH_SIZE,12,12,2,2);
+	FCConfig* l2 = new FCConfig(MINI_BATCH_SIZE, 256, 100);
+	FCConfig* l3 = new FCConfig(MINI_BATCH_SIZE, 100, 10);
+	config->addLayer(l0);
+	config->addLayer(l1);
+	config->addLayer(l2);
+	config->addLayer(l3);
 
 	//LeNet
 	// whichNetwork = "LeNet";
@@ -51,13 +62,13 @@ int main(int argc, char** argv)
 	// config->addLayer(l3);
 
 	//SecureML
-	whichNetwork = "SecureML";
-	FCConfig* l0 = new FCConfig(MINI_BATCH_SIZE, LAYER0, LAYER1); 
-	FCConfig* l1 = new FCConfig(MINI_BATCH_SIZE, LAYER1, LAYER2); 
-	FCConfig* l2 = new FCConfig(MINI_BATCH_SIZE, LAYER2, LAST_LAYER_SIZE); 
-	config->addLayer(l0);
-	config->addLayer(l1);
-	config->addLayer(l2);
+	// whichNetwork = "SecureML";
+	// FCConfig* l0 = new FCConfig(MINI_BATCH_SIZE, LAYER0, LAYER1); 
+	// FCConfig* l1 = new FCConfig(MINI_BATCH_SIZE, LAYER1, LAYER2); 
+	// FCConfig* l2 = new FCConfig(MINI_BATCH_SIZE, LAYER2, LAST_LAYER_SIZE); 
+	// config->addLayer(l0);
+	// config->addLayer(l1);
+	// config->addLayer(l2);
 
 	//Chameleon
 	// whichNetwork = "Sarda";
@@ -115,8 +126,8 @@ int main(int argc, char** argv)
 	// testMaxPoolDerivative(24, 24, 2, 2, 16, NUM_ITERATIONS);
 	// testMaxPoolDerivative(8, 8, 4, 4, 50, NUM_ITERATIONS);
 
-	// whichNetwork += " train";
-	// train(network, config);
+	whichNetwork += " train";
+	train(network, config);
 
 	// whichNetwork += " test";
 	// test(network);
@@ -145,8 +156,8 @@ int main(int argc, char** argv)
 	// whichNetwork = "Debug SelectShares";
 	// debugSS();
 
-	whichNetwork = "Debug Maxpool";
-	debugMaxpool();
+	// whichNetwork = "Debug Maxpool";
+	// debugMaxpool();
 
 
 
@@ -165,7 +176,8 @@ int main(int argc, char** argv)
 	delete l0;
 	delete l1;
 	delete l2;
-	// delete l3;
+	if (NUM_LAYERS == 5)
+		delete l3;
 	delete network;
 	deleteObjects();
 
