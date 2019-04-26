@@ -2,10 +2,8 @@
 #pragma once
 #include "Functionalities.h"
 #include "Precompute.h"
-#include <algorithm>    // std::rotate
 #include <thread>
 
-// extern inline smallType subModPrime(smallType a, smallType b);
 
 using namespace std;
 extern Precompute PrecomputeObject;
@@ -52,34 +50,6 @@ void funcTruncate(RSSVectorMyType &a, size_t power, size_t size)
 	}	
 }
 
-
-// XOR shares with a public bit into output.
-void funcXORModuloOdd2PC(RSSVectorSmallType &bit, RSSVectorMyType &shares, RSSVectorMyType &output, size_t size)
-{
-/******************************** TODO ****************************************/	
-	// if (partyNum == PARTY_A)
-	// {
-	// 	for (size_t i = 0; i < size; ++i)
-	// 	{
-	// 		if (bit[i] == 1)
-	// 			output[i] = subtractModuloOdd<smallType, myType>(1, shares[i]);
-	// 		else
-	// 			output[i] = shares[i];
-	// 	}
-	// }
-
-	// if (partyNum == PARTY_B)
-	// {
-	// 	for (size_t i = 0; i < size; ++i)
-	// 	{
-	// 		if (bit[i] == 1)
-	// 			output[i] = subtractModuloOdd<smallType, myType>(0, shares[i]);
-	// 		else
-	// 			output[i] = shares[i];
-	// 	}
-	// }
-/******************************** TODO ****************************************/
-}
 
 //Add public vector b to RSS vector a into c.
 void funcAddMyTypeAndRSS(RSSVectorMyType &a, vector<myType> &b, RSSVectorMyType &c, size_t size)
@@ -1302,65 +1272,6 @@ void funcMaxpool(RSSVectorMyType &a, RSSVectorMyType &max, RSSVectorMyType &maxI
 			maxIndex[j] = maxIndex[j] + indexShares[j*columns + i];
 	}
 }
-
-
-//MaxIndex is of size rows. a is of size rows*columns.
-//a will be set to 0's except at maxIndex (in every set of column)
-// void funcMaxpoolPrime(RSSVectorMyType &a, const RSSVectorMyType &maxIndex, 
-// 						size_t rows, size_t columns)
-// {
-// 	log_print("funcMaxpoolPrime");
-
-// /******************************** TODO ****************************************/
-// 	assert(((1 << (BIT_SIZE-1)) % columns) == 0 && "funcMaxpoolPrime works only for power of 2 columns");
-// 	assert(columns < 257 && "This implementation does not support larger than 257 columns");
-	
-// 	// RSSVectorSmallType random(rows);
-
-// 	// if (PRIMARY)
-// 	// {
-// 	// 	RSSVectorSmallType toSend(rows);
-// 	// 	for (size_t i = 0; i < rows; ++i)
-// 	// 		toSend[i] = (smallType)maxIndex[i] % columns;
-		
-// 	// 	populateRandomVector<RSSSmallType>(random, rows, "COMMON", "POSITIVE");
-// 	// 	if (partyNum == PARTY_A)
-// 	// 		addVectors<smallType>(toSend, random, toSend, rows);
-
-// 	// 	sendVector<RSSSmallType>(toSend, PARTY_C, rows);
-// 	// }
-
-// 	// if (partyNum == PARTY_C)
-// 	// {
-// 	// 	RSSVectorSmallType index(rows), temp(rows);
-// 	// 	RSSVectorMyType vector(rows*columns, 0), share_1(rows*columns), share_2(rows*columns);
-// 	// 	receiveVector<RSSSmallType>(index, PARTY_A, rows);
-// 	// 	receiveVector<RSSSmallType>(temp, PARTY_B, rows);
-// 	// 	addVectors<RSSSmallType>(index, temp, index, rows);
-
-// 	// 	for (size_t i = 0; i < rows; ++i)
-// 	// 		index[i] = index[i] % columns;
-
-// 	// 	for (size_t i = 0; i < rows; ++i)
-// 	// 		vector[i*columns + index[i]] = 1;
-
-// 	// 	splitIntoShares(vector, share_1, share_2, rows*columns);
-// 	// 	sendVector<RSSMyType>(share_1, PARTY_A, rows*columns);
-// 	// 	sendVector<RSSMyType>(share_2, PARTY_B, rows*columns);
-// 	// }
-
-// 	// if (PRIMARY)
-// 	// {
-// 	// 	receiveVector<RSSMyType>(a, PARTY_C, rows*columns);
-// 	// 	size_t offset = 0;
-// 	// 	for (size_t i = 0; i < rows; ++i)
-// 	// 	{
-// 	// 		rotate(a.begin()+offset, a.begin()+offset+(random[i] % columns), a.begin()+offset+columns);
-// 	// 		offset += columns;
-// 	// 	}
-// 	// }
-// /******************************** TODO ****************************************/	
-// }
 
 
 
