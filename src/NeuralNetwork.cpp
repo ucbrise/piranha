@@ -11,7 +11,6 @@ using namespace std;
 
 extern size_t INPUT_SIZE;
 extern size_t LAST_LAYER_SIZE;
-size_t LL;
 
 NeuralNetwork::NeuralNetwork(NeuralNetConfig* config)
 :inputData(INPUT_SIZE * MINI_BATCH_SIZE),
@@ -30,8 +29,6 @@ NeuralNetwork::NeuralNetwork(NeuralNetConfig* config)
 		else
 			error("Only FC, CNN, ReLU, Maxpool, and BatchNorm layer types currently supported");
 	}
-
-	LL = NUM_LAYERS-1;
 }
 
 
@@ -77,23 +74,23 @@ void NeuralNetwork::computeDelta()
 	// for (size_t i = 0; i < rows; ++i)
 	// 	for (size_t j = 0; j < columns; ++j)
 	// 		rowSum[i*columns] = rowSum[i*columns] + 
-	// 							(*(layers[LL]->getActivation()))[i * columns + j];
+	// 							(*(layers[NUM_LAYERS-1]->getActivation()))[i * columns + j];
 
 	// for (size_t i = 0; i < rows; ++i)
 	// 	for (size_t j = 0; j < columns; ++j)
 	// 		rowSum[i*columns + j] = rowSum[i*columns];
 
-	// funcDivision(*(layers[LL]->getActivation()), rowSum, quotient, size);
+	// funcDivision(*(layers[NUM_LAYERS-1]->getActivation()), rowSum, quotient, size);
 
 	for (size_t i = 0; i < rows; ++i)
 		for (size_t j = 0; j < columns; ++j)
 		{
 			index = i * columns + j;
-			(*(layers[LL]->getDelta()))[index] = 
-			(*(layers[LL]->getActivation()))[index] - outputData[index];
+			(*(layers[NUM_LAYERS-1]->getDelta()))[index] = 
+			(*(layers[NUM_LAYERS-1]->getActivation()))[index] - outputData[index];
 		}
 
-	for (size_t i = LL; i > 0; --i)
+	for (size_t i = NUM_LAYERS-1; i > 0; --i)
 		layers[i]->computeDelta(*(layers[i-1]->getDelta()));
 }
 
@@ -101,7 +98,7 @@ void NeuralNetwork::updateEquations()
 {
 	log_print("NN.updateEquations");
 
-	for (size_t i = LL; i > 0; --i)
+	for (size_t i = NUM_LAYERS-1; i > 0; --i)
 		layers[i]->updateEquations(*(layers[i-1]->getActivation()));	
 
 	layers[0]->updateEquations(inputData);
@@ -116,7 +113,7 @@ void NeuralNetwork::predict(RSSVectorMyType &maxIndex)
 	RSSVectorMyType max(rows);
 	RSSVectorSmallType maxPrime(rows*columns);
 
-	funcMaxpool(*(layers[LL]->getActivation()), max, maxIndex, maxPrime, rows, columns);
+	funcMaxpool(*(layers[NUM_LAYERS-1]->getActivation()), max, maxIndex, maxPrime, rows, columns);
 }
 
 void NeuralNetwork::getAccuracy(const RSSVectorMyType &maxIndex, vector<size_t> &counter)

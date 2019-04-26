@@ -1213,10 +1213,8 @@ void funcDivision(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorM
 
 
 //Chunk wise maximum of a vector of size rows*columns and maximum is caclulated of every 
-//column number of elements. max is a vector of size rows. maxIndex contains the index of 
-//the maximum value.
-//PARTY_A, PARTY_B start with the shares in a and {A,B} and {C,D} have the results in 
-//max and maxIndex.
+//column number of elements. max, maxIndex are vectors of size rows. 
+//maxIndex contains the index of the maximum value.
 void funcMaxpool(RSSVectorMyType &a, RSSVectorMyType &max, RSSVectorMyType &maxIndex, 
 					RSSVectorSmallType &maxPrime, size_t rows, size_t columns)
 {

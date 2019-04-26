@@ -7,7 +7,6 @@
 #include "NeuralNetConfig.h"
 #include "NeuralNetwork.h"
 #include "unitTests.h"
-// #include "Functionalities.h"
 
 
 int partyNum;
@@ -59,7 +58,7 @@ int main(int argc, char** argv)
 			" iterations," << endl << "Running " << whichNetwork << ", batch size " << MINI_BATCH_SIZE << endl;
 	cout << "----------------------------------------" << endl << endl;  
 
-	// printNetwork(network);
+	printNetwork(network);
 
 /****************************** CLEAN-UP ******************************/ 
 	delete aes_indep;
