@@ -284,8 +284,8 @@ void selectNetwork(string str, NeuralNetConfig* config, string &ret)
 	{
 		ret = str;
 		NUM_LAYERS = 4;
-		PlainCNNConfig* l0 = new PlainCNNConfig(28,28,1,16,5,1,1,MINI_BATCH_SIZE);
-		PlainCNNConfig* l1 = new PlainCNNConfig(26,26,16,1,2,1,1,MINI_BATCH_SIZE);
+		CNNConfig* l0 = new CNNConfig(28,28,1,16,5,1,1,MINI_BATCH_SIZE);
+		CNNConfig* l1 = new CNNConfig(26,26,16,1,2,1,1,MINI_BATCH_SIZE);
 		FCConfig* l2 = new FCConfig(7290, MINI_BATCH_SIZE, 100);
 		FCConfig* l3 = new FCConfig(100, MINI_BATCH_SIZE, 10);
 		config->addLayer(l0);

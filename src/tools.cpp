@@ -822,35 +822,35 @@ void error(string str)
 }
 
 
-void convolutionReshape(const RSSVectorMyType &vec, RSSVectorMyType &vecShaped,
-						size_t ih, size_t iw, size_t C, size_t B,  
-						size_t fh, size_t fw, size_t sy, size_t sx)
-{
-	size_t p_range = (ih-fh+1);
-	size_t q_range = (iw-fw+1);
-	size_t size_activation = ih*iw*C*B;
-	size_t size_shaped = ((((iw - fw)/sx) + 1)* 
-						 (((ih - fh)/sy) + 1)*B)*(fw*fh*C);
+// void convolutionReshape(const RSSVectorMyType &vec, RSSVectorMyType &vecShaped,
+// 						size_t ih, size_t iw, size_t C, size_t B,  
+// 						size_t fh, size_t fw, size_t sy, size_t sx)
+// {
+// 	size_t p_range = (ih-fh+1);
+// 	size_t q_range = (iw-fw+1);
+// 	size_t size_activation = ih*iw*C*B;
+// 	size_t size_shaped = ((((iw - fw)/sx) + 1)* 
+// 						 (((ih - fh)/sy) + 1)*B)*(fw*fh*C);
 
-	assert((sx == 1 and sy == 1) && "Stride not implemented in generality");
-	assert(fw >= sx and fh >= sy && "Check implementation");
-	assert((iw - fw)%sx == 0 && "Check implementations for this unmet condition");
-	assert((ih - fh)%sy == 0 && "Check implementations for this unmet condition");
-	assert(vec.size() == size_activation && "Dimension issue with convolutionReshape");
-	assert(vecShaped.size() == size_shaped && "Dimension issue with convolutionReshape");
+// 	assert((sx == 1 and sy == 1) && "Stride not implemented in generality");
+// 	assert(fw >= sx and fh >= sy && "Check implementation");
+// 	assert((iw - fw)%sx == 0 && "Check implementations for this unmet condition");
+// 	assert((ih - fh)%sy == 0 && "Check implementations for this unmet condition");
+// 	assert(vec.size() == size_activation && "Dimension issue with convolutionReshape");
+// 	assert(vecShaped.size() == size_shaped && "Dimension issue with convolutionReshape");
 
-	size_t loc = 0, counter = 0;
-	for (size_t i = 0; i < B; ++i)
-		for (size_t j = 0; j < p_range; j += sy) 
-			for (size_t k = 0; k < q_range; k += sx)
-				for (size_t l = 0; l < C; ++l)
-				{
-					loc = i*iw*ih*C + l*iw*ih + j*iw + k;
-					for (size_t a = 0; a < fh; ++a)
-						for (size_t b = 0; b < fw; ++b)
-							vecShaped[counter++] = vec[loc + a*iw + b];
-				}
-}
+// 	size_t loc = 0, counter = 0;
+// 	for (size_t i = 0; i < B; ++i)
+// 		for (size_t j = 0; j < p_range; j += sy) 
+// 			for (size_t k = 0; k < q_range; k += sx)
+// 				for (size_t l = 0; l < C; ++l)
+// 				{
+// 					loc = i*iw*ih*C + l*iw*ih + j*iw + k;
+// 					for (size_t a = 0; a < fh; ++a)
+// 						for (size_t b = 0; b < fw; ++b)
+// 							vecShaped[counter++] = vec[loc + a*iw + b];
+// 				}
+// }
 
 
 void maxPoolReshape(const RSSVectorMyType &vec, RSSVectorMyType &vecShaped,

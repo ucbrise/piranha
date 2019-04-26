@@ -3,8 +3,8 @@
 #include "LayerConfig.h"
 #include "FCConfig.h"
 #include "CNNConfig.h"
-#include "ChameleonCNNConfig.h"
-#include "PlainCNNConfig.h"
+// #include "ChameleonCNNConfig.h"
+// #include "PlainCNNConfig.h"
 #include "globals.h"
 using namespace std;
 
@@ -26,8 +26,8 @@ public:
 
 	addLayer(FCConfig* fcl) {layerConf.push_back(fcl);};
 	addLayer(CNNConfig* cnnl) {layerConf.push_back(cnnl);};
-	addLayer(ChameleonCNNConfig* ccnnl) {layerConf.push_back(ccnnl);};
-	addLayer(PlainCNNConfig* pcnnl) {layerConf.push_back(pcnnl);};
+	// addLayer(ChameleonCNNConfig* ccnnl) {layerConf.push_back(ccnnl);};
+	// addLayer(PlainCNNConfig* pcnnl) {layerConf.push_back(pcnnl);};
 	
 	checkNetwork() 
 	{

@@ -16,11 +16,6 @@ private:
 	RSSVectorMyType deltas;
 	RSSVectorMyType weights;
 	RSSVectorMyType biases;
-	RSSVectorSmallType reluPrime;
-	RSSVectorMyType maxIndex;
-	RSSVectorSmallType maxPrime;
-	RSSVectorMyType deltaRelu;
-
 
 public:
 	//Constructor and initializer
@@ -32,8 +27,6 @@ public:
 	void forward(const RSSVectorMyType& inputActivation) override;
 	void computeDelta(RSSVectorMyType& prevDelta) override;
 	void updateEquations(const RSSVectorMyType& prevActivations) override;
-	// void findMax(RSSVectorMyType &a, RSSVectorMyType &max, RSSVectorMyType &maxIndex, 
-	// 			 RSSVectorSmallType &maxPrime, size_t rows, size_t columns) override;
 
 	//Getters
 	RSSVectorMyType* getActivation() {return &activations;};
