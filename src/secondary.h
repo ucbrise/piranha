@@ -10,9 +10,10 @@
 void parseInputs(int argc, char* argv[]);
 void train(NeuralNetwork* net, NeuralNetConfig* config);
 void test(NeuralNetwork* net);
-void loadData();
+void loadData(string str);
 void readMiniBatch(NeuralNetwork* net, string phase);
-
+void printNetwork(NeuralNetwork* net);
+void selectNetwork(string str, NeuralNetConfig* config, string &ret);
 
 /********************* COMMUNICATION AND HELPERS *********************/
 void start_m();

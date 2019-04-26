@@ -283,7 +283,11 @@ void convolutionReshapeBackprop(const vector<myType> &vec, vector<myType> &vecOu
 								size_t C, size_t D, size_t B);
 
 void multiplyByScalar(const RSSVectorMyType &a, size_t scalar, RSSVectorMyType &b);
-
+// void transposeVector(const RSSVectorMyType &a, RSSVectorMyType &b, size_t rows, size_t columns);
+void zeroPad(const RSSVectorMyType &a, RSSVectorMyType &b, 
+			size_t iw, size_t ih, size_t f, size_t Din, size_t B);
+void convToMult(const RSSVectorMyType &vec1, RSSVectorMyType &vec2, 
+				size_t iw, size_t ih, size_t f, size_t Din, size_t S, size_t B);
 
 
 // Template functions

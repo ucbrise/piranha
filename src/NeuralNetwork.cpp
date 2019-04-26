@@ -4,17 +4,20 @@
 #include "FCLayer.h"
 #include "CNNLayer.h"
 #include "ChameleonCNNLayer.h"
+#include "PlainCNNLayer.h"
 #include "NeuralNetwork.h"
 #include "Functionalities.h"
 using namespace std;
 
-
+extern size_t INPUT_SIZE;
+extern size_t LAST_LAYER_SIZE;
+size_t LL;
 
 NeuralNetwork::NeuralNetwork(NeuralNetConfig* config)
-:inputData(LAYER0 * MINI_BATCH_SIZE),
+:inputData(INPUT_SIZE * MINI_BATCH_SIZE),
  outputData(LAST_LAYER_SIZE * MINI_BATCH_SIZE)
 {
-	for (size_t i = 0; i < NUM_LAYERS - 1; ++i)
+	for (size_t i = 0; i < NUM_LAYERS; ++i)
 	{
 		if (config->layerConf[i]->type.compare("FC") == 0)
 			layers.push_back(new FCLayer(config->layerConf[i]));
@@ -22,9 +25,13 @@ NeuralNetwork::NeuralNetwork(NeuralNetConfig* config)
 			layers.push_back(new CNNLayer(config->layerConf[i]));
 		else if (config->layerConf[i]->type.compare("ChameleonCNN") == 0)
 			layers.push_back(new ChameleonCNNLayer(config->layerConf[i]));
+		else if (config->layerConf[i]->type.compare("PlainCNN") == 0)
+			layers.push_back(new PlainCNNLayer(config->layerConf[i]));
 		else
-			error("Only FC, CNN, and ChameleonCNN layer types currently supported");
+			error("Only FC, CNN, ReLU, Maxpool, and BatchNorm layer types currently supported");
 	}
+
+	LL = NUM_LAYERS-1;
 }
 
 
@@ -43,7 +50,7 @@ void NeuralNetwork::forward()
 
 	layers[0]->forward(inputData);
 
-	for (size_t i = 1; i < NUM_LAYERS - 1; ++i)
+	for (size_t i = 1; i < NUM_LAYERS; ++i)
 		layers[i]->forward(*(layers[i-1]->getActivation()));
 }
 
@@ -64,25 +71,26 @@ void NeuralNetwork::computeDelta()
 	size_t size = rows*columns;
 	size_t index;
 
-	RSSVectorMyType rowSum(size, make_pair(0,0));
-	RSSVectorMyType quotient(size, make_pair(0,0));
+	// RSSVectorMyType rowSum(size, make_pair(0,0));
+	// RSSVectorMyType quotient(size, make_pair(0,0));
 
-	for (size_t i = 0; i < rows; ++i)
-		for (size_t j = 0; j < columns; ++j)
-			rowSum[i*columns] = rowSum[i*columns] + 
-								(*(layers[LL]->getActivation()))[i * columns + j];
+	// for (size_t i = 0; i < rows; ++i)
+	// 	for (size_t j = 0; j < columns; ++j)
+	// 		rowSum[i*columns] = rowSum[i*columns] + 
+	// 							(*(layers[LL]->getActivation()))[i * columns + j];
 
-	for (size_t i = 0; i < rows; ++i)
-		for (size_t j = 0; j < columns; ++j)
-			rowSum[i*columns + j] = rowSum[i*columns];
+	// for (size_t i = 0; i < rows; ++i)
+	// 	for (size_t j = 0; j < columns; ++j)
+	// 		rowSum[i*columns + j] = rowSum[i*columns];
 
-	funcDivision(*(layers[LL]->getActivation()), rowSum, quotient, size);
+	// funcDivision(*(layers[LL]->getActivation()), rowSum, quotient, size);
 
 	for (size_t i = 0; i < rows; ++i)
 		for (size_t j = 0; j < columns; ++j)
 		{
 			index = i * columns + j;
-			(*(layers[LL]->getDelta()))[index] = quotient[index] - outputData[index];
+			(*(layers[LL]->getDelta()))[index] = 
+			(*(layers[LL]->getActivation()))[index] - outputData[index];
 		}
 
 	for (size_t i = LL; i > 0; --i)

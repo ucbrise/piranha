@@ -5,13 +5,11 @@
 using namespace std;
 
 FCLayer::FCLayer(FCConfig* conf)
-:conf(conf->batchSize, conf->inputDim, conf->outputDim),
+:conf(conf->inputDim, conf->batchSize, conf->outputDim),
  activations(conf->batchSize * conf->outputDim), 
- zetas(conf->batchSize * conf->outputDim), 
  deltas(conf->batchSize * conf->outputDim),
  weights(conf->inputDim * conf->outputDim),
- biases(conf->outputDim),
- reluPrime(conf->batchSize * conf->outputDim)
+ biases(conf->outputDim)
 {
 	initialize();
 }
@@ -45,6 +43,14 @@ void FCLayer::initialize()
 }
 
 
+void FCLayer::printLayer()
+{
+	cout << "----------------------------------------" << endl;  	
+	cout << "FC Layer\t  " << conf.inputDim << " x " << conf.outputDim << endl << "\t\t  "
+		 << conf.batchSize << "\t\t (Batch Size)" << endl;
+}
+
+
 void FCLayer::forward(const RSSVectorMyType &inputActivation)
 {
 	log_print("FC.forward");
@@ -54,15 +60,12 @@ void FCLayer::forward(const RSSVectorMyType &inputActivation)
 	size_t common_dim = conf.inputDim;
 	size_t size = rows*columns;
 
-	funcMatMul(inputActivation, weights, zetas, 
+	funcMatMul(inputActivation, weights, activations, 
 				rows, common_dim, columns, 0, 0);
 
 	for(size_t r = 0; r < rows; ++r)
 		for(size_t c = 0; c < columns; ++c)
-			zetas[r*columns + c] = zetas[r*columns + c] + biases[c];
-
-	// cout << "ReLU: \t\t" << funcTime(funcRELU, zetas, reluPrime, activations, size) << endl;
-	funcRELU(zetas, reluPrime, activations, size);
+			activations[r*columns + c] = activations[r*columns + c] + biases[c];
 }
 
 
@@ -74,16 +77,8 @@ void FCLayer::computeDelta(RSSVectorMyType& prevDelta)
 	size_t rows = conf.batchSize;
 	size_t columns = conf.inputDim;
 	size_t common_dim = conf.outputDim;
-	size_t size = rows*columns;
-	size_t tempSize = rows*common_dim;
-
-	//Since delta and weights are both unnaturally shared, modify into temp
-	RSSVectorMyType temp(tempSize);
-	for (size_t i = 0; i < tempSize; ++i)
-		temp[i] = deltas[i];
-
-	funcSelectShares(deltas, reluPrime, temp, tempSize);
-	funcMatMul(temp, weights, prevDelta, rows, 
+	
+	funcMatMul(deltas, weights, prevDelta, rows, 
 				common_dim, columns, 0, 1);
 }
 
@@ -118,13 +113,3 @@ void FCLayer::updateEquations(const RSSVectorMyType& prevActivations)
 	funcTruncate(deltaWeight, LOG_MINI_BATCH + LOG_LEARNING_RATE, size);
 	subtractVectors<RSSMyType>(weights, deltaWeight, weights, size);		
 }
-
-
-// void FCLayer::findMax(RSSVectorMyType &a, RSSVectorMyType &max, RSSVectorMyType &maxIndex, 
-// 				 RSSVectorSmallType &maxPrime, size_t rows, size_t columns)
-// {
-// 	log_print("FC.findMax");
-// 	assert(true && "Maxpool function should not be called on FCLayer");
-// }
-
-

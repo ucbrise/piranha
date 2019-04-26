@@ -28,6 +28,7 @@ public:
 	void initialize();
 
 	//Functions
+	void printLayer() override;
 	void forward(const RSSVectorMyType& inputActivation) override;
 	void computeDelta(RSSVectorMyType& prevDelta) override;
 	void updateEquations(const RSSVectorMyType& prevActivations) override;

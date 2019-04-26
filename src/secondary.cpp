@@ -1,6 +1,7 @@
 
 #include "connect.h" 
 #include "secondary.h"
+
 extern CommunicationObject commObject;
 extern int partyNum;
 extern string * addrs;
@@ -29,6 +30,9 @@ size_t trainLabelsBatchCounter = 0;
 size_t testDataBatchCounter = 0;
 size_t testLabelsBatchCounter = 0;
 
+size_t INPUT_SIZE;
+size_t LAST_LAYER_SIZE;
+size_t NUM_LAYERS;
 
 /******************* Main train and test functions *******************/
 void parseInputs(int argc, char* argv[])
@@ -45,9 +49,6 @@ void parseInputs(int argc, char* argv[])
 			subtractModPrime[i][j] = ((PRIME_NUMBER + i - j) % PRIME_NUMBER);
 			multiplicationModPrime[i][j] = ((i * j) % PRIME_NUMBER); //How come you give the right answer multiplying in 8-bits??
 		}
-
-	loadData();	
-	cout << "Loading data done....." << endl;
 }
 
 void train(NeuralNetwork* net, NeuralNetConfig* config)
@@ -84,8 +85,25 @@ void test(NeuralNetwork* net)
 }
 
 
-void loadData()
+void loadData(string str)
 {
+	if (str.compare("MNIST"))
+	{
+		INPUT_SIZE = 784;
+		LAST_LAYER_SIZE = 10;
+	}
+	else if (str.compare("CIFAR10"))
+	{
+		INPUT_SIZE = 784;
+		LAST_LAYER_SIZE = 10;
+	}
+	else if (str.compare("ImageNet"))
+	{
+		INPUT_SIZE = 784;
+		LAST_LAYER_SIZE = 10;
+	}
+
+
 	string filename_train_data_next, filename_train_data_prev;
 	string filename_test_data_next, filename_test_data_prev;
 	string filename_train_labels_next, filename_train_labels_prev;
@@ -106,7 +124,7 @@ void loadData()
 	float temp_next = 0, temp_prev = 0;
 	ifstream f_next(filename_train_data_next);
 	ifstream f_prev(filename_train_data_prev);
-	for (int i = 0; i < TRAINING_DATA_SIZE * LAYER0; ++i)
+	for (int i = 0; i < TRAINING_DATA_SIZE * INPUT_SIZE; ++i)
 	{
 		f_next >> temp_next; f_prev >> temp_prev;
 		trainData.push_back(std::make_pair(floatToMyType(temp_next), floatToMyType(temp_prev)));
@@ -124,7 +142,7 @@ void loadData()
 
 	ifstream h_next(filename_test_data_next);
 	ifstream h_prev(filename_test_data_prev);
-	for (int i = 0; i < TRAINING_DATA_SIZE * LAYER0; ++i)
+	for (int i = 0; i < TRAINING_DATA_SIZE * INPUT_SIZE; ++i)
 	{
 		h_next >> temp_next; h_prev >> temp_prev;
 		testData.push_back(std::make_pair(floatToMyType(temp_next), floatToMyType(temp_prev)));
@@ -139,6 +157,8 @@ void loadData()
 		testLabels.push_back(std::make_pair(floatToMyType(temp_next), floatToMyType(temp_prev)));
 	}
 	k_next.close(); k_prev.close();		
+
+	cout << "Loading data done....." << endl;
 }
 
 
@@ -149,13 +169,13 @@ void readMiniBatch(NeuralNetwork* net, string phase)
 
 	if (phase == "TRAINING")
 	{
-		for (int i = 0; i < LAYER0 * MINI_BATCH_SIZE; ++i)
+		for (int i = 0; i < INPUT_SIZE * MINI_BATCH_SIZE; ++i)
 			net->inputData[i] = trainData[(trainDataBatchCounter + i)%s];
 
 		for (int i = 0; i < LAST_LAYER_SIZE * MINI_BATCH_SIZE; ++i)
 			net->outputData[i] = trainLabels[(trainLabelsBatchCounter + i)%t];
 
-		trainDataBatchCounter += LAYER0 * MINI_BATCH_SIZE;
+		trainDataBatchCounter += INPUT_SIZE * MINI_BATCH_SIZE;
 		trainLabelsBatchCounter += LAST_LAYER_SIZE * MINI_BATCH_SIZE;
 	}
 
@@ -172,13 +192,13 @@ void readMiniBatch(NeuralNetwork* net, string phase)
 
 	if (phase == "TESTING")
 	{
-		for (int i = 0; i < LAYER0 * MINI_BATCH_SIZE; ++i)
+		for (int i = 0; i < INPUT_SIZE * MINI_BATCH_SIZE; ++i)
 			net->inputData[i] = testData[(testDataBatchCounter + i)%p];
 
 		for (int i = 0; i < LAST_LAYER_SIZE * MINI_BATCH_SIZE; ++i)
 			net->outputData[i] = testLabels[(testLabelsBatchCounter + i)%q];
 
-		testDataBatchCounter += LAYER0 * MINI_BATCH_SIZE;
+		testDataBatchCounter += INPUT_SIZE * MINI_BATCH_SIZE;
 		testLabelsBatchCounter += LAST_LAYER_SIZE * MINI_BATCH_SIZE;
 	}
 
@@ -189,12 +209,94 @@ void readMiniBatch(NeuralNetwork* net, string phase)
 		testLabelsBatchCounter -= q;
 }
 
+void printNetwork(NeuralNetwork* net)
+{
+	for (int i = 0; i < net->layers.size(); ++i)
+		net->layers[i]->printLayer();
+	cout << "----------------------------------------" << endl;  	
+}
 
 
-
-
-
-
+void selectNetwork(string str, NeuralNetConfig* config, string &ret)
+{
+	if (str.compare("SecureML") == 0)
+	{
+		// ret = str;
+		// NUM_LAYERS = 3;
+		// FCConfig* l0 = new FCConfig(784, MINI_BATCH_SIZE, 128); 
+		// FCConfig* l1 = new FCConfig(128, MINI_BATCH_SIZE, 128); 
+		// FCConfig* l2 = new FCConfig(128, MINI_BATCH_SIZE, 10); 
+		// config->addLayer(l0);
+		// config->addLayer(l1);
+		// config->addLayer(l2);
+	}
+	else if (str.compare("Sarda") == 0)
+	{
+		// ret = str;
+		// NUM_LAYERS = 3;
+		// ChameleonCNNConfig* l0 = new ChameleonCNNConfig(5,1,5,5,MINI_BATCH_SIZE,28,28,2,2);
+		// FCConfig* l1 = new FCConfig(MINI_BATCH_SIZE, 980, 100);
+		// FCConfig* l2 = new FCConfig(MINI_BATCH_SIZE, 100, 10);
+		// config->addLayer(l0);
+		// config->addLayer(l1);
+		// config->addLayer(l2);
+	}
+	else if (str.compare("MiniONN") == 0)
+	{
+		// ret = str;
+		// NUM_LAYERS = 4;
+		// CNNConfig* l0 = new CNNConfig(16,1,5,5,MINI_BATCH_SIZE,28,28,2,2);
+		// CNNConfig* l1 = new CNNConfig(16,16,5,5,MINI_BATCH_SIZE,12,12,2,2);
+		// FCConfig* l2 = new FCConfig(MINI_BATCH_SIZE, 256, 100);
+		// FCConfig* l3 = new FCConfig(MINI_BATCH_SIZE, 100, 10);
+		// config->addLayer(l0);
+		// config->addLayer(l1);
+		// config->addLayer(l2);
+		// config->addLayer(l3);
+	}
+	else if (str.compare("LeNet") == 0)
+	{
+		// ret = str;
+		// NUM_LAYERS = 4;
+		// CNNConfig* l0 = new CNNConfig(20,1,5,5,MINI_BATCH_SIZE,28,28,2,2);
+		// CNNConfig* l1 = new CNNConfig(50,20,5,5,MINI_BATCH_SIZE,12,12,2,2);
+		// FCConfig* l2 = new FCConfig(MINI_BATCH_SIZE, 800, 500);
+		// FCConfig* l3 = new FCConfig(MINI_BATCH_SIZE, 500, 10);
+		// config->addLayer(l0);
+		// config->addLayer(l1);
+		// config->addLayer(l2);
+		// config->addLayer(l3);
+	}
+	else if (str.compare("AlexNet") == 0)
+	{
+		// ret = str;
+		// NUM_LAYERS = 4;
+		// PlainCNNConfig* l0 = new PlainCNNConfig(28,28,1,16,5,1,1,MINI_BATCH_SIZE);
+		// PlainCNNConfig* l1 = new PlainCNNConfig(26,26,16,1,2,1,1,MINI_BATCH_SIZE);
+		// FCConfig* l2 = new FCConfig(7290, MINI_BATCH_SIZE, 100);
+		// FCConfig* l3 = new FCConfig(100, MINI_BATCH_SIZE, 10);
+		// config->addLayer(l0);
+		// config->addLayer(l1);
+		// config->addLayer(l2);
+		// config->addLayer(l3);
+	}
+	else if (str.compare("VGG16") == 0)
+	{
+		ret = str;
+		NUM_LAYERS = 4;
+		PlainCNNConfig* l0 = new PlainCNNConfig(28,28,1,16,5,1,1,MINI_BATCH_SIZE);
+		PlainCNNConfig* l1 = new PlainCNNConfig(26,26,16,1,2,1,1,MINI_BATCH_SIZE);
+		FCConfig* l2 = new FCConfig(7290, MINI_BATCH_SIZE, 100);
+		FCConfig* l3 = new FCConfig(100, MINI_BATCH_SIZE, 10);
+		config->addLayer(l0);
+		config->addLayer(l1);
+		config->addLayer(l2);
+		config->addLayer(l3);
+	}
+	else
+		assert(false && "Only SecureML, Sarda, Gazelle, LeNet, AlexNet, and VGG16 Networks supported");
+	
+}
 
 
 

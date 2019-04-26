@@ -6,8 +6,7 @@
 #include "connect.h"
 #include "NeuralNetConfig.h"
 #include "NeuralNetwork.h"
-#include "Functionalities.h"
-
+// #include "Functionalities.h"
 
 
 int partyNum;
@@ -15,8 +14,6 @@ AESObject* aes_indep;
 AESObject* aes_next;
 AESObject* aes_prev;
 Precompute PrecomputeObject;
-
-
 
 
 int main(int argc, char** argv)
@@ -28,60 +25,11 @@ int main(int argc, char** argv)
 	NeuralNetConfig* config = new NeuralNetConfig(NUM_ITERATIONS);
 
 /****************************** SELECT NETWORK ******************************/ 
-	//VGG16
-	// whichNetwork = "VGG16";
-	// PlainCNNConfig* l0 = new PlainCNNConfig(16,1,5,5,MINI_BATCH_SIZE,28,28,2,2);
-	// CNNConfig* l1 = new CNNConfig(16,16,5,5,MINI_BATCH_SIZE,12,12,2,2);
-	// FCConfig* l2 = new FCConfig(MINI_BATCH_SIZE, 256, 100);
-	// FCConfig* l3 = new FCConfig(MINI_BATCH_SIZE, 100, 10);
-	// config->addLayer(l0);
-	// config->addLayer(l1);
-	// config->addLayer(l2);
-	// config->addLayer(l3);
-
-	//MINIONN, Network-D in GAZELLE
-	whichNetwork = "MiniONN/GAZELLE-D";
-	CNNConfig* l0 = new CNNConfig(16,1,5,5,MINI_BATCH_SIZE,28,28,2,2);
-	CNNConfig* l1 = new CNNConfig(16,16,5,5,MINI_BATCH_SIZE,12,12,2,2);
-	FCConfig* l2 = new FCConfig(MINI_BATCH_SIZE, 256, 100);
-	FCConfig* l3 = new FCConfig(MINI_BATCH_SIZE, 100, 10);
-	config->addLayer(l0);
-	config->addLayer(l1);
-	config->addLayer(l2);
-	config->addLayer(l3);
-
-	//LeNet
-	// whichNetwork = "LeNet";
-	// CNNConfig* l0 = new CNNConfig(20,1,5,5,MINI_BATCH_SIZE,28,28,2,2);
-	// CNNConfig* l1 = new CNNConfig(50,20,5,5,MINI_BATCH_SIZE,12,12,2,2);
-	// FCConfig* l2 = new FCConfig(MINI_BATCH_SIZE, 800, 500);
-	// FCConfig* l3 = new FCConfig(MINI_BATCH_SIZE, 500, 10);
-	// config->addLayer(l0);
-	// config->addLayer(l1);
-	// config->addLayer(l2);
-	// config->addLayer(l3);
-
-	//SecureML
-	// whichNetwork = "SecureML";
-	// FCConfig* l0 = new FCConfig(MINI_BATCH_SIZE, LAYER0, LAYER1); 
-	// FCConfig* l1 = new FCConfig(MINI_BATCH_SIZE, LAYER1, LAYER2); 
-	// FCConfig* l2 = new FCConfig(MINI_BATCH_SIZE, LAYER2, LAST_LAYER_SIZE); 
-	// config->addLayer(l0);
-	// config->addLayer(l1);
-	// config->addLayer(l2);
-
-	//Chameleon
-	// whichNetwork = "Sarda";
-	// ChameleonCNNConfig* l0 = new ChameleonCNNConfig(5,1,5,5,MINI_BATCH_SIZE,28,28,2,2);
-	// FCConfig* l1 = new FCConfig(MINI_BATCH_SIZE, 980, 100);
-	// FCConfig* l2 = new FCConfig(MINI_BATCH_SIZE, 100, 10);
-	// config->addLayer(l0);
-	// config->addLayer(l1);
-	// config->addLayer(l2);
-
+	//Choices are SecureML, Sarda, Gazelle, LeNet, AlexNet, and VGG16 
+	selectNetwork("VGG16", config, whichNetwork);	
+	loadData("MNIST");
 	config->checkNetwork();
 	NeuralNetwork* network = new NeuralNetwork(config);
-
 
 /****************************** AES SETUP and SYNC ******************************/ 
 	aes_indep = new AESObject(argv[3]);
@@ -90,7 +38,6 @@ int main(int argc, char** argv)
 
 	initializeCommunication(argv[2], partyNum);
 	synchronize(2000000);
-
 
 /****************************** RUN NETWORK/BENCHMARKS ******************************/ 
 	start_m();
@@ -126,8 +73,10 @@ int main(int argc, char** argv)
 	// testMaxPoolDerivative(24, 24, 2, 2, 16, NUM_ITERATIONS);
 	// testMaxPoolDerivative(8, 8, 4, 4, 50, NUM_ITERATIONS);
 
-	whichNetwork += " train";
-	train(network, config);
+	network->layers[1]->computeDelta(*(network->layers[0]->getDelta()));
+
+	// whichNetwork += " train";
+	// train(network, config);
 
 	// whichNetwork += " test";
 	// test(network);
@@ -167,17 +116,13 @@ int main(int argc, char** argv)
 			" iterations," << endl << "Running " << whichNetwork << ", batch size " << MINI_BATCH_SIZE << endl;
 	cout << "----------------------------------------" << endl << endl;  
 
+	printNetwork(network);
 
 /****************************** CLEAN-UP ******************************/ 
 	delete aes_indep;
 	delete aes_next;
 	delete aes_prev;
 	delete config;
-	delete l0;
-	delete l1;
-	delete l2;
-	if (NUM_LAYERS == 5)
-		delete l3;
 	delete network;
 	deleteObjects();
 

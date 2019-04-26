@@ -885,3 +885,52 @@ void multiplyByScalar(const RSSVectorMyType &a, size_t scalar, RSSVectorMyType &
 		b[i].second  = a[i].second * scalar;
 	}
 }
+
+//a is just a vector, b has to be a matrix of size rows*columns 
+//such that b read columns wise is the same as a.
+// void transposeVector(const RSSVectorMyType &a, RSSVectorMyType &b, size_t rows, size_t columns)
+// {
+// 	size_t totalSize = rows*columns;
+
+// 	for (int i = 0; i < totalSize; ++i)
+// 		b[(i % rows)*columns + (i/rows)] = a[i];
+// }
+
+//a is zero padded into b with parameters as passed:
+//imageWidth, imageHeight, padding, inputFilters, batchSize
+void zeroPad(const RSSVectorMyType &a, RSSVectorMyType &b, 
+			size_t iw, size_t ih, size_t P, size_t Din, size_t B)
+{
+	size_t size_B 	= (iw+2*P)*(ih+2*P)*Din;
+	size_t size_Din = (iw+2*P)*(ih+2*P);
+	size_t size_w 	= (iw+2*P);
+
+	for (size_t i = 0; i < B; ++i)
+		for (size_t j = 0; j < Din; ++j) 
+			for (size_t k = 0; k < ih; ++k)
+				for (size_t l = 0; l < iw; ++l)
+				{
+					b[i*size_B + j*size_Din + k*size_w + l+P]
+						= a[i*Din*iw*ih + j*iw*ih + k*iw + l];
+				}
+}
+
+//vec1 is reshaped for a "convolutional multiplication" with the following params:  
+//imageWidth, imageHeight, padding, inputFilters, stride, batchSize
+//Here, imageWidth and imageHeight are those of the zeroPadded output.
+//When multiplying, this will have to be transposed.
+void convToMult(const RSSVectorMyType &vec1, RSSVectorMyType &vec2, 
+				size_t iw, size_t ih, size_t f, size_t Din, size_t S, size_t B)
+{
+	size_t loc, counter = 0;
+	for (size_t i = 0; i < B; ++i)
+		for (size_t j = 0; j < ih-f+1; j+=S)
+			for (size_t k = 0; k < iw-f+1; k+=S)
+				for (size_t l = 0; l < Din; ++l) 
+				{
+					loc = i*iw*ih*Din + l*iw*ih + j*iw + k;
+					for (size_t a = 0; a < f; ++a)
+						for (size_t b = 0; b < f; ++b)
+							vec2[counter++] = vec1[loc + a*iw + b];
+				}
+}
