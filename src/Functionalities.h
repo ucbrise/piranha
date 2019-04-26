@@ -21,7 +21,7 @@ void funcReconstruct(const RSSVectorSmallType &a, vector<smallType> &b, size_t s
 void funcReconstruct(const vector<myType> &a, vector<myType> &b, size_t size, string str, bool print);
 void funcMatMul(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyType &c, 
 				size_t rows, size_t common_dim, size_t columns,
-			 	size_t transpose_a, size_t transpose_b);
+			 	size_t transpose_a, size_t transpose_b, size_t truncation);
 void funcDotProduct(const RSSVectorMyType &a, const RSSVectorMyType &b, 
 					   RSSVectorMyType &c, size_t size, bool truncation, size_t precision);
 void funcDotProduct(const RSSVectorSmallType &a, const RSSVectorSmallType &b, 

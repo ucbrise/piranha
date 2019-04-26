@@ -108,7 +108,7 @@ void ChameleonCNNLayer::forward(const RSSVectorMyType& inputActivation)
 	//Convolution multiplication
 	RSSVectorMyType convOutput((((padded_x-fw)/sx) + 1)*(((padded_y-fh)/sy) + 1)*B*D, make_pair(0,0));
 	funcMatMul(convShaped, reshapedWeights, convOutput, 
-				((((padded_x-fw)/sx) + 1)*(((padded_y-fh)/sy) + 1)*B), (fw*fh*C), D, 0, 0);
+				((((padded_x-fw)/sx) + 1)*(((padded_y-fh)/sy) + 1)*B), (fw*fh*C), D, 0, 0, FLOAT_PRECISION);
 
 	//Add Biases
 	size_t rows_convo = ((((padded_x-fw)/sx) + 1)*(((padded_y-fh)/sy) + 1)*B);

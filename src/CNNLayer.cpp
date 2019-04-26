@@ -108,7 +108,7 @@ void CNNLayer::forward(const RSSVectorMyType& inputActivation)
 	//Convolution multiplication
 	RSSVectorMyType convOutput(p_range*q_range*B*D, make_pair(0,0));
 	funcMatMul(convShaped, reshapedWeights, convOutput, 
-					(p_range*q_range*B), (fw*fh*C), D, 0, 0);
+					(p_range*q_range*B), (fw*fh*C), D, 0, 0, FLOAT_PRECISION);
 
 	//Add Biases
 	size_t rows_convo = p_range*q_range*B;
@@ -255,7 +255,7 @@ void CNNLayer::computeDelta(RSSVectorMyType& prevDelta)
 	RSSVectorMyType temp(size_pd, make_pair(0,0)); 
 
 	funcMatMul(reshapedPaddedDelta, reshapedWeights, prevDelta, 
-					(iw*ih*B), (fw*fh*D), C, 0, 0);
+					(iw*ih*B), (fw*fh*D), C, 0, 0, FLOAT_PRECISION);
 
 	//Reshape temp into prevDelta
 	for (size_t i = 0; i < size_pd; ++i)
@@ -333,7 +333,7 @@ void CNNLayer::updateEquations(const RSSVectorMyType& prevActivations)
 	RSSVectorMyType tempProd(size_w, make_pair(0,0));
 
 	funcMatMul(shapedActivation, shapedDelta, tempProd, 
-				  (C*fw*fh), (p_range*q_range*B), D, 0, 0);
+				  (C*fw*fh), (p_range*q_range*B), D, 0, 0, FLOAT_PRECISION);
 	funcTruncate(tempProd, LOG_MINI_BATCH + LOG_LEARNING_RATE, (C*fw*fh*D));
 
 

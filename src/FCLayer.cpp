@@ -61,7 +61,7 @@ void FCLayer::forward(const RSSVectorMyType &inputActivation)
 	size_t size = rows*columns;
 
 	funcMatMul(inputActivation, weights, activations, 
-				rows, common_dim, columns, 0, 0);
+				rows, common_dim, columns, 0, 0, FLOAT_PRECISION);
 
 	for(size_t r = 0; r < rows; ++r)
 		for(size_t c = 0; c < columns; ++c)
@@ -79,7 +79,7 @@ void FCLayer::computeDelta(RSSVectorMyType& prevDelta)
 	size_t common_dim = conf.outputDim;
 	
 	funcMatMul(deltas, weights, prevDelta, rows, 
-				common_dim, columns, 0, 1);
+				common_dim, columns, 0, 1, FLOAT_PRECISION);
 }
 
 
@@ -109,7 +109,8 @@ void FCLayer::updateEquations(const RSSVectorMyType& prevActivations)
 	RSSVectorMyType deltaWeight(size);
 
 	funcMatMul(prevActivations, deltas, deltaWeight, 
-					rows, common_dim, columns, 1, 0);
-	funcTruncate(deltaWeight, LOG_MINI_BATCH + LOG_LEARNING_RATE, size);
+			   rows, common_dim, columns, 1, 0, 
+			   FLOAT_PRECISION + LOG_LEARNING_RATE + LOG_MINI_BATCH);
+	// funcTruncate(deltaWeight, LOG_MINI_BATCH + LOG_LEARNING_RATE, size);
 	subtractVectors<RSSMyType>(weights, deltaWeight, weights, size);		
 }

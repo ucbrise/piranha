@@ -73,7 +73,7 @@ int main(int argc, char** argv)
 	// testMaxPoolDerivative(24, 24, 2, 2, 16, NUM_ITERATIONS);
 	// testMaxPoolDerivative(8, 8, 4, 4, 50, NUM_ITERATIONS);
 
-	network->layers[1]->computeDelta(*(network->layers[0]->getDelta()));
+	network->layers[1]->updateEquations(*(network->layers[0]->getActivation()));
 
 	// whichNetwork += " train";
 	// train(network, config);

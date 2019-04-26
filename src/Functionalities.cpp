@@ -408,7 +408,7 @@ void funcConditionalSet2PC(const RSSVectorMyType &a, const RSSVectorMyType &b, R
 // a^transpose_a is rows*common_dim and b^transpose_b is common_dim*columns
 void funcMatMul(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyType &c, 
 					size_t rows, size_t common_dim, size_t columns,
-				 	size_t transpose_a, size_t transpose_b)
+				 	size_t transpose_a, size_t transpose_b, size_t truncation)
 {
 	log_print("funcMatMul");
 	assert(a.size() == rows*common_dim && "Matrix a incorrect for Mat-Mul");
@@ -419,20 +419,18 @@ void funcMatMul(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyT
 	cout << "Rows, Common_dim, Columns: " << rows << "x" << common_dim << "x" << columns << endl;
 #endif
 
-	// size_t first_size = rows*common_dim;
-	// size_t second_size = common_dim*columns;
 	size_t final_size = rows*columns;
 	vector<myType> temp3(final_size, 0), diffReconst(final_size, 0);
 
 	matrixMultRSS(a, b, temp3, rows, common_dim, columns, transpose_a, transpose_b);
 
 	RSSVectorMyType r(final_size), rPrime(final_size);
-	PrecomputeObject.getDividedShares(r, rPrime, FLOAT_PRECISION, final_size);
+	PrecomputeObject.getDividedShares(r, rPrime, truncation, final_size);
 	for (int i = 0; i < final_size; ++i)
 		temp3[i] = temp3[i] - rPrime[i].first;
 	
 	funcReconstruct(temp3, diffReconst, final_size, "Mat-Mul diff reconst", false);
-	dividePlainSA(diffReconst, (1 << FLOAT_PRECISION));
+	dividePlainSA(diffReconst, (1 << truncation));
 	if (partyNum == PARTY_A)
 	{
 		for (int i = 0; i < final_size; ++i)
@@ -1379,7 +1377,7 @@ void debugMatMul()
 	// RSSVectorMyType a(rows*common_dim, make_pair(1,1)), 
 	// 				b(common_dim*columns, make_pair(1,1)), c(rows*columns);
 
-	// funcMatMul(a, b, c, rows, common_dim, columns, transpose_a, transpose_b);
+	// funcMatMul(a, b, c, rows, common_dim, columns, transpose_a, transpose_b, FLOAT_PRECISION);
 
 /******************************** TODO ****************************************/	
 	size_t rows = 3; 
@@ -1400,7 +1398,7 @@ void debugMatMul()
 
 	funcReconstruct(a, a_reconst, rows*common_dim, "a", true);
 	funcReconstruct(b, b_reconst, common_dim*columns, "b", true);
-	funcMatMul(a, b, c, rows, common_dim, columns, transpose_a, transpose_b);
+	funcMatMul(a, b, c, rows, common_dim, columns, transpose_a, transpose_b, FLOAT_PRECISION);
 	funcReconstruct(c, c_reconst, rows*columns, "c", true);
 /******************************** TODO ****************************************/	
 }
@@ -1669,7 +1667,7 @@ void testMatMul(size_t rows, size_t common_dim, size_t columns, size_t iter)
 	// RSSVectorMyType c(rows*columns);
 
 	// 	for (int runs = 0; runs < iter; ++runs)
-	// 		funcMatMul(a, b, c, rows, common_dim, columns, 0, 0);
+	// 		funcMatMul(a, b, c, rows, common_dim, columns, 0, 0, FLOAT_PRECISION);
 }
 
 
@@ -1704,7 +1702,7 @@ void testConvolution(size_t iw, size_t ih, size_t fw, size_t fh, size_t C, size_
 	// 	RSSVectorMyType convOutput(p_range*q_range*B*D, 0);
 
 	// 	funcMatMul(convShaped, reshapedWeights, convOutput, 
-	// 				(p_range*q_range*B), (fw*fh*C), D, 0, 0);
+	// 				(p_range*q_range*B), (fw*fh*C), D, 0, 0, FLOAT_PRECISION);
 	// }
 /******************************** TODO ****************************************/	
 }
