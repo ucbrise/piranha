@@ -283,15 +283,21 @@ void selectNetwork(string str, NeuralNetConfig* config, string &ret)
 	else if (str.compare("VGG16") == 0)
 	{
 		ret = str;
-		NUM_LAYERS = 4;
+		NUM_LAYERS = 7;
 		CNNConfig* l0 = new CNNConfig(28,28,1,16,5,1,1,MINI_BATCH_SIZE);
-		CNNConfig* l1 = new CNNConfig(26,26,16,1,2,1,1,MINI_BATCH_SIZE);
-		FCConfig* l2 = new FCConfig(7290, MINI_BATCH_SIZE, 100);
-		FCConfig* l3 = new FCConfig(100, MINI_BATCH_SIZE, 10);
+		MaxpoolConfig* l1 = new MaxpoolConfig(26,26,16,2,2,MINI_BATCH_SIZE);
+		ReLUConfig* l2 = new ReLUConfig(13*13*16, MINI_BATCH_SIZE);		
+		FCConfig* l3 = new FCConfig(13*13*16, MINI_BATCH_SIZE, 100);
+		ReLUConfig* l4 = new ReLUConfig(100, MINI_BATCH_SIZE);
+		FCConfig* l5 = new FCConfig(100, MINI_BATCH_SIZE, 10);
+		ReLUConfig* l6 = new ReLUConfig(10, MINI_BATCH_SIZE);
 		config->addLayer(l0);
 		config->addLayer(l1);
 		config->addLayer(l2);
 		config->addLayer(l3);
+		config->addLayer(l4);
+		config->addLayer(l5);
+		config->addLayer(l6);
 	}
 	else
 		assert(false && "Only SecureML, Sarda, Gazelle, LeNet, AlexNet, and VGG16 Networks supported");

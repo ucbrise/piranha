@@ -44,10 +44,10 @@ int main(int argc, char** argv)
 	//Run unit tests in two modes: Debug or Test
 	//Debug possibilities: Mat-Mul, DotProd, PC, Wrap, ReLUPrime,
 	//					   ReLU, Division, SSBits, SS, and Maxpool
-	runTest("Debug", "Wrap", whichNetwork);
+	// runTest("Debug", "Wrap", whichNetwork);
 
-	// whichNetwork += " train";
-	// train(network, config);
+	whichNetwork += " train";
+	train(network, config);
 
 	// whichNetwork += " test";
 	// test(network);

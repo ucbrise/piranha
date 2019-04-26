@@ -3,8 +3,9 @@
 #include "LayerConfig.h"
 #include "FCConfig.h"
 #include "CNNConfig.h"
-// #include "ChameleonCNNConfig.h"
-// #include "PlainCNNConfig.h"
+#include "MaxpoolConfig.h"
+#include "ReLUConfig.h"
+// #include "ReLUConfig.h"
 #include "globals.h"
 using namespace std;
 
@@ -26,14 +27,14 @@ public:
 
 	addLayer(FCConfig* fcl) {layerConf.push_back(fcl);};
 	addLayer(CNNConfig* cnnl) {layerConf.push_back(cnnl);};
-	// addLayer(ChameleonCNNConfig* ccnnl) {layerConf.push_back(ccnnl);};
-	// addLayer(PlainCNNConfig* pcnnl) {layerConf.push_back(pcnnl);};
+	addLayer(MaxpoolConfig* mpl) {layerConf.push_back(mpl);};
+	addLayer(ReLUConfig* relul) {layerConf.push_back(relul);};
 	
 	checkNetwork() 
 	{
 		//Checks
-		assert(layerConf.back()->type.compare("FC") == 0 && "Last layer has to be FC");
-		assert(((FCConfig*)layerConf.back())->outputDim == LAST_LAYER_SIZE && "Last layer size does not match LAST_LAYER_SIZE");
+		// assert(layerConf.back()->type.compare("FC") == 0 && "Last layer has to be FC");
+		// assert(((FCConfig*)layerConf.back())->outputDim == LAST_LAYER_SIZE && "Last layer size does not match LAST_LAYER_SIZE");
 		if (layerConf.front()->type.compare("FC") == 0)
 	    	assert(((FCConfig*)layerConf.front())->inputDim == INPUT_SIZE && "FC input error");
 		else if (layerConf.front()->type.compare("CNN") == 0)
