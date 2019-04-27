@@ -1,7 +1,6 @@
 
 #pragma once
 #include "globals.h"
-// using namespace std;
 
 class LayerConfig
 {

@@ -19,7 +19,7 @@ private:
 
 public:
 	//Constructor and initializer
-	CNNLayer(CNNConfig* conf);
+	CNNLayer(CNNConfig* conf, int _layerNum);
 	void initialize();
 
 	//Functions

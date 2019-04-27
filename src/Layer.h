@@ -5,6 +5,10 @@
 class Layer
 {
 public: 
+	int layerNum = 0;
+	Layer(int _layerNum): layerNum(_layerNum) {};
+
+//Virtual functions	
 	virtual void printLayer() {};
 	virtual void forward(const RSSVectorMyType& inputActivation) {};
 	virtual void computeDelta(RSSVectorMyType& prevDelta) {};

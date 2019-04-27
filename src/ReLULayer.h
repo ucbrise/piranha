@@ -20,7 +20,7 @@ private:
 
 public:
 	//Constructor and initializer
-	ReLULayer(ReLUConfig* conf);
+	ReLULayer(ReLUConfig* conf, int _layerNum);
 
 	//Functions
 	void printLayer() override;

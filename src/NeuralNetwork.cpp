@@ -13,6 +13,7 @@ using namespace std;
 extern size_t INPUT_SIZE;
 extern size_t LAST_LAYER_SIZE;
 extern bool WITH_NORMALIZATION;
+extern bool LARGE_NETWORK;
 
 NeuralNetwork::NeuralNetwork(NeuralNetConfig* config)
 :inputData(INPUT_SIZE * MINI_BATCH_SIZE),
@@ -21,13 +22,13 @@ NeuralNetwork::NeuralNetwork(NeuralNetConfig* config)
 	for (size_t i = 0; i < NUM_LAYERS; ++i)
 	{
 		if (config->layerConf[i]->type.compare("FC") == 0)
-			layers.push_back(new FCLayer(config->layerConf[i]));
+			layers.push_back(new FCLayer(config->layerConf[i], i));
 		else if (config->layerConf[i]->type.compare("CNN") == 0)
-			layers.push_back(new CNNLayer(config->layerConf[i]));
+			layers.push_back(new CNNLayer(config->layerConf[i], i));
 		else if (config->layerConf[i]->type.compare("Maxpool") == 0)
-			layers.push_back(new MaxpoolLayer(config->layerConf[i]));
+			layers.push_back(new MaxpoolLayer(config->layerConf[i], i));
 		else if (config->layerConf[i]->type.compare("ReLU") == 0)
-			layers.push_back(new ReLULayer(config->layerConf[i]));
+			layers.push_back(new ReLULayer(config->layerConf[i], i));
 		else
 			error("Only FC, CNN, ReLU, Maxpool, and BatchNorm layer types currently supported");
 	}
@@ -47,9 +48,15 @@ void NeuralNetwork::forward()
 	log_print("NN.forward");
 
 	layers[0]->forward(inputData);
+	if (LARGE_NETWORK)
+		cout << "Forward \t" << layers[0]->layerNum << " completed..." << endl;
 
 	for (size_t i = 1; i < NUM_LAYERS; ++i)
+	{
 		layers[i]->forward(*(layers[i-1]->getActivation()));
+		if (LARGE_NETWORK)
+			cout << "Forward \t" << layers[i]->layerNum << " completed..." << endl;
+	}
 }
 
 void NeuralNetwork::backward()
@@ -103,8 +110,15 @@ void NeuralNetwork::computeDelta()
 			}
 	}
 
+	if (LARGE_NETWORK)		
+		cout << "Delta last layer completed." << endl;
+
 	for (size_t i = NUM_LAYERS-1; i > 0; --i)
+	{
 		layers[i]->computeDelta(*(layers[i-1]->getDelta()));
+		if (LARGE_NETWORK)
+			cout << "Delta \t\t" << layers[i]->layerNum << " completed..." << endl;
+	}
 }
 
 void NeuralNetwork::updateEquations()
@@ -112,9 +126,15 @@ void NeuralNetwork::updateEquations()
 	log_print("NN.updateEquations");
 
 	for (size_t i = NUM_LAYERS-1; i > 0; --i)
+	{
 		layers[i]->updateEquations(*(layers[i-1]->getActivation()));	
+		if (LARGE_NETWORK)
+			cout << "Update Eq. \t" << layers[i]->layerNum << " completed..." << endl;	
+	}
 
 	layers[0]->updateEquations(inputData);
+	if (LARGE_NETWORK)
+		cout << "First layer update Eq. completed." << endl;		
 }
 
 void NeuralNetwork::predict(RSSVectorMyType &maxIndex)

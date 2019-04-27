@@ -4,8 +4,9 @@
 using namespace std;
 
 
-CNNLayer::CNNLayer(CNNConfig* conf)
-:conf(conf->imageHeight, conf->imageWidth, conf->inputFeatures, 
+CNNLayer::CNNLayer(CNNConfig* conf, int _layerNum)
+:Layer(_layerNum),
+ conf(conf->imageHeight, conf->imageWidth, conf->inputFeatures, 
 	  conf->filters, conf->filterSize, conf->stride, 
 	  conf->padding, conf->batchSize),
  weights(conf->filterSize * conf->filterSize * conf->inputFeatures * conf->filters),

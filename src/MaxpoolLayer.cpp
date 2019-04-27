@@ -4,8 +4,9 @@
 using namespace std;
 
 
-MaxpoolLayer::MaxpoolLayer(MaxpoolConfig* conf)
-:conf(conf->imageHeight, conf->imageWidth, conf->features, 
+MaxpoolLayer::MaxpoolLayer(MaxpoolConfig* conf, int _layerNum)
+:Layer(_layerNum),
+ conf(conf->imageHeight, conf->imageWidth, conf->features, 
 	  conf->poolSize, conf->stride, conf->batchSize),
  activations(conf->batchSize * conf->features * 
 		    (((conf->imageWidth - conf->poolSize)/conf->stride) + 1) * 

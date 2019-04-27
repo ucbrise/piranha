@@ -22,7 +22,7 @@ private:
 
 public:
 	//Constructor and initializer
-	FCLayer(FCConfig* conf);
+	FCLayer(FCConfig* conf, int _layerNum);
 	void initialize();
 
 	//Functions

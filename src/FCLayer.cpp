@@ -4,8 +4,9 @@
 #include "Functionalities.h"
 using namespace std;
 
-FCLayer::FCLayer(FCConfig* conf)
-:conf(conf->inputDim, conf->batchSize, conf->outputDim),
+FCLayer::FCLayer(FCConfig* conf, int _layerNum)
+:Layer(_layerNum),
+ conf(conf->inputDim, conf->batchSize, conf->outputDim),
  activations(conf->batchSize * conf->outputDim), 
  deltas(conf->batchSize * conf->outputDim),
  weights(conf->inputDim * conf->outputDim),

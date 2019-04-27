@@ -26,7 +26,7 @@ int main(int argc, char** argv)
 /****************************** SELECT NETWORK ******************************/ 
 	//Network {SecureML, Sarda, MiniONN, LeNet, AlexNet, and VGG16}
 	//Dataset {MNIST, CIFAR10, and ImageNet}
-	selectNetwork("VGG16", "CIFAR10", config, whichNetwork);
+	selectNetwork("SecureML", "MNIST", config, whichNetwork);
 	config->checkNetwork();
 	NeuralNetwork* network = new NeuralNetwork(config);
 
@@ -46,8 +46,8 @@ int main(int argc, char** argv)
 	// runTest("Debug", "Wrap", whichNetwork);
 	// runTest("Test", "Maxpool1", whichNetwork);
 
-	// whichNetwork += " train";
-	// train(network, config);
+	whichNetwork += " train";
+	train(network, config);
 
 	// whichNetwork += " test";
 	// test(network);

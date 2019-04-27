@@ -18,7 +18,7 @@ private:
 
 public:
 	//Constructor and initializer
-	MaxpoolLayer(MaxpoolConfig* conf);
+	MaxpoolLayer(MaxpoolConfig* conf, int _layerNum);
 
 	//Functions
 	void printLayer() override;
