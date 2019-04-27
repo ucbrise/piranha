@@ -18,7 +18,6 @@ Precompute PrecomputeObject;
 
 int main(int argc, char** argv)
 {
-
 /****************************** PREPROCESSING ******************************/ 
 	parseInputs(argc, argv);
 	string whichNetwork = "No Network";
@@ -26,7 +25,8 @@ int main(int argc, char** argv)
 
 /****************************** SELECT NETWORK ******************************/ 
 	//Choices are SecureML, Sarda, Gazelle, LeNet, AlexNet, and VGG16 
-	selectNetwork("VGG16", config, whichNetwork);	
+	selectNetwork("VGG16", config, whichNetwork);
+	//Choose Dataset according to network: MNIST, CIFAR10, and ImageNet
 	loadData("MNIST");
 	config->checkNetwork();
 	NeuralNetwork* network = new NeuralNetwork(config);
@@ -41,13 +41,14 @@ int main(int argc, char** argv)
 
 /****************************** RUN NETWORK/UNIT TESTS ******************************/ 
 	start_m();
-	//Run unit tests in two modes: Debug or Test
-	//Debug possibilities: Mat-Mul, DotProd, PC, Wrap, ReLUPrime,
-	//					   ReLU, Division, SSBits, SS, and Maxpool
+	//Run unit tests in two modes: 
+	//	1. Debug {Mat-Mul, DotProd, PC, Wrap, ReLUPrime, ReLU, Division, SSBits, SS, and Maxpool}
+	//	2. Test {Mat-Mul1, Mat-Mul2, Mat-Mul3 (and similarly) Conv*, ReLU*, ReLUPrime*, and Maxpool*}
 	// runTest("Debug", "Wrap", whichNetwork);
+	runTest("Test", "Maxpool1", whichNetwork);
 
-	whichNetwork += " train";
-	train(network, config);
+	// whichNetwork += " train";
+	// train(network, config);
 
 	// whichNetwork += " test";
 	// test(network);

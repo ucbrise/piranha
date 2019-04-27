@@ -58,8 +58,8 @@ void debugMaxpool();
 
 //Test
 void testMatMul(size_t rows, size_t common_dim, size_t columns, size_t iter);
-void testConvolution(size_t iw, size_t ih, size_t fw, size_t fh, size_t C, size_t D, size_t iter);
+void testConvolution(size_t iw, size_t ih, size_t Din, size_t Dout, 
+					size_t f, size_t S, size_t P, size_t B, size_t iter);
 void testRelu(size_t r, size_t c, size_t iter);
 void testReluPrime(size_t r, size_t c, size_t iter);
-void testMaxPool(size_t p_range, size_t q_range, size_t px, size_t py, size_t D, size_t iter);
-void testMaxPoolDerivative(size_t p_range, size_t q_range, size_t px, size_t py, size_t D, size_t iter);
+void testMaxpool(size_t ih, size_t iw, size_t Din, size_t f, size_t S, size_t B, size_t iter);

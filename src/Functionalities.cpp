@@ -327,50 +327,6 @@ void funcReconstruct(const vector<myType> &a, vector<myType> &b, size_t size, st
 // }
 
 
-void funcReconstructBit2PC(const RSSVectorSmallType &a, size_t size, string str)
-{
-/******************************** TODO ****************************************/	
-	// assert((partyNum == PARTY_A or partyNum == PARTY_B) && "Reconstruct called by spurious parties");
-
-	// RSSVectorSmallType temp(size);
-	// if (partyNum == PARTY_B)
-	// 	sendVector<RSSSmallType>(a, PARTY_A, size);
-
-	// if (partyNum == PARTY_A)
-	// {
-	// 	receiveVector<RSSSmallType>(temp, PARTY_B, size);
-	// 	XORVectors(temp, a, temp, size);
-	
-	// 	cout << str << ": ";
-	// 	for (size_t i = 0; i < size; ++i)
-	// 		cout << (int)temp[i] << " ";
-	// 	cout << endl;
-	// }
-/******************************** TODO ****************************************/	
-}
-
-
-void funcConditionalSet2PC(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorSmallType &c, 
-					RSSVectorMyType &u, RSSVectorMyType &v, size_t size)
-{
-/******************************** TODO ****************************************/	
-	// assert((partyNum == PARTY_C or partyNum == PARTY_D) && "ConditionalSet called by spurious parties");
-
-	// for (size_t i = 0; i < size; ++i)
-	// {
-	// 	if (c[i] == 0)
-	// 	{
-	// 		u[i] = a[i];
-	// 		v[i] = b[i];
-	// 	}
-	// 	else
-	// 	{
-	// 		u[i] = b[i];
-	// 		v[i] = a[i];
-	// 	}
-	// }
-/******************************** TODO ****************************************/	
-}
 
 /******************************** Functionalities MPC ********************************/
 // Matrix Multiplication of a*b = c with transpose flags for a,b.
@@ -1571,183 +1527,101 @@ void testMatMul(size_t rows, size_t common_dim, size_t columns, size_t iter)
 {
 
 /******************************** TODO ****************************************/	
-	// RSSVectorMyType a(rows*common_dim, 1);
-	// RSSVectorMyType b(common_dim*columns, 1);
-	// RSSVectorMyType c(rows*columns);
+	RSSVectorMyType a(rows*common_dim, make_pair(0,0));
+	RSSVectorMyType b(common_dim*columns, make_pair(0,0));
+	RSSVectorMyType c(rows*columns);
 
-	// 	for (int runs = 0; runs < iter; ++runs)
-	// 		funcMatMul(a, b, c, rows, common_dim, columns, 0, 0, FLOAT_PRECISION);
+	for (int runs = 0; runs < iter; ++runs)
+		funcMatMul(a, b, c, rows, common_dim, columns, 0, 0, FLOAT_PRECISION);
 }
 
 
-void testConvolution(size_t iw, size_t ih, size_t fw, size_t fh, size_t C, size_t D, size_t iter)
+void testConvolution(size_t iw, size_t ih, size_t Din, size_t Dout, 
+					size_t f, size_t S, size_t P, size_t B, size_t iter)
 {
+	size_t ow 		= (((iw-f+2*P)/S)+1);
+	size_t oh		= (((ih-f+2*P)/S)+1);
+	size_t tempSize = ow*oh;
 
-/******************************** TODO ****************************************/	
-	// size_t sx = 1, sy = 1, B = MINI_BATCH_SIZE;
-	// RSSVectorMyType w(fw*fh*C*D, 0);
-	// RSSVectorMyType act(iw*ih*C*B, 0);
-	// size_t p_range = (ih-fh+1);
-	// size_t q_range = (iw-fw+1);
-	// size_t size_rw = fw*fh*C*D;
-	// size_t rows_rw = fw*fh*C;
-	// size_t columns_rw = D;
+	RSSVectorMyType a(iw*ih*Din*B, make_pair(0,0));
+	RSSVectorMyType b(f*f*Din*Dout, make_pair(0,0));
+	RSSVectorMyType ans(ow*oh*Dout*B, make_pair(0,0));
+	RSSVectorMyType c(Dout, make_pair(0,0));
 
+	for (int runs = 0; runs < iter; ++runs)
+	{
+		//Reshape activations
+		RSSVectorMyType temp1((iw+2*P)*(ih+2*P)*Din*B, make_pair(0,0));
+		zeroPad(a, temp1, iw, ih, P, Din, B);
 
-	// for (int runs = 0; runs < iter; ++runs)
-	// {
-	// 	//Reshape weights
-	// 	RSSVectorMyType reshapedWeights(size_rw, 0);
-	// 	for (int i = 0; i < size_rw; ++i)
-	// 		reshapedWeights[(i%rows_rw)*columns_rw + (i/rows_rw)] = w[i];
+		//Reshape for convolution
+		RSSVectorMyType temp2((f*f*Din) * (ow * oh * B));
+		convToMult(temp1, temp2, (iw+2*P), (ih+2*P), f, Din, S, B);
 
-	// 	//reshape activations
-	// 	size_t size_convo = (p_range*q_range*B) * (fw*fh*C); 
-	// 	RSSVectorMyType convShaped(size_convo, 0);
-	// 	convolutionReshape(act, convShaped, iw, ih, C, B, fw, fh, 1, 1);
+		//Perform the multiplication, transpose the actications.
+		RSSVectorMyType temp3(Dout * (ow*oh*B));
+		funcMatMul(b, temp2, temp3, Dout, (f*f*Din), (ow*oh*B), 0, 1, FLOAT_PRECISION);
 
-
-	// 	//Convolution multiplication
-	// 	RSSVectorMyType convOutput(p_range*q_range*B*D, 0);
-
-	// 	funcMatMul(convShaped, reshapedWeights, convOutput, 
-	// 				(p_range*q_range*B), (fw*fh*C), D, 0, 0, FLOAT_PRECISION);
-	// }
-/******************************** TODO ****************************************/	
+		//Add biases and meta-transpose
+		for (size_t i = 0; i < B; ++i)
+			for (size_t j = 0; j < Dout; ++j) 
+				for (size_t k = 0; k < tempSize; ++k)
+					ans[i*Dout*tempSize + j*tempSize + k] 
+						= temp3[j*B*tempSize + i*tempSize + k] + c[j];		
+	}
 }
 
 
 void testRelu(size_t r, size_t c, size_t iter)
 {
+	RSSVectorMyType a(r*c, make_pair(0,0));
+	RSSVectorSmallType reluPrime(r*c);
+	RSSVectorMyType b(r*c);
 
-/******************************** TODO ****************************************/	
-	// RSSVectorMyType a(r*c, 1);
-	// RSSVectorSmallType reluPrimeSmall(r*c, 1);
-	// RSSVectorMyType reluPrimeLarge(r*c, 1);
-	// RSSVectorMyType b(r*c, 0);
-
-	// for (int runs = 0; runs < iter; ++runs)
-	// {
-	// 	if (STANDALONE)
-	// 		for (size_t i = 0; i < r*c; ++i)
-	// 			b[i] = a[i] * reluPrimeSmall[i];
-
-	// 	if (FOUR_PC)
-	// 		funcSelectShares4PC(a, reluPrimeSmall, b, r*c);
-
-	// 	if (THREE_PC)
-	// 		funcSelectShares3PC(a, reluPrimeLarge, b, r*c);
-	// }
-/******************************** TODO ****************************************/	
+	for (int runs = 0; runs < iter; ++runs)
+		funcRELU(a, reluPrime, b, r*c);
 }
 
 
 void testReluPrime(size_t r, size_t c, size_t iter)
 {
+	RSSVectorMyType a(r*c, make_pair(0,0));
+	RSSVectorSmallType reluPrime(r*c);
 
-/******************************** TODO ****************************************/	
-	// RSSVectorMyType a(r*c, 1);
-	// RSSVectorMyType b(r*c, 0);
-	// RSSVectorSmallType d(r*c, 0);
-
-	// for (int runs = 0; runs < iter; ++runs)
-	// {
-	// 	if (STANDALONE)
-	// 		for (size_t i = 0; i < r*c; ++i)
-	// 			b[i] = (a[i] < LARGEST_NEG ? 1:0);
-
-	// 	if (THREE_PC)
-	// 		funcRELUPrime(a, b, r*c);
-
-	// 	if (FOUR_PC)
-	// 		funcRELUPrime4PC(a, d, r*c);
-	// }
-/******************************** TODO ****************************************/	
+	for (int runs = 0; runs < iter; ++runs)
+		funcRELUPrime(a, reluPrime, r*c);
 }
 
 
-void testMaxPool(size_t p_range, size_t q_range, size_t px, size_t py, size_t D, size_t iter)
+void testMaxpool(size_t ih, size_t iw, size_t Din, size_t f, size_t S, size_t B, size_t iter)
 {
+	size_t ow 		= (((iw-f)/S)+1);
+	size_t oh		= (((ih-f)/S)+1);
 
-/******************************** TODO ****************************************/	
-	size_t B = MINI_BATCH_SIZE;
-	size_t size_x = p_range*q_range*D*B;
+	RSSVectorMyType a(iw*ih*Din*B);
+	RSSVectorMyType b(ow*oh*Din*B);
+	RSSVectorSmallType c(iw*ih*Din*B);
+	RSSVectorMyType temp1(ow*oh*Din*B*f*f);
+	RSSVectorMyType temp2(ow*oh*Din*B);
+	size_t sizeBeta = iw;
+	size_t sizeD 	= sizeBeta*ih;
+	size_t sizeB 	= sizeD*Din;
+	size_t counter 	= 0;
 
-	RSSVectorMyType y(size_x);
-	RSSVectorMyType maxPoolShaped(size_x);
-	RSSVectorMyType act(size_x/(px*py));
-	RSSVectorMyType maxIndex(size_x/(px*py)); 
-	RSSVectorSmallType maxPrime(size_x); 
-
-	for (size_t i = 0; i < iter; ++i)
+	for (int runs = 0; runs < iter; ++runs)
 	{
-		maxPoolReshape(y, maxPoolShaped, p_range, q_range, D, B, py, px, py, px);
-		funcMaxpool(maxPoolShaped, act, maxIndex, maxPrime, size_x/(px*py), px*py);
+		counter = 0;
+		for (int b = 0; b < B; ++b)
+			for (size_t r = 0; r < Din; ++r)
+				for (size_t beta = 0; beta < ih-f+1; beta+=S) 
+					for (size_t alpha = 0; alpha < iw-f+1; alpha+=S)
+						for (int q = 0; q < f; ++q)
+							for (int p = 0; p < f; ++p)
+							{
+								temp1[counter++] = 
+								a[b*sizeB + r*sizeD + (beta + q)*sizeBeta + (alpha + p)];
+							}
+		//Pooling operation
+		funcMaxpool(temp1, b, temp2, c, ow*oh*Din*B, f*f);
 	}
-/******************************** TODO ****************************************/	
 }
-
-void testMaxPoolDerivative(size_t p_range, size_t q_range, size_t px, size_t py, size_t D, size_t iter)
-{
-
-/******************************** TODO ****************************************/	
-	// size_t B = MINI_BATCH_SIZE;
-	// size_t alpha_range = p_range/py;
-	// size_t beta_range = q_range/px;
-	// size_t size_y = (p_range*q_range*D*B);
-	// RSSVectorMyType deltaMaxPool(size_y, 0);
-	// RSSVectorMyType deltas(size_y/(px*py), 0);
-	// RSSVectorMyType maxIndex(size_y/(px*py), 0);
-
-	// size_t size_delta = alpha_range*beta_range*D*B;
-	// RSSVectorMyType thatMatrixTemp(size_y, 0), thatMatrix(size_y, 0);
-
-
-	// for (size_t i = 0; i < iter; ++i)
-	// {
-	// 	if (STANDALONE)
-	// 		for (size_t i = 0; i < size_delta; ++i)
-	// 			thatMatrixTemp[i*px*py + maxIndex[i]] = 1;
-
-	// 	if (MPC)
-	// 		funcMaxpoolPrime(thatMatrixTemp, maxIndex, size_delta, px*py);
-		
-
-	// 	//Reshape thatMatrix
-	// 	size_t repeat_size = D*B;
-	// 	size_t alpha_offset, beta_offset, alpha, beta;
-	// 	for (size_t r = 0; r < repeat_size; ++r)
-	// 	{
-	// 		size_t size_temp = p_range*q_range;
-	// 		for (size_t i = 0; i < size_temp; ++i)
-	// 		{
-	// 			alpha = (i/(px*py*beta_range));
-	// 			beta = (i/(px*py)) % beta_range;
-	// 			alpha_offset = (i%(px*py))/px;
-	// 			beta_offset = (i%py);
-	// 			thatMatrix[((py*alpha + alpha_offset)*q_range) + 
-	// 					   (px*beta + beta_offset) + r*size_temp] 
-	// 			= thatMatrixTemp[r*size_temp + i];
-	// 		}
-	// 	}
-
-	// 	//Replicate delta martix appropriately
-	// 	RSSVectorMyType largerDelta(size_y, 0);
-	// 	size_t index_larger, index_smaller;
-	// 	for (size_t r = 0; r < repeat_size; ++r)
-	// 	{
-	// 		size_t size_temp = p_range*q_range;
-	// 		for (size_t i = 0; i < size_temp; ++i)
-	// 		{
-	// 			index_smaller = r*size_temp/(px*py) + (i/(q_range*py))*beta_range + ((i%q_range)/px);
-	// 			index_larger = r*size_temp + (i/q_range)*q_range + (i%q_range);
-	// 			largerDelta[index_larger] = deltas[index_smaller];
-	// 		}
-	// 	}
-
-	// 	funcDotProduct(largerDelta, thatMatrix, deltaMaxPool, size_y);
-	// }
-/******************************** TODO ****************************************/	
-}
-
-
