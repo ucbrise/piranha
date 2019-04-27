@@ -24,10 +24,9 @@ int main(int argc, char** argv)
 	NeuralNetConfig* config = new NeuralNetConfig(NUM_ITERATIONS);
 
 /****************************** SELECT NETWORK ******************************/ 
-	//Choices are SecureML, Sarda, Gazelle, LeNet, AlexNet, and VGG16 
-	selectNetwork("Sarda", config, whichNetwork);
-	//Choose Dataset according to network: MNIST, CIFAR10, and ImageNet
-	loadData("MNIST");
+	//Network {SecureML, Sarda, MiniONN, LeNet, AlexNet, and VGG16}
+	//Dataset {MNIST, CIFAR10, and ImageNet}
+	selectNetwork("VGG16", "CIFAR10", config, whichNetwork);
 	config->checkNetwork();
 	NeuralNetwork* network = new NeuralNetwork(config);
 

@@ -18,11 +18,11 @@
 
 
 /********************* AES and other globals *********************/
-#define LOG_DEBUG true
+#define LOG_DEBUG false
 #define LOG_DEBUG_NETWORK false
 #define RANDOM_COMPUTE 256//Size of buffer for random elements
 #define STRING_BUFFER_SIZE 256
-#define MNIST false
+// #define MNIST false
 #define PARALLEL true
 #define NO_CORES 4
 
@@ -40,20 +40,20 @@
 
 /********************* Neural Network globals *********************/
 //Batch size has to be a power of two
-#if MNIST
-	#define TRAINING_DATA_SIZE 60000
-	#define TEST_DATA_SIZE 10000
+// #if MNIST
+// 	#define TRAINING_DATA_SIZE 60000
+// 	#define TEST_DATA_SIZE 10000
+// 	#define LOG_MINI_BATCH 7
+// #else
+// 	#define TRAINING_DATA_SIZE 8
+// 	#define TEST_DATA_SIZE 8
 	#define LOG_MINI_BATCH 7
-#else
-	#define TRAINING_DATA_SIZE 8
-	#define TEST_DATA_SIZE 8
-	#define LOG_MINI_BATCH 7
-#endif
+// #endif
 #define MINI_BATCH_SIZE (1 << LOG_MINI_BATCH)
 #define LOG_LEARNING_RATE 5
 #define LEARNING_RATE (1 << (FLOAT_PRECISION - LOG_LEARNING_RATE))
 #define NO_OF_EPOCHS 1.5
-#define NUM_ITERATIONS 10
+#define NUM_ITERATIONS 1
 // #define NUM_ITERATIONS ((int) (NO_OF_EPOCHS * TRAINING_DATA_SIZE/MINI_BATCH_SIZE))
 
 
