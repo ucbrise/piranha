@@ -18,7 +18,7 @@
 
 
 /********************* AES and other globals *********************/
-#define LOG_DEBUG false
+#define LOG_DEBUG true
 #define LOG_DEBUG_NETWORK false
 #define RANDOM_COMPUTE 256//Size of buffer for random elements
 #define STRING_BUFFER_SIZE 256
@@ -47,7 +47,7 @@
 #else
 	#define TRAINING_DATA_SIZE 8
 	#define TEST_DATA_SIZE 8
-	#define LOG_MINI_BATCH 0
+	#define LOG_MINI_BATCH 7
 #endif
 #define MINI_BATCH_SIZE (1 << LOG_MINI_BATCH)
 #define LOG_LEARNING_RATE 5

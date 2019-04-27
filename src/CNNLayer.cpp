@@ -159,14 +159,14 @@ void CNNLayer::updateEquations(const RSSVectorMyType& prevActivations)
 
 
 	/********************** Weights update **********************/
-	//Reshape weights
+	//Reshape activations
 	RSSVectorMyType temp3((f*f*Din) * (ow*oh*B));
 	{
 		size_t sizeY 		= ow;
-		size_t sizeB 		= sizeY*B;
-		size_t sizeP 		= sizeB*f; 
+		size_t sizeB 		= sizeY*oh;
+		size_t sizeP 		= sizeB*B; 
 		size_t sizeQ 		= sizeP*f; 
-		size_t sizeR 		= sizeQ*Din; 
+		size_t sizeR 		= sizeQ*f; 
 
 		size_t actSizeBeta	= iw;
 		size_t actSizeR		= actSizeBeta*ih;

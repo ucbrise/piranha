@@ -12,6 +12,7 @@ using namespace std;
 
 extern size_t INPUT_SIZE;
 extern size_t LAST_LAYER_SIZE;
+extern bool WITH_NORMALIZATION;
 
 NeuralNetwork::NeuralNetwork(NeuralNetConfig* config)
 :inputData(INPUT_SIZE * MINI_BATCH_SIZE),
@@ -41,7 +42,6 @@ NeuralNetwork::~NeuralNetwork()
 	layers.clear();
 }
 
-
 void NeuralNetwork::forward()
 {
 	log_print("NN.forward");
@@ -69,27 +69,39 @@ void NeuralNetwork::computeDelta()
 	size_t size = rows*columns;
 	size_t index;
 
-	// RSSVectorMyType rowSum(size, make_pair(0,0));
-	// RSSVectorMyType quotient(size, make_pair(0,0));
+	if (WITH_NORMALIZATION)
+	{
+		RSSVectorMyType rowSum(size, make_pair(0,0));
+		RSSVectorMyType quotient(size, make_pair(0,0));
 
-	// for (size_t i = 0; i < rows; ++i)
-	// 	for (size_t j = 0; j < columns; ++j)
-	// 		rowSum[i*columns] = rowSum[i*columns] + 
-	// 							(*(layers[NUM_LAYERS-1]->getActivation()))[i * columns + j];
+		for (size_t i = 0; i < rows; ++i)
+			for (size_t j = 0; j < columns; ++j)
+				rowSum[i*columns] = rowSum[i*columns] + 
+									(*(layers[NUM_LAYERS-1]->getActivation()))[i * columns + j];
 
-	// for (size_t i = 0; i < rows; ++i)
-	// 	for (size_t j = 0; j < columns; ++j)
-	// 		rowSum[i*columns + j] = rowSum[i*columns];
+		for (size_t i = 0; i < rows; ++i)
+			for (size_t j = 0; j < columns; ++j)
+				rowSum[i*columns + j] = rowSum[i*columns];
 
-	// funcDivision(*(layers[NUM_LAYERS-1]->getActivation()), rowSum, quotient, size);
+		funcDivision(*(layers[NUM_LAYERS-1]->getActivation()), rowSum, quotient, size);
 
-	for (size_t i = 0; i < rows; ++i)
-		for (size_t j = 0; j < columns; ++j)
-		{
-			index = i * columns + j;
-			(*(layers[NUM_LAYERS-1]->getDelta()))[index] = 
-			(*(layers[NUM_LAYERS-1]->getActivation()))[index] - outputData[index];
-		}
+		for (size_t i = 0; i < rows; ++i)
+			for (size_t j = 0; j < columns; ++j)
+			{
+				index = i * columns + j;
+				(*(layers[NUM_LAYERS-1]->getDelta()))[index] = quotient[index] - outputData[index];
+			}
+	}
+	else
+	{
+		for (size_t i = 0; i < rows; ++i)
+			for (size_t j = 0; j < columns; ++j)
+			{
+				index = i * columns + j;
+				(*(layers[NUM_LAYERS-1]->getDelta()))[index] = 
+				(*(layers[NUM_LAYERS-1]->getActivation()))[index] - outputData[index];
+			}
+	}
 
 	for (size_t i = NUM_LAYERS-1; i > 0; --i)
 		layers[i]->computeDelta(*(layers[i-1]->getDelta()));

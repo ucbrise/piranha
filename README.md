@@ -76,6 +76,7 @@ make abcFile
 * Remove size arugment from all functions (generate it inside functions)
 * Clean-up tools and functionalities file -- move reconstruction functions to tools
 * Pointers to layer configurations are never deleted --> needs to be fixed
+* Division needs access to alpha in clear
 
 ---
 Report any bugs to [swagh@princeton.edu](swagh@princeton.edu)

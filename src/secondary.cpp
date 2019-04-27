@@ -33,6 +33,7 @@ size_t testLabelsBatchCounter = 0;
 size_t INPUT_SIZE;
 size_t LAST_LAYER_SIZE;
 size_t NUM_LAYERS;
+bool WITH_NORMALIZATION;
 
 /******************* Main train and test functions *******************/
 void parseInputs(int argc, char* argv[])
@@ -221,51 +222,89 @@ void selectNetwork(string str, NeuralNetConfig* config, string &ret)
 {
 	if (str.compare("SecureML") == 0)
 	{
-		// ret = str;
-		// NUM_LAYERS = 3;
-		// FCConfig* l0 = new FCConfig(784, MINI_BATCH_SIZE, 128); 
-		// FCConfig* l1 = new FCConfig(128, MINI_BATCH_SIZE, 128); 
-		// FCConfig* l2 = new FCConfig(128, MINI_BATCH_SIZE, 10); 
-		// config->addLayer(l0);
-		// config->addLayer(l1);
-		// config->addLayer(l2);
+		ret = str;
+		NUM_LAYERS = 6;
+		WITH_NORMALIZATION = true;
+		FCConfig* l0 = new FCConfig(784, MINI_BATCH_SIZE, 128); 
+		ReLUConfig* l1 = new ReLUConfig(128, MINI_BATCH_SIZE);
+		FCConfig* l2 = new FCConfig(128, MINI_BATCH_SIZE, 128); 
+		ReLUConfig* l3 = new ReLUConfig(128, MINI_BATCH_SIZE);
+		FCConfig* l4 = new FCConfig(128, MINI_BATCH_SIZE, 10); 
+		ReLUConfig* l5 = new ReLUConfig(10, MINI_BATCH_SIZE);
+		config->addLayer(l0);
+		config->addLayer(l1);
+		config->addLayer(l2);
+		config->addLayer(l3);
+		config->addLayer(l4);
+		config->addLayer(l5);
 	}
 	else if (str.compare("Sarda") == 0)
 	{
-		// ret = str;
-		// NUM_LAYERS = 3;
-		// ChameleonCNNConfig* l0 = new ChameleonCNNConfig(5,1,5,5,MINI_BATCH_SIZE,28,28,2,2);
-		// FCConfig* l1 = new FCConfig(MINI_BATCH_SIZE, 980, 100);
-		// FCConfig* l2 = new FCConfig(MINI_BATCH_SIZE, 100, 10);
-		// config->addLayer(l0);
-		// config->addLayer(l1);
-		// config->addLayer(l2);
+		ret = str;
+		NUM_LAYERS = 5;
+		WITH_NORMALIZATION = true;
+		CNNConfig* l0 = new CNNConfig(28,28,1,5,2,2,0,MINI_BATCH_SIZE);
+		ReLUConfig* l1 = new ReLUConfig(980, MINI_BATCH_SIZE);
+		FCConfig* l2 = new FCConfig(980, MINI_BATCH_SIZE, 100);
+		ReLUConfig* l3 = new ReLUConfig(100, MINI_BATCH_SIZE);
+		FCConfig* l4 = new FCConfig(100, MINI_BATCH_SIZE, 10);
+		config->addLayer(l0);
+		config->addLayer(l1);
+		config->addLayer(l2);
+		config->addLayer(l3);
+		config->addLayer(l4);
 	}
 	else if (str.compare("MiniONN") == 0)
 	{
-		// ret = str;
-		// NUM_LAYERS = 4;
-		// CNNConfig* l0 = new CNNConfig(16,1,5,5,MINI_BATCH_SIZE,28,28,2,2);
-		// CNNConfig* l1 = new CNNConfig(16,16,5,5,MINI_BATCH_SIZE,12,12,2,2);
-		// FCConfig* l2 = new FCConfig(MINI_BATCH_SIZE, 256, 100);
-		// FCConfig* l3 = new FCConfig(MINI_BATCH_SIZE, 100, 10);
-		// config->addLayer(l0);
-		// config->addLayer(l1);
-		// config->addLayer(l2);
-		// config->addLayer(l3);
+		ret = str;
+		NUM_LAYERS = 10;
+		WITH_NORMALIZATION = true;
+		CNNConfig* l0 = new CNNConfig(28,28,1,16,5,1,0,MINI_BATCH_SIZE);
+		MaxpoolConfig* l1 = new MaxpoolConfig(24,24,16,2,2,MINI_BATCH_SIZE);
+		ReLUConfig* l2 = new ReLUConfig(12*12*16, MINI_BATCH_SIZE);
+		CNNConfig* l3 = new CNNConfig(12,12,16,16,5,1,0,MINI_BATCH_SIZE);
+		MaxpoolConfig* l4 = new MaxpoolConfig(8,8,16,2,2,MINI_BATCH_SIZE);
+		ReLUConfig* l5 = new ReLUConfig(4*4*16, MINI_BATCH_SIZE);
+		FCConfig* l6 = new FCConfig(4*4*16, MINI_BATCH_SIZE, 100);
+		ReLUConfig* l7 = new ReLUConfig(100, MINI_BATCH_SIZE);
+		FCConfig* l8 = new FCConfig(100, MINI_BATCH_SIZE, 10);
+		ReLUConfig* l9 = new ReLUConfig(10, MINI_BATCH_SIZE);
+		config->addLayer(l0);
+		config->addLayer(l1);
+		config->addLayer(l2);
+		config->addLayer(l3);
+		config->addLayer(l4);
+		config->addLayer(l5);
+		config->addLayer(l6);
+		config->addLayer(l7);
+		config->addLayer(l8);
+		config->addLayer(l9);
 	}
 	else if (str.compare("LeNet") == 0)
 	{
-		// ret = str;
-		// NUM_LAYERS = 4;
-		// CNNConfig* l0 = new CNNConfig(20,1,5,5,MINI_BATCH_SIZE,28,28,2,2);
-		// CNNConfig* l1 = new CNNConfig(50,20,5,5,MINI_BATCH_SIZE,12,12,2,2);
-		// FCConfig* l2 = new FCConfig(MINI_BATCH_SIZE, 800, 500);
-		// FCConfig* l3 = new FCConfig(MINI_BATCH_SIZE, 500, 10);
-		// config->addLayer(l0);
-		// config->addLayer(l1);
-		// config->addLayer(l2);
-		// config->addLayer(l3);
+		ret = str;
+		NUM_LAYERS = 10;
+		WITH_NORMALIZATION = true;
+		CNNConfig* l0 = new CNNConfig(28,28,1,16,5,1,0,MINI_BATCH_SIZE);
+		MaxpoolConfig* l1 = new MaxpoolConfig(24,24,16,2,2,MINI_BATCH_SIZE);
+		ReLUConfig* l2 = new ReLUConfig(12*12*16, MINI_BATCH_SIZE);
+		CNNConfig* l3 = new CNNConfig(12,12,16,16,5,1,0,MINI_BATCH_SIZE);
+		MaxpoolConfig* l4 = new MaxpoolConfig(8,8,16,2,2,MINI_BATCH_SIZE);
+		ReLUConfig* l5 = new ReLUConfig(4*4*16, MINI_BATCH_SIZE);
+		FCConfig* l6 = new FCConfig(4*4*16, MINI_BATCH_SIZE, 100);
+		ReLUConfig* l7 = new ReLUConfig(100, MINI_BATCH_SIZE);
+		FCConfig* l8 = new FCConfig(100, MINI_BATCH_SIZE, 10);
+		ReLUConfig* l9 = new ReLUConfig(10, MINI_BATCH_SIZE);
+		config->addLayer(l0);
+		config->addLayer(l1);
+		config->addLayer(l2);
+		config->addLayer(l3);
+		config->addLayer(l4);
+		config->addLayer(l5);
+		config->addLayer(l6);
+		config->addLayer(l7);
+		config->addLayer(l8);
+		config->addLayer(l9);
 	}
 	else if (str.compare("AlexNet") == 0)
 	{
@@ -284,6 +323,7 @@ void selectNetwork(string str, NeuralNetConfig* config, string &ret)
 	{
 		ret = str;
 		NUM_LAYERS = 7;
+		WITH_NORMALIZATION = true;
 		CNNConfig* l0 = new CNNConfig(28,28,1,16,5,1,1,MINI_BATCH_SIZE);
 		MaxpoolConfig* l1 = new MaxpoolConfig(26,26,16,2,2,MINI_BATCH_SIZE);
 		ReLUConfig* l2 = new ReLUConfig(13*13*16, MINI_BATCH_SIZE);		
