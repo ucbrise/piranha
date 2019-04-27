@@ -37,12 +37,12 @@ void CNNLayer::initialize()
 
 void CNNLayer::printLayer()
 {
-	cout << "----------------------------------------" << endl;  	
-	cout << "CNN Layer\t  " << conf.imageHeight << " x " << conf.imageWidth 
-		 << " x " << conf.inputFeatures << endl << "\t\t  " 
-		 << conf.filterSize << " x " << conf.filterSize << "  \t(Filter Size)" << endl << "\t\t  " 
-		 << conf.stride << " , " << conf.padding << " \t(Stride, padding)" << endl << "\t\t  " 
-		 << conf.batchSize << "\t\t(Batch Size)" << endl << "\t\t  " 
+	cout << "----------------------------------------------" << endl;  	
+	cout << "(" << layerNum+1 << ") CNN Layer\t\t  " << conf.imageHeight << " x " << conf.imageWidth 
+		 << " x " << conf.inputFeatures << endl << "\t\t\t  " 
+		 << conf.filterSize << " x " << conf.filterSize << "  \t(Filter Size)" << endl << "\t\t\t  " 
+		 << conf.stride << " , " << conf.padding << " \t(Stride, padding)" << endl << "\t\t\t  " 
+		 << conf.batchSize << "\t\t(Batch Size)" << endl << "\t\t\t  " 
 		 << (((conf.imageWidth - conf.filterSize + 2*conf.padding)/conf.stride) + 1) << " x " 
 		 << (((conf.imageHeight - conf.filterSize + 2*conf.padding)/conf.stride) + 1) << " x " 
 		 << conf.filters << " \t(Output)" << endl;

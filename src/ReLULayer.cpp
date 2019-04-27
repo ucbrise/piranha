@@ -15,8 +15,8 @@ ReLULayer::ReLULayer(ReLUConfig* conf, int _layerNum)
 
 void ReLULayer::printLayer()
 {
-	cout << "----------------------------------------" << endl;  	
-	cout << "ReLU Layer\t  " << conf.batchSize << " x " << conf.inputDim << endl;
+	cout << "----------------------------------------------" << endl;  	
+	cout << "(" << layerNum+1 << ") ReLU Layer\t\t  " << conf.batchSize << " x " << conf.inputDim << endl;
 }
 
 

@@ -46,8 +46,8 @@ void FCLayer::initialize()
 
 void FCLayer::printLayer()
 {
-	cout << "----------------------------------------" << endl;  	
-	cout << "FC Layer\t  " << conf.inputDim << " x " << conf.outputDim << endl << "\t\t  "
+	cout << "----------------------------------------------" << endl;  	
+	cout << "(" << layerNum+1 << ") FC Layer\t\t  " << conf.inputDim << " x " << conf.outputDim << endl << "\t\t\t  "
 		 << conf.batchSize << "\t\t (Batch Size)" << endl;
 }
 

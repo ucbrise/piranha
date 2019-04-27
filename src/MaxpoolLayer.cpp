@@ -21,11 +21,11 @@ MaxpoolLayer::MaxpoolLayer(MaxpoolConfig* conf, int _layerNum)
 
 void MaxpoolLayer::printLayer()
 {
-	cout << "----------------------------------------" << endl;  	
-	cout << "Maxpool Layer\t  " << conf.imageHeight << " x " << conf.imageWidth 
-		 << " x " << conf.features << endl << "\t\t  " 
-		 << conf.poolSize << "  \t\t(Pooling Size)" << endl << "\t\t  " 
-		 << conf.stride << " \t\t(Stride)" << endl << "\t\t  " 
+	cout << "----------------------------------------------" << endl;  	
+	cout << "(" << layerNum+1 << ") Maxpool Layer\t  " << conf.imageHeight << " x " << conf.imageWidth 
+		 << " x " << conf.features << endl << "\t\t\t  " 
+		 << conf.poolSize << "  \t\t(Pooling Size)" << endl << "\t\t\t  " 
+		 << conf.stride << " \t\t(Stride)" << endl << "\t\t\t  " 
 		 << conf.batchSize << "\t\t(Batch Size)" << endl;
 }
 

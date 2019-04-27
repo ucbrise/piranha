@@ -13,7 +13,7 @@ void test(NeuralNetwork* net);
 void loadData(string net, string dataset);
 void readMiniBatch(NeuralNetwork* net, string phase);
 void printNetwork(NeuralNetwork* net);
-void selectNetwork(string str, string dataset, NeuralNetConfig* config, string &ret);
+void selectNetwork(string network, string dataset, NeuralNetConfig* config);
 
 /********************* COMMUNICATION AND HELPERS *********************/
 void start_m();

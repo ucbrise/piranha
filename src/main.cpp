@@ -20,15 +20,16 @@ int main(int argc, char** argv)
 {
 /****************************** PREPROCESSING ******************************/ 
 	parseInputs(argc, argv);
-	string whichNetwork = "No Network";
 	NeuralNetConfig* config = new NeuralNetConfig(NUM_ITERATIONS);
 
 /****************************** SELECT NETWORK ******************************/ 
 	//Network {SecureML, Sarda, MiniONN, LeNet, AlexNet, and VGG16}
 	//Dataset {MNIST, CIFAR10, and ImageNet}
-	selectNetwork("SecureML", "MNIST", config, whichNetwork);
+	string network = "SecureML";
+	string dataset = "MNIST";
+	selectNetwork(network, dataset, config);
 	config->checkNetwork();
-	NeuralNetwork* network = new NeuralNetwork(config);
+	NeuralNetwork* net = new NeuralNetwork(config);
 
 /****************************** AES SETUP and SYNC ******************************/ 
 	aes_indep = new AESObject(argv[3]);
@@ -43,29 +44,30 @@ int main(int argc, char** argv)
 	//Run unit tests in two modes: 
 	//	1. Debug {Mat-Mul, DotProd, PC, Wrap, ReLUPrime, ReLU, Division, SSBits, SS, and Maxpool}
 	//	2. Test {Mat-Mul1, Mat-Mul2, Mat-Mul3 (and similarly) Conv*, ReLU*, ReLUPrime*, and Maxpool*}
-	// runTest("Debug", "Wrap", whichNetwork);
-	// runTest("Test", "Maxpool1", whichNetwork);
+	// runTest("Debug", "Wrap", network);
+	// runTest("Test", "Maxpool1", network);
 
-	whichNetwork += " train";
-	train(network, config);
+	network += " train";
+	train(net, config);
 
-	// whichNetwork += " test";
-	// test(network);
+	// network += " test";
+	// test(net);
 
-	end_m(whichNetwork);
-	cout << "----------------------------------------" << endl;  	
-	cout << "Run details: " << NUM_OF_PARTIES << "PC code, P" << partyNum << ", " << NUM_ITERATIONS << 
-			" iterations," << endl << "Running " << whichNetwork << ", batch size " << MINI_BATCH_SIZE << endl;
-	cout << "----------------------------------------" << endl << endl;  
+	end_m(network);
+	cout << "----------------------------------------------" << endl;  	
+	cout << "Run details: " << NUM_OF_PARTIES << "PC (P" << partyNum 
+		 << "), " << NUM_ITERATIONS << " iterations, batch size " << MINI_BATCH_SIZE << endl 
+		 << "Running " << network << " on " << dataset << " dataset" << endl;
+	cout << "----------------------------------------------" << endl << endl;  
 
-	printNetwork(network);
+	printNetwork(net);
 
 /****************************** CLEAN-UP ******************************/ 
 	delete aes_indep;
 	delete aes_next;
 	delete aes_prev;
 	delete config;
-	delete network;
+	delete net;
 	deleteObjects();
 
 	return 0;

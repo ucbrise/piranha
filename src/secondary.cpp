@@ -245,18 +245,17 @@ void printNetwork(NeuralNetwork* net)
 {
 	for (int i = 0; i < net->layers.size(); ++i)
 		net->layers[i]->printLayer();
-	cout << "----------------------------------------" << endl;  	
+	cout << "----------------------------------------------" << endl;  	
 }
 
 
-void selectNetwork(string net, string dataset, NeuralNetConfig* config, string &ret)
+void selectNetwork(string network, string dataset, NeuralNetConfig* config)
 {
-	loadData(net, dataset);
+	loadData(network, dataset);
 
-	if (net.compare("SecureML") == 0)
+	if (network.compare("SecureML") == 0)
 	{
 		assert((dataset.compare("MNIST") == 0) && "SecureML only over MNIST");
-		ret = net;
 		NUM_LAYERS = 6;
 		WITH_NORMALIZATION = true;
 		FCConfig* l0 = new FCConfig(784, MINI_BATCH_SIZE, 128); 
@@ -272,10 +271,9 @@ void selectNetwork(string net, string dataset, NeuralNetConfig* config, string &
 		config->addLayer(l4);
 		config->addLayer(l5);
 	}
-	else if (net.compare("Sarda") == 0)
+	else if (network.compare("Sarda") == 0)
 	{
 		assert((dataset.compare("MNIST") == 0) && "Sarda only over MNIST");
-		ret = net;
 		NUM_LAYERS = 5;
 		WITH_NORMALIZATION = true;
 		CNNConfig* l0 = new CNNConfig(28,28,1,5,2,2,0,MINI_BATCH_SIZE);
@@ -289,10 +287,9 @@ void selectNetwork(string net, string dataset, NeuralNetConfig* config, string &
 		config->addLayer(l3);
 		config->addLayer(l4);
 	}
-	else if (net.compare("MiniONN") == 0)
+	else if (network.compare("MiniONN") == 0)
 	{
 		assert((dataset.compare("MNIST") == 0) && "MiniONN only over MNIST");
-		ret = net;
 		NUM_LAYERS = 10;
 		WITH_NORMALIZATION = true;
 		CNNConfig* l0 = new CNNConfig(28,28,1,16,5,1,0,MINI_BATCH_SIZE);
@@ -316,10 +313,9 @@ void selectNetwork(string net, string dataset, NeuralNetConfig* config, string &
 		config->addLayer(l8);
 		config->addLayer(l9);
 	}
-	else if (net.compare("LeNet") == 0)
+	else if (network.compare("LeNet") == 0)
 	{
 		assert((dataset.compare("MNIST") == 0) && "LeNet only over MNIST");
-		ret = net;
 		NUM_LAYERS = 10;
 		WITH_NORMALIZATION = true;
 		CNNConfig* l0 = new CNNConfig(28,28,1,20,5,1,0,MINI_BATCH_SIZE);
@@ -343,7 +339,7 @@ void selectNetwork(string net, string dataset, NeuralNetConfig* config, string &
 		config->addLayer(l8);
 		config->addLayer(l9);
 	}
-	else if (net.compare("AlexNet") == 0)
+	else if (network.compare("AlexNet") == 0)
 	{
 		if(dataset.compare("MNIST") == 0)
 		{
@@ -358,7 +354,7 @@ void selectNetwork(string net, string dataset, NeuralNetConfig* config, string &
 			cout << "Hmm" << endl;	
 		}
 	}
-	else if (net.compare("VGG16") == 0)
+	else if (network.compare("VGG16") == 0)
 	{
 		if(dataset.compare("MNIST") == 0)
 		{
@@ -366,7 +362,6 @@ void selectNetwork(string net, string dataset, NeuralNetConfig* config, string &
 		}
 		else if (dataset.compare("CIFAR10") == 0)
 		{
-			ret = net;
 			NUM_LAYERS = 37;
 			WITH_NORMALIZATION = false;
 			CNNConfig* l0 = new CNNConfig(32,32,3,64,3,1,1,MINI_BATCH_SIZE);
@@ -451,7 +446,6 @@ void selectNetwork(string net, string dataset, NeuralNetConfig* config, string &
 		}
 		else if (dataset.compare("ImageNet") == 0)
 		{
-			ret = net;
 			NUM_LAYERS = 37;
 			WITH_NORMALIZATION = false;
 			CNNConfig* l0 = new CNNConfig(224,224,3,64,3,1,1,MINI_BATCH_SIZE);
@@ -584,10 +578,10 @@ void end_time(string str)
 	}
 
 	clock_gettime(CLOCK_REALTIME, &requestEnd);
-	cout << "------------------------------------" << endl;
+	cout << "----------------------------------------------" << endl;
 	cout << "Wall Clock time for " << str << ": " << diff(requestStart, requestEnd) << " sec\n";
 	cout << "CPU time for " << str << ": " << (double)(clock() - tStart)/CLOCKS_PER_SEC << " sec\n";
-	cout << "------------------------------------" << endl;	
+	cout << "----------------------------------------------" << endl;	
 	alreadyMeasuringTime = false;
 }
 
@@ -613,10 +607,10 @@ void end_rounds(string str)
 		exit(-1);
 	}
 
-	cout << "------------------------------------" << endl;
+	cout << "----------------------------------------------" << endl;
 	cout << "Send Round Complexity of " << str << ": " << roundComplexitySend << endl;
 	cout << "Recv Round Complexity of " << str << ": " << roundComplexityRecv << endl;
-	cout << "------------------------------------" << endl;	
+	cout << "----------------------------------------------" << endl;	
 	alreadyMeasuringRounds = false;
 }
 
@@ -643,10 +637,10 @@ void aggregateCommunication()
 
 	if (partyNum == PARTY_A)
 	{
-		cout << "------------------------------------" << endl;
+		cout << "----------------------------------------------" << endl;
 		cout << "Total communication: " << (float)vec[0]/1000000 << "MB (sent) and " << (float)vec[1]/1000000 << "MB (recv)\n";
 		cout << "Total calls: " << vec[2] << " (sends) and " << vec[3] << " (recvs)" << endl;
-		cout << "------------------------------------" << endl;
+		cout << "----------------------------------------------" << endl;
 	}
 }
 
