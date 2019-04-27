@@ -157,7 +157,8 @@ void print(__m128i* arr, int size);
 
 void print128_num(__m128i var);
 
-
+void log_print(string str);
+void error(string str);
 
 void print_myType(myType var, string message, string type);
 void print_linear(myType var, string type);
@@ -165,23 +166,15 @@ void matrixMultRSS(const RSSVectorMyType &a, const RSSVectorMyType &b, vector<my
 					size_t rows, size_t common_dim, size_t columns,
 				 	size_t transpose_a, size_t transpose_b);
 
-// void matrixMultEigen(const vector<myType> &a, const vector<myType> &b, vector<myType> &c, 
-// 					size_t rows, size_t common_dim, size_t columns,
-// 				 	size_t transpose_a, size_t transpose_b);
-
-// myType divideMyTypeSA(myType a, myType b);
-myType dividePlainSA(myType a, int b);
-void dividePlainSA(vector<myType> &vec, int divisor);
-// myType multiplyMyTypesSA(myType a, myType b, int shift);
+myType dividePlain(myType a, int b);
+void dividePlain(vector<myType> &vec, int divisor);
 
 size_t nextParty(size_t party);
 size_t prevParty(size_t party);
-size_t partner(size_t party);
-size_t adversary(size_t party);
+
 
 inline smallType getMSB(myType a)
 {return ((smallType)((a >> (BIT_SIZE - 1)) & 1));}
-
 
 inline RSSSmallType addModPrime(RSSSmallType a, RSSSmallType b)
 {
@@ -193,7 +186,6 @@ inline RSSSmallType addModPrime(RSSSmallType a, RSSSmallType b)
 
 inline smallType subModPrime(smallType a, smallType b)
 {return subtractModPrime[a][b];}
-
 
 inline RSSSmallType subConstModPrime(RSSSmallType a, const smallType r)
 {
@@ -208,10 +200,6 @@ inline RSSSmallType subConstModPrime(RSSSmallType a, const smallType r)
 	return ret;
 }
 
-// inline smallType addModPrime(smallType a, smallType b)
-// {return additionModPrime[a][b];}
-// inline smallType multiplyModPrime(smallType a, smallType b)
-// {return multiplicationModPrime[a][b];}
 inline RSSSmallType XORPublicModPrime(RSSSmallType a, bool r)
 {
 	RSSSmallType ret;
@@ -236,7 +224,6 @@ inline RSSSmallType XORPublicModPrime(RSSSmallType a, bool r)
 }
 
 
-// smallType subtractModPrime(smallType a, smallType b);
 inline smallType wrapAround(myType a, myType b)
 {return (a > MINUS_ONE - b);}
 
@@ -253,34 +240,6 @@ void wrapAround(const vector<myType> &a, const vector<myType> &b,
 				vector<smallType> &c, size_t size);
 void wrap3(const RSSVectorMyType &a, const vector<myType> &b, 
 				vector<smallType> &c, size_t size);
-void populateBitsVector(vector<smallType> &vec, string r_type, size_t size);
-void sharesOfBits(vector<smallType> &bit_shares_x_1, vector<smallType> &bit_shares_x_2, 
-				  const vector<myType> &x, size_t size, string r_type);
-void sharesOfLSB(vector<smallType> &share_1, vector<smallType> &share_2, 
-				  const vector<myType> &r, size_t size, string r_type);
-void sharesOfLSB(vector<myType> &share_1, vector<myType> &share_2, 
-				  const vector<myType> &r, size_t size, string r_type);
-void sharesOfBitVector(vector<smallType> &share_1, vector<smallType> &share_2, 
-				  const vector<smallType> &vec, size_t size, string r_type);
-void sharesOfBitVector(vector<myType> &share_1, vector<myType> &share_2, 
-				  const vector<smallType> &vec, size_t size, string r_type);
-void splitIntoShares(const vector<myType> &a, vector<myType> &a1, vector<myType> &a2, size_t size);
-void XORVectors(const vector<smallType> &a, const vector<smallType> &b, 
-				  vector<smallType> &c, size_t size);
-myType multiplyMyTypes(myType a, myType b, size_t shift);
-void log_print(string str);
-void error(string str);
-void convolutionReshape(const RSSVectorMyType &vec, RSSVectorMyType &vecShaped,
-						size_t ih, size_t iw, size_t C, size_t B,  
-						size_t fh, size_t fw, size_t sy, size_t sx);
-void maxPoolReshape(const RSSVectorMyType &vec, RSSVectorMyType &vecShaped,
-						size_t ih, size_t iw, size_t D, size_t B,  
-						size_t fh, size_t fw, size_t sy, size_t sx);
-void convolutionReshapeBackprop(const vector<myType> &vec, vector<myType> &vecOut, 
-								size_t imageH, size_t imageW, 
-								size_t filterH, size_t filterW, 
-								size_t strideY, size_t strideX, 
-								size_t C, size_t D, size_t B);
 
 void multiplyByScalar(const RSSVectorMyType &a, size_t scalar, RSSVectorMyType &b);
 // void transposeVector(const RSSVectorMyType &a, RSSVectorMyType &b, size_t rows, size_t columns);
@@ -290,7 +249,12 @@ void convToMult(const RSSVectorMyType &vec1, RSSVectorMyType &vec2,
 				size_t iw, size_t ih, size_t f, size_t Din, size_t S, size_t B);
 
 
-// Template functions
+
+
+
+
+/*********************** TEMPLATE FUNCTIONS ***********************/ 
+
 template <typename T,typename U>                                                   
 std::pair<T,U> operator+(const std::pair<T,U> & l,const std::pair<T,U> & r) {   
     return {l.first+r.first,l.second+r.second};
@@ -306,181 +270,10 @@ std::pair<T,U> operator^(const std::pair<T,U> & l,const std::pair<T,U> & r) {
     return {l.first ^ r.first, l.second ^ r.second};
 }
 
-
 template <typename T>                                                   
 std::pair<T,T> operator<<(const std::pair<T,T> & l, const int shift) {   
     return {l.first << shift, l.second << shift};
 }   
-
-template<typename T>
-void populateRandomVector(vector<T> &vec, size_t size,  string r_type, string neg_type);
-
-template<typename T>
-void addVectors(const vector<T> &a, const vector<T> &b, vector<T> &c, size_t size);
-
-template<typename T>
-void subtractVectors(const vector<T> &a, const vector<T> &b, vector<T> &c, size_t size);
-
-template<typename T>
-void copyVectors(const vector<T> &a, vector<T> &b, size_t size);
-
-template<typename T1, typename T2>
-void addModuloOdd(const vector<T1> &a, const vector<T2> &b, vector<myType> &c, size_t size);
-
-template<typename T1, typename T2>
-void subtractModuloOdd(const vector<T1> &a, const vector<T2> &b, vector<myType> &c, size_t size);
-
-template<typename T1, typename T2>
-myType addModuloOdd(T1 a, T2 b);
-
-template<typename T1, typename T2>
-myType subtractModuloOdd(T1 a, T2 b);
-
-template<typename T>
-void sharesModuloOdd(vector<myType> &shares_1, vector<myType> &shares_2, 
-				  const vector<T> &x, size_t size, string r_type);
-
-//Randmoization is passed as an argument here.
-template<typename T>
-void getVectorfromPrimary(vector<T> &vec, size_t size, string r_mode, string n_mode);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-template<typename T>
-void populateRandomVector(vector<T> &vec, size_t size, string r_type, string neg_type)
-{	
-	// assert((r_type == "COMMON" or r_type == "INDEP") && "invalid randomness type for populateRandomVector");
-	assert((neg_type == "NEGATIVE" or neg_type == "POSITIVE") && "invalid negativeness type for populateRandomVector");
-	// assert(sizeof(T) == sizeof(myType) && "Probably only need 64-bit numbers");
-	// assert(r_type == "COMMON" && "Only common randomness mode required currently");
-
-	myType sign = 1;
-	if (r_type == "COMMON")
-	{
-		if (neg_type == "NEGATIVE")
-		{		
-			if (partyNum == PARTY_B or partyNum == PARTY_D)
-				sign = MINUS_ONE;
-
-			if (sizeof(T) == sizeof(myType))
-			{
-				for (size_t i = 0; i < size; ++i)
-					vec[i] = sign*aes_next->get64Bits();		
-			}
-			else
-			{
-				for (size_t i = 0; i < size; ++i)
-					vec[i] = sign*aes_next->get8Bits();		
-			}
-		}
-		
-		if (neg_type == "POSITIVE")
-		{
-			if (sizeof(T) == sizeof(myType))
-			{
-				for (size_t i = 0; i < size; ++i)
-					vec[i] = aes_next->get64Bits();		
-			}
-			else
-			{
-				for (size_t i = 0; i < size; ++i)
-					vec[i] = aes_next->get8Bits();		
-			}			
-		}
-	}
-
-	if (r_type == "INDEP")
-	{
-		if (neg_type == "NEGATIVE")
-		{		
-			if (partyNum == PARTY_B or partyNum == PARTY_D)
-				sign = MINUS_ONE;
-
-			if (sizeof(T) == sizeof(myType))
-			{
-				for (size_t i = 0; i < size; ++i)
-					vec[i] = sign*aes_indep->get64Bits();		
-			}
-			else
-			{
-				for (size_t i = 0; i < size; ++i)
-					vec[i] = sign*aes_indep->get8Bits();		
-			}		
-		}
-		
-		if (neg_type == "POSITIVE")
-		{
-			if (sizeof(T) == sizeof(myType))
-			{
-				for (size_t i = 0; i < size; ++i)
-					vec[i] = aes_indep->get64Bits();		
-			}
-			else
-			{
-				for (size_t i = 0; i < size; ++i)
-					vec[i] = aes_indep->get8Bits();		
-			}		
-		}
-	}
-
-	// if (r_type == "a_1")
-	// {
-	// 	assert((partyNum == PARTY_A or partyNum == PARTY_C) && "Only A and C can call for a_1");
-	// 	assert(neg_type == "POSITIVE" && "neg_type should be POSITIVE");
-	// 	assert(sizeof(T) == sizeof(myType) && "sizeof(T) == sizeof(myType)");
-	// 	for (size_t i = 0; i < size; ++i)
-	// 		vec[i] = aes_a_1->get64Bits();
-	// }
-
-	// if (r_type == "b_1")
-	// {
-	// 	assert((partyNum == PARTY_A or partyNum == PARTY_C) && "Only A and C can call for b_1");
-	// 	assert(neg_type == "POSITIVE" && "neg_type should be POSITIVE");
-	// 	assert(sizeof(T) == sizeof(myType) && "sizeof(T) == sizeof(myType)");
-	// 	for (size_t i = 0; i < size; ++i)
-	// 		vec[i] = aes_b_1->get64Bits();
-	// }
-
-	// if (r_type == "c_1")
-	// {	
-	// 	assert((partyNum == PARTY_A or partyNum == PARTY_C) && "Only A and C can call for c_1");
-	// 	assert(neg_type == "POSITIVE" && "neg_type should be POSITIVE");
-	// 	assert(sizeof(T) == sizeof(myType) && "sizeof(T) == sizeof(myType)");
-	// 	for (size_t i = 0; i < size; ++i)
-	// 		vec[i] = aes_c_1->get64Bits();
-	// }
-
-	// if (r_type == "a_2")
-	// {
-	// 	assert((partyNum == PARTY_B or partyNum == PARTY_C) && "Only B and C can call for a_2");
-	// 	assert(neg_type == "POSITIVE" && "neg_type should be POSITIVE");
-	// 	assert(sizeof(T) == sizeof(myType) && "sizeof(T) == sizeof(myType)");
-	// 	for (size_t i = 0; i < size; ++i)
-	// 		vec[i] = aes_a_2->get64Bits();
-	// }
-
-	// if (r_type == "b_2")
-	// {
-	// 	assert((partyNum == PARTY_B or partyNum == PARTY_C) && "Only B and C can call for b_2");
-	// 	assert(neg_type == "POSITIVE" && "neg_type should be POSITIVE");
-	// 	assert(sizeof(T) == sizeof(myType) && "sizeof(T) == sizeof(myType)");
-	// 	for (size_t i = 0; i < size; ++i)
-	// 		vec[i] = aes_b_2->get64Bits();
-	// }	
-}
-
 
 template<typename T>
 void addVectors(const vector<T> &a, const vector<T> &b, vector<T> &c, size_t size)
@@ -496,114 +289,14 @@ void subtractVectors(const vector<T> &a, const vector<T> &b, vector<T> &c, size_
 		c[i] = a[i] - b[i];
 }
 
-template<typename T>
-void copyVectors(const vector<T> &a, vector<T> &b, size_t size)
-{
-	for (size_t i = 0; i < size; ++i)
-		b[i] = a[i];
-}
 
 
-template<typename T1, typename T2>
-void addModuloOdd(const vector<T1> &a, const vector<T2> &b, vector<myType> &c, size_t size)
-{
-	assert((sizeof(T1) == sizeof(myType) or sizeof(T2) == sizeof(myType)) && "At least one type should be myType for typecast to work");
 
-	for (size_t i = 0; i < size; ++i)
-	{
-		if (a[i] == MINUS_ONE and b[i] == MINUS_ONE)
-			c[i] = 0;
-		else 
-			c[i] = (a[i] + b[i] + wrapAround(a[i], b[i])) % MINUS_ONE;
-	}
-}
 
-template<typename T1, typename T2>
-void subtractModuloOdd(const vector<T1> &a, const vector<T2> &b, vector<myType> &c, size_t size)
-{
-	vector<myType> temp(size);
-	for (size_t i = 0; i < size; ++i)
-		temp[i] = MINUS_ONE - b[i];
 
-	addModuloOdd<T1, myType>(a, temp, c, size);
-}
 
-template<typename T>
-void sharesModuloOdd(vector<myType> &shares_1, vector<myType> &shares_2, 
-				  const vector<T> &x, size_t size, string r_type)
-{
-	assert((r_type == "COMMON" or r_type == "INDEP") && "invalid randomness type for sharesOfBits");
 
-	if (r_type == "COMMON")
-	{
-		for (size_t i = 0; i < size; ++i)
-			shares_1[i] = aes_next->randModuloOdd();
-	}
 
-	if (r_type == "INDEP")
-	{
-		for (size_t i = 0; i < size; ++i)
-			shares_1[i] = aes_indep->randModuloOdd();
-	}
-
-	subtractModuloOdd<T, myType>(x, shares_1, shares_2, size);
-}
-
-template<typename T1, typename T2>
-myType addModuloOdd(T1 a, T2 b)
-{
-	assert((sizeof(T1) == sizeof(myType) or sizeof(T2) == sizeof(myType)) && "At least one type should be myType for typecast to work");
-
-	if (a == MINUS_ONE and b == MINUS_ONE)
-		return 0;
-	else 
-		return (a + b + wrapAround(a, b)) % MINUS_ONE;
-}
-
-template<typename T1, typename T2>
-myType subtractModuloOdd(T1 a, T2 b)
-{
-	myType temp = MINUS_ONE - b;
-	return addModuloOdd<T1, myType>(a, temp);
-}
-
-template<typename T>
-void getVectorfromPrimary(vector<T> &vec, size_t size, string r_mode, string n_mode)
-{
-	assert(r_mode == "RANDOMIZE" or r_mode == "AS-IS" && "Random mode issue in getVectorfromPrimary");
-	assert(n_mode == "NATURAL" or n_mode == "UNNATURAL" && "Natural mode issue in getVectorfromPrimary");
-
-	if (r_mode == "RANDOMIZE")
-	{
-		//Original vec also gets modified here.
-		vector<myType> temp(size);
-		if (PRIMARY)
-		{
-			populateRandomVector<myType>(temp, size, "COMMON", "NEGATIVE");
-			addVectors<myType>(vec, temp, vec, size);
-		}
-	}
-
-	if (n_mode == "NATURAL")
-	{
-		if (PRIMARY)
-			sendVector<T>(vec, partner(partyNum), size);
-		if (!PRIMARY)
-			receiveVector<T>(vec, partner(partyNum), size);
-	}
-	else
-	{
-		if (partyNum == PARTY_A)
-			sendVector<T>(vec, PARTY_D, size);
-		if (partyNum == PARTY_B)
-			sendVector<T>(vec, PARTY_C, size);
-
-		if (partyNum == PARTY_C)
-			receiveVector<T>(vec, PARTY_B, size);
-		if (partyNum == PARTY_D)
-			receiveVector<T>(vec, PARTY_A, size);
-	}
-}
 
 #include <chrono>
 #include <utility>

@@ -21,7 +21,7 @@ void funcTruncate(RSSVectorMyType &a, size_t power, size_t size)
 		a[i] = a[i] - rPrime[i];
 	
 	funcReconstruct(a, reconst, size, "Truncate reconst", false);
-	dividePlainSA(reconst, (1 << power));
+	dividePlain(reconst, (1 << power));
 	if (partyNum == PARTY_A)
 	{
 		for (int i = 0; i < size; ++i)
@@ -356,7 +356,7 @@ void funcMatMul(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyT
 		temp3[i] = temp3[i] - rPrime[i].first;
 	
 	funcReconstruct(temp3, diffReconst, final_size, "Mat-Mul diff reconst", false);
-	dividePlainSA(diffReconst, (1 << truncation));
+	dividePlain(diffReconst, (1 << truncation));
 	if (partyNum == PARTY_A)
 	{
 		for (int i = 0; i < final_size; ++i)
@@ -435,7 +435,7 @@ void funcDotProduct(const RSSVectorMyType &a, const RSSVectorMyType &b,
 		}
 
 		funcReconstruct(temp3, diffReconst, size, "Dot-product diff reconst", false);
-		dividePlainSA(diffReconst, (1 << precision));
+		dividePlain(diffReconst, (1 << precision));
 		if (partyNum == PARTY_A)
 		{
 			for (int i = 0; i < size; ++i)

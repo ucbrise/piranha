@@ -77,47 +77,6 @@ smallType AESObject::get8Bits()
 	return ret;
 }
 
-smallType AESObject::getBit()
-{
-	smallType ret;
-	__m128i temp;
-
-	if (randomBitCounter == 0)
-		randomBitNumber = newRandomNumber();
-	
-	int x = randomBitCounter % 8; 
-	switch(x) 
-	{
-    case 0 : temp = _mm_and_si128(randomBitNumber, BIT1);
-             break;       
-    case 1 : temp = _mm_and_si128(randomBitNumber, BIT2);
-             break;
-    case 2 : temp = _mm_and_si128(randomBitNumber, BIT4);
-             break;       
-    case 3 : temp = _mm_and_si128(randomBitNumber, BIT8);
-             break;
-	case 4 : temp = _mm_and_si128(randomBitNumber, BIT16);
-             break;       
-    case 5 : temp = _mm_and_si128(randomBitNumber, BIT32);
-             break;
-	case 6 : temp = _mm_and_si128(randomBitNumber, BIT64);
-             break;       
-    case 7 : temp = _mm_and_si128(randomBitNumber, BIT128);
-             break;
-	}
-	uint8_t *val = (uint8_t*)&temp;
-	ret = (val[0] >> x);
-
-	randomBitCounter++;	
-	if (randomBitCounter % 8 == 0)
-		randomBitNumber = _mm_srli_si128(randomBitNumber, 1);
-
-	if (randomBitCounter == 128)
-		randomBitCounter = 0;
-
-	return ret;
-}
-
 smallType AESObject::randModPrime()
 {
 	smallType ret;
@@ -141,16 +100,6 @@ smallType AESObject::randNonZeroModPrime()
 	return ret; 
 }
 
-myType AESObject::randModuloOdd()
-{
-	myType ret;
-	do
-	{
-		ret = get64Bits();
-	} while (ret == MINUS_ONE);
-	return ret;
-}
-
 
 smallType AESObject::AES_random(int i)
 {
@@ -161,18 +110,4 @@ smallType AESObject::AES_random(int i)
 	} while (ret >= ((256/i) * i));
 
 	return (ret % i); 
-}
-
-void AESObject::AES_random_shuffle(vector<smallType> &vec, size_t begin_offset, size_t end_offset)
-{
-	vector<smallType>::iterator it = vec.begin();
-	auto first = it + begin_offset;
-	auto last = it + end_offset;
-    auto n = last - first;
-
-    for (auto i = n-1; i > 0; --i)
-    {
-        using std::swap;
-        swap(first[i], first[AES_random(i+1)]);
-    }
 }

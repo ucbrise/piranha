@@ -139,7 +139,7 @@ void NeuralNetwork::getAccuracy(const RSSVectorMyType &maxIndex, vector<size_t> 
 	// {
 	// 	receiveTwoVectors<RSSMyType>(temp_max, temp_groundTruth, PARTY_B, rows, rows);
 	// 	addVectors<RSSMyType>(temp_max, max, temp_max, rows);
-//		dividePlainSA(temp_max, (1 << FLOAT_PRECISION));
+//		dividePlain(temp_max, (1 << FLOAT_PRECISION));
 	// 	addVectors<RSSMyType>(temp_groundTruth, groundTruth, temp_groundTruth, rows);	
 	// }
 /******************************** TODO ****************************************/
