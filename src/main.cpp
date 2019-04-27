@@ -46,8 +46,8 @@ int main(int argc, char** argv)
 	// runTest("Debug", "Wrap", whichNetwork);
 	// runTest("Test", "Maxpool1", whichNetwork);
 
-	whichNetwork += " train";
-	train(network, config);
+	// whichNetwork += " train";
+	// train(network, config);
 
 	// whichNetwork += " test";
 	// test(network);

@@ -42,7 +42,9 @@ void CNNLayer::printLayer()
 		 << conf.filterSize << " x " << conf.filterSize << "  \t(Filter Size)" << endl << "\t\t  " 
 		 << conf.stride << " , " << conf.padding << " \t(Stride, padding)" << endl << "\t\t  " 
 		 << conf.batchSize << "\t\t(Batch Size)" << endl << "\t\t  " 
-		 << 0 << " x " << 0 << " x " << conf.filters << " \t(Output)" << endl;
+		 << (((conf.imageWidth - conf.filterSize + 2*conf.padding)/conf.stride) + 1) << " x " 
+		 << (((conf.imageHeight - conf.filterSize + 2*conf.padding)/conf.stride) + 1) << " x " 
+		 << conf.filters << " \t(Output)" << endl;
 }
 
 void CNNLayer::forward(const RSSVectorMyType& inputActivation)
