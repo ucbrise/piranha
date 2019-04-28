@@ -101,6 +101,7 @@ void loadData(string net, string dataset)
 	}
 	else if (dataset.compare("CIFAR10") == 0)
 	{
+		LARGE_NETWORK = true;
 		INPUT_SIZE = 32*32*3;
 		LAST_LAYER_SIZE = 10;
 		TRAINING_DATA_SIZE = 8;
@@ -115,7 +116,6 @@ void loadData(string net, string dataset)
 		//https://neurohive.io/en/popular-networks/vgg16/
 		if (net.compare("AlexNet") == 0)
 		{
-			assert(false && "Dimensions need to be figured out");
 			INPUT_SIZE = 227*227*3;
 			LAST_LAYER_SIZE = 1000;
 			TRAINING_DATA_SIZE = 8;
@@ -123,7 +123,6 @@ void loadData(string net, string dataset)
 		}
 		else if (net.compare("VGG16") == 0)
 		{
-			assert(false && "Dimensions need to be figured out");
 			INPUT_SIZE = 224*224*3;
 			LAST_LAYER_SIZE = 1000;
 			TRAINING_DATA_SIZE = 8;
@@ -531,7 +530,35 @@ void selectNetwork(string network, string dataset, NeuralNetConfig* config)
 	}
 	else
 		assert(false && "Only SecureML, Sarda, Gazelle, LeNet, AlexNet, and VGG16 Networks supported");
-	
+}
+
+void runOnly(NeuralNetwork* net, size_t l, string what, string& network)
+{
+	size_t total_layers = net->layers.size();
+	assert((0 < l and l < total_layers) && "Incorrect layer number for runOnly"); 
+	network = network + " L" + std::to_string(l) + " " + what;
+
+	if (what.compare("F") == 0)
+	{
+		if (l == 0)
+			net->layers[0]->forward(net->inputData);
+		else
+			net->layers[l]->forward(*(net->layers[l-1]->getActivation()));
+	}
+	else if (what.compare("D") == 0)
+	{
+		if (l != 0)
+			net->layers[l]->computeDelta(*(net->layers[l-1]->getDelta()));	
+	}
+	else if (what.compare("U") == 0)
+	{
+		if (l == 0)
+			net->layers[0]->updateEquations(net->inputData);
+		else
+			net->layers[l]->updateEquations(*(net->layers[l-1]->getActivation()));
+	}
+	else
+		assert(false && "Only F,D or U allowed in runOnly");
 }
 
 

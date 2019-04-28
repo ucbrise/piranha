@@ -25,8 +25,8 @@ int main(int argc, char** argv)
 /****************************** SELECT NETWORK ******************************/ 
 	//Network {SecureML, Sarda, MiniONN, LeNet, AlexNet, and VGG16}
 	//Dataset {MNIST, CIFAR10, and ImageNet}
-	string network = "SecureML";
-	string dataset = "MNIST";
+	string network = "VGG16";
+	string dataset = "ImageNet";
 	selectNetwork(network, dataset, config);
 	config->checkNetwork();
 	NeuralNetwork* net = new NeuralNetwork(config);
@@ -47,8 +47,15 @@ int main(int argc, char** argv)
 	// runTest("Debug", "Wrap", network);
 	// runTest("Test", "Maxpool1", network);
 
-	network += " train";
-	train(net, config);
+	//Run forward/backward for single layers
+	//  1. what {F, D, U}
+	//	2. l {0,1,....NUM_LAYERS-1}
+	size_t l = 1;
+	string what = "F";
+	runOnly(net, l, what, network);
+
+	// network += " train";
+	// train(net, config);
 
 	// network += " test";
 	// test(net);
@@ -60,7 +67,7 @@ int main(int argc, char** argv)
 		 << "Running " << network << " on " << dataset << " dataset" << endl;
 	cout << "----------------------------------------------" << endl << endl;  
 
-	printNetwork(net);
+	// printNetwork(net);
 
 /****************************** CLEAN-UP ******************************/ 
 	delete aes_indep;
