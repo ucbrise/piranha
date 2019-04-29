@@ -38,6 +38,8 @@ void funcRELUPrime(const RSSVectorMyType &a, RSSVectorSmallType &b, size_t size)
 void funcRELU(const RSSVectorMyType &a, RSSVectorSmallType &temp, RSSVectorMyType &b, size_t size);
 void funcDivision(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyType &quotient, 
 							size_t size);
+void funcBatchNorm(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyType &quotient, 
+							size_t batchSize, size_t B);
 void funcMaxpool(RSSVectorMyType &a, RSSVectorMyType &max, RSSVectorMyType &maxIndex, 
 					RSSVectorSmallType &maxPrime, size_t rows, size_t columns);
 void aggregateCommunication();

@@ -1166,6 +1166,47 @@ void funcDivision(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorM
 	funcDotProduct(answer, scaledA, quotient, size, true, (precision + 2*alpha + 2));	
 }
 
+// a is of size batchSize*B, b is of size B and quotient is a/b (b from each group).
+void funcBatchNorm(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyType &quotient, 
+							size_t batchSize, size_t B)
+{
+	log_print("funcBatchNorm");
+
+	assert(a.size() == batchSize*B && "funcBatchNorm a size incorrect");
+	assert(b.size() == B && "funcBatchNorm b size incorrect");
+	assert(quotient.size() == batchSize*B && "funcBatchNorm quotient size incorrect");
+
+	size_t alpha = 3;
+	size_t precision = alpha + FLOAT_PRECISION + 1;
+	const myType constTwoPointNine = ((myType)(2.9142 * (1 << precision)));
+	const myType constOne = ((myType)(1 * (1 << precision)));
+
+	vector<myType> data_twoPointNine(B, constTwoPointNine), data_one(B, constOne), reconst(B);
+	RSSVectorMyType ones(B), twoPointNine(B), twoX(B), w0(B), xw0(B), 
+					epsilon0(B), epsilon1(B), termOne(B), termTwo(B), answer(B);
+	funcGetShares(twoPointNine, data_twoPointNine);
+	funcGetShares(ones, data_one);
+
+	multiplyByScalar(b, 2, twoX);
+	subtractVectors<RSSMyType>(twoPointNine, twoX, w0, B);
+	funcDotProduct(b, w0, xw0, B, true, precision); 
+	subtractVectors<RSSMyType>(ones, xw0, epsilon0, B);
+	if (PRECISE_DIVISION)
+		funcDotProduct(epsilon0, epsilon0, epsilon1, B, true, precision);
+	addVectors(ones, epsilon0, termOne, B);
+	if (PRECISE_DIVISION)
+		addVectors(ones, epsilon1, termTwo, B);
+	funcDotProduct(w0, termOne, answer, B, true, precision);
+	if (PRECISE_DIVISION)
+		funcDotProduct(answer, termTwo, answer, B, true, precision);
+
+	RSSVectorMyType scaledA(batchSize*B), b_repeat(batchSize*B);
+	multiplyByScalar(a, (1 << (alpha + 1)), scaledA);
+	for (int i = 0; i < B; ++i)
+		for (int j = 0; j < batchSize; ++j)
+			b_repeat[i*batchSize + j] = answer[i];
+	funcDotProduct(b_repeat, scaledA, quotient, batchSize*B, true, (precision + 2*alpha + 2));
+}
 
 
 //Chunk wise maximum of a vector of size rows*columns and maximum is caclulated of every 

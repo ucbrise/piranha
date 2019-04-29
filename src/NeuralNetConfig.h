@@ -5,7 +5,7 @@
 #include "CNNConfig.h"
 #include "MaxpoolConfig.h"
 #include "ReLUConfig.h"
-// #include "ReLUConfig.h"
+#include "BNConfig.h"
 #include "globals.h"
 using namespace std;
 
@@ -29,6 +29,7 @@ public:
 	addLayer(CNNConfig* cnnl) {layerConf.push_back(cnnl);};
 	addLayer(MaxpoolConfig* mpl) {layerConf.push_back(mpl);};
 	addLayer(ReLUConfig* relul) {layerConf.push_back(relul);};
+	addLayer(BNConfig* bnl) {layerConf.push_back(bnl);};
 	
 	checkNetwork() 
 	{

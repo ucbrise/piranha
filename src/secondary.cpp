@@ -106,7 +106,6 @@ void loadData(string net, string dataset)
 		LAST_LAYER_SIZE = 10;
 		TRAINING_DATA_SIZE = 8;
 		TEST_DATA_SIZE = 8;	
-		LARGE_NETWORK = true;		
 	}
 	else if (dataset.compare("ImageNet") == 0)
 	{
@@ -341,16 +340,91 @@ void selectNetwork(string network, string dataset, NeuralNetConfig* config)
 	else if (network.compare("AlexNet") == 0)
 	{
 		if(dataset.compare("MNIST") == 0)
-		{
-			cout << "Hmm" << endl;	
-		}
+			assert(false && "No AlexNet on MNIST");
 		else if (dataset.compare("CIFAR10") == 0)
-		{
-			cout << "Hmm" << endl;	
-		}
+			assert(false && "No AlexNet on CIFAR10");
 		else if (dataset.compare("ImageNet") == 0)
 		{
-			cout << "Hmm" << endl;	
+			// NUM_LAYERS = 37;
+			WITH_NORMALIZATION = false;
+			CNNConfig* l0 = new CNNConfig(227,227,3,96,11,4,0,MINI_BATCH_SIZE);
+			ReLUConfig* l1 = new ReLUConfig(55*55*96,MINI_BATCH_SIZE);		
+			MaxpoolConfig* l2 = new MaxpoolConfig(55,55,96,3,2,MINI_BATCH_SIZE);
+			ReLUConfig* l4 = new ReLUConfig(27*27*96,MINI_BATCH_SIZE);
+
+			// CNNConfig* l5 = new CNNConfig(16,16,64,128,3,1,1,MINI_BATCH_SIZE);
+			// ReLUConfig* l6 = new ReLUConfig(16*16*128,MINI_BATCH_SIZE);
+			// CNNConfig* l7 = new CNNConfig(16,16,128,128,3,1,1,MINI_BATCH_SIZE);
+			// MaxpoolConfig* l8 = new MaxpoolConfig(16,16,128,2,2,MINI_BATCH_SIZE);
+			// ReLUConfig* l9 = new ReLUConfig(8*8*128,MINI_BATCH_SIZE);
+
+			// CNNConfig* l10 = new CNNConfig(8,8,128,256,3,1,1,MINI_BATCH_SIZE);
+			// ReLUConfig* l11 = new ReLUConfig(8*8*256,MINI_BATCH_SIZE);
+			// CNNConfig* l12 = new CNNConfig(8,8,256,256,3,1,1,MINI_BATCH_SIZE);
+			// ReLUConfig* l13 = new ReLUConfig(8*8*256,MINI_BATCH_SIZE);
+			// CNNConfig* l14 = new CNNConfig(8,8,256,256,3,1,1,MINI_BATCH_SIZE);
+			// MaxpoolConfig* l15 = new MaxpoolConfig(8,8,256,2,2,MINI_BATCH_SIZE);
+			// ReLUConfig* l16 = new ReLUConfig(4*4*256,MINI_BATCH_SIZE);
+
+			// CNNConfig* l17 = new CNNConfig(4,4,256,512,3,1,1,MINI_BATCH_SIZE);
+			// ReLUConfig* l18 = new ReLUConfig(4*4*512,MINI_BATCH_SIZE);
+			// CNNConfig* l19 = new CNNConfig(4,4,512,512,3,1,1,MINI_BATCH_SIZE);
+			// ReLUConfig* l20 = new ReLUConfig(4*4*512,MINI_BATCH_SIZE);
+			// CNNConfig* l21 = new CNNConfig(4,4,512,512,3,1,1,MINI_BATCH_SIZE);
+			// MaxpoolConfig* l22 = new MaxpoolConfig(4,4,512,2,2,MINI_BATCH_SIZE);
+			// ReLUConfig* l23 = new ReLUConfig(2*2*512,MINI_BATCH_SIZE);
+
+			// CNNConfig* l24 = new CNNConfig(2,2,512,512,3,1,1,MINI_BATCH_SIZE);
+			// ReLUConfig* l25 = new ReLUConfig(2*2*512,MINI_BATCH_SIZE);
+			// CNNConfig* l26 = new CNNConfig(2,2,512,512,3,1,1,MINI_BATCH_SIZE);
+			// ReLUConfig* l27 = new ReLUConfig(2*2*512,MINI_BATCH_SIZE);
+			// CNNConfig* l28 = new CNNConfig(2,2,512,512,3,1,1,MINI_BATCH_SIZE);
+			// MaxpoolConfig* l29 = new MaxpoolConfig(2,2,512,2,2,MINI_BATCH_SIZE);
+			// ReLUConfig* l30 = new ReLUConfig(1*1*512,MINI_BATCH_SIZE);
+
+			// FCConfig* l31 = new FCConfig(1*1*512,MINI_BATCH_SIZE,4096);
+			// ReLUConfig* l32 = new ReLUConfig(4096,MINI_BATCH_SIZE);
+			// FCConfig* l33 = new FCConfig(4096, MINI_BATCH_SIZE, 4096);
+			// ReLUConfig* l34 = new ReLUConfig(4096, MINI_BATCH_SIZE);
+			// FCConfig* l35 = new FCConfig(4096, MINI_BATCH_SIZE, 1000);
+			// ReLUConfig* l36 = new ReLUConfig(1000, MINI_BATCH_SIZE);
+			// config->addLayer(l0);
+			// config->addLayer(l1);
+			// config->addLayer(l2);
+			// config->addLayer(l3);
+			// config->addLayer(l4);
+			// config->addLayer(l5);
+			// config->addLayer(l6);
+			// config->addLayer(l7);
+			// config->addLayer(l8);
+			// config->addLayer(l9);
+			// config->addLayer(l10);
+			// config->addLayer(l11);
+			// config->addLayer(l12);
+			// config->addLayer(l13);
+			// config->addLayer(l14);
+			// config->addLayer(l15);
+			// config->addLayer(l16);
+			// config->addLayer(l17);
+			// config->addLayer(l18);
+			// config->addLayer(l19);
+			// config->addLayer(l20);
+			// config->addLayer(l21);
+			// config->addLayer(l22);
+			// config->addLayer(l23);
+			// config->addLayer(l24);
+			// config->addLayer(l25);
+			// config->addLayer(l26);
+			// config->addLayer(l27);
+			// config->addLayer(l28);
+			// config->addLayer(l29);
+			// config->addLayer(l30);
+			// config->addLayer(l31);
+			// config->addLayer(l32);
+			// config->addLayer(l33);
+			// config->addLayer(l34);
+			// config->addLayer(l35);
+			// config->addLayer(l36);
 		}
 	}
 	else if (network.compare("VGG16") == 0)
@@ -535,7 +609,7 @@ void selectNetwork(string network, string dataset, NeuralNetConfig* config)
 void runOnly(NeuralNetwork* net, size_t l, string what, string& network)
 {
 	size_t total_layers = net->layers.size();
-	assert((0 < l and l < total_layers) && "Incorrect layer number for runOnly"); 
+	assert((l >= 0 and l < total_layers) && "Incorrect layer number for runOnly"); 
 	network = network + " L" + std::to_string(l) + " " + what;
 
 	if (what.compare("F") == 0)

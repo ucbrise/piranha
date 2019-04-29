@@ -5,7 +5,7 @@
 #include "CNNLayer.h"
 #include "MaxpoolLayer.h"
 #include "ReLULayer.h"
-// #include "ReLULayer.h"
+#include "BNLayer.h"
 #include "NeuralNetwork.h"
 #include "Functionalities.h"
 using namespace std;
@@ -29,8 +29,10 @@ NeuralNetwork::NeuralNetwork(NeuralNetConfig* config)
 			layers.push_back(new MaxpoolLayer(config->layerConf[i], i));
 		else if (config->layerConf[i]->type.compare("ReLU") == 0)
 			layers.push_back(new ReLULayer(config->layerConf[i], i));
+		else if (config->layerConf[i]->type.compare("BN") == 0)
+			layers.push_back(new BNLayer(config->layerConf[i], i));
 		else
-			error("Only FC, CNN, ReLU, Maxpool, and BatchNorm layer types currently supported");
+			error("Only FC, CNN, ReLU, Maxpool, and BN layer types currently supported");
 	}
 }
 

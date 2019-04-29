@@ -25,8 +25,8 @@ int main(int argc, char** argv)
 /****************************** SELECT NETWORK ******************************/ 
 	//Network {SecureML, Sarda, MiniONN, LeNet, AlexNet, and VGG16}
 	//Dataset {MNIST, CIFAR10, and ImageNet}
-	string network = "VGG16";
-	string dataset = "ImageNet";
+	string network = "SecureML";
+	string dataset = "MNIST";
 	selectNetwork(network, dataset, config);
 	config->checkNetwork();
 	NeuralNetwork* net = new NeuralNetwork(config);
@@ -50,12 +50,12 @@ int main(int argc, char** argv)
 	//Run forward/backward for single layers
 	//  1. what {F, D, U}
 	//	2. l {0,1,....NUM_LAYERS-1}
-	size_t l = 1;
-	string what = "F";
-	runOnly(net, l, what, network);
+	// size_t l = 1;
+	// string what = "F";
+	// runOnly(net, l, what, network);
 
-	// network += " train";
-	// train(net, config);
+	network += " train";
+	train(net, config);
 
 	// network += " test";
 	// test(net);
