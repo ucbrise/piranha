@@ -14,8 +14,10 @@ private:
 	BNConfig conf;
 	RSSVectorMyType activations;
 	RSSVectorMyType deltas;
-	// RSSVectorMyType weights;
-	// RSSVectorMyType biases;
+	RSSVectorMyType gamma;
+	RSSVectorMyType beta;
+	RSSVectorMyType xhat;
+	RSSVectorMyType sigma;
 
 public:
 	//Constructor and initializer

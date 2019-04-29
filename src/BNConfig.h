@@ -8,11 +8,11 @@ class BNConfig : public LayerConfig
 {
 public:
 	size_t inputSize = 0;
-	size_t batchSize = 0;
+	size_t numBatches = 0;
 
-	BNConfig(size_t _inputSize, size_t _batchSize)
+	BNConfig(size_t _inputSize, size_t _numBatches)
 	:inputSize(_inputSize),
-	 batchSize(_batchSize),
+	 numBatches(_numBatches),
 	 LayerConfig("BN")
 	{};
 };

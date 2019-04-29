@@ -16,7 +16,7 @@ void funcTruncate(RSSVectorMyType &a, size_t power, size_t size)
 
 	RSSVectorMyType r(size), rPrime(size);
 	vector<myType> reconst(size);
-	PrecomputeObject.getDividedShares(r, rPrime, power, size);
+	PrecomputeObject.getDividedShares(r, rPrime, (1<<power), size);
 	for (int i = 0; i < size; ++i)
 		a[i] = a[i] - rPrime[i];
 	
@@ -50,35 +50,46 @@ void funcTruncate(RSSVectorMyType &a, size_t power, size_t size)
 	}	
 }
 
-
-//Add public vector b to RSS vector a into c.
-void funcAddMyTypeAndRSS(RSSVectorMyType &a, vector<myType> &b, RSSVectorMyType &c, size_t size)
+void funcTruncatePublic(RSSVectorMyType &a, size_t divisor, size_t size)
 {
+	log_print("funcTruncate");
+
+	RSSVectorMyType r(size), rPrime(size);
+	vector<myType> reconst(size);
+	PrecomputeObject.getDividedShares(r, rPrime, divisor, size);
+	for (int i = 0; i < size; ++i)
+		a[i] = a[i] - rPrime[i];
+	
+	funcReconstruct(a, reconst, size, "Truncate reconst", false);
+	dividePlain(reconst, divisor);
 	if (partyNum == PARTY_A)
 	{
 		for (int i = 0; i < size; ++i)
 		{
-			c[i].first = a[i].first + b[i];
-			c[i].second = a[i].second;
+			a[i].first = r[i].first + reconst[i];
+			a[i].second = r[i].second;
 		}
 	}
-	else if (partyNum == PARTY_B)
+
+	if (partyNum == PARTY_B)
 	{
 		for (int i = 0; i < size; ++i)
 		{
-			c[i].first = a[i].first;
-			c[i].second = a[i].second;
+			a[i].first = r[i].first;
+			a[i].second = r[i].second;
 		}
 	}
-	else if (partyNum == PARTY_C)
+
+	if (partyNum == PARTY_C)
 	{
 		for (int i = 0; i < size; ++i)
 		{
-			c[i].first = a[i].first;
-			c[i].second = a[i].second + b[i];
+			a[i].first = r[i].first;
+			a[i].second = r[i].second + reconst[i];
 		}
-	}
+	}	
 }
+
 
 //Fixed-point data has to be processed outside this function.
 void funcGetShares(RSSVectorMyType &a, const vector<myType> &data)
@@ -351,7 +362,7 @@ void funcMatMul(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyT
 	matrixMultRSS(a, b, temp3, rows, common_dim, columns, transpose_a, transpose_b);
 
 	RSSVectorMyType r(final_size), rPrime(final_size);
-	PrecomputeObject.getDividedShares(r, rPrime, truncation, final_size);
+	PrecomputeObject.getDividedShares(r, rPrime, (1<<truncation), final_size);
 	for (int i = 0; i < final_size; ++i)
 		temp3[i] = temp3[i] - rPrime[i].first;
 	
@@ -424,7 +435,7 @@ void funcDotProduct(const RSSVectorMyType &a, const RSSVectorMyType &b,
 	{
 		vector<myType> temp3(size, 0), diffReconst(size, 0);
 		RSSVectorMyType r(size), rPrime(size);
-		PrecomputeObject.getDividedShares(r, rPrime, precision, size);
+		PrecomputeObject.getDividedShares(r, rPrime, (1<<precision), size);
 
 		for (int i = 0; i < size; ++i)
 		{

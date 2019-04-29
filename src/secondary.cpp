@@ -262,12 +262,14 @@ void selectNetwork(string network, string dataset, NeuralNetConfig* config)
 		ReLUConfig* l3 = new ReLUConfig(128, MINI_BATCH_SIZE);
 		FCConfig* l4 = new FCConfig(128, MINI_BATCH_SIZE, 10); 
 		ReLUConfig* l5 = new ReLUConfig(10, MINI_BATCH_SIZE);
+		// BNConfig* l6 = new BNConfig(10, MINI_BATCH_SIZE);
 		config->addLayer(l0);
 		config->addLayer(l1);
 		config->addLayer(l2);
 		config->addLayer(l3);
 		config->addLayer(l4);
 		config->addLayer(l5);
+		// config->addLayer(l6);
 	}
 	else if (network.compare("Sarda") == 0)
 	{

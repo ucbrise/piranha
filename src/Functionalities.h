@@ -13,6 +13,7 @@ extern void end_communication(string str);
 
 
 void funcTruncate(RSSVectorMyType &a, size_t power, size_t size);
+void funcTruncatePublic(RSSVectorMyType &a, size_t divisor, size_t size);
 void funcGetShares(RSSVectorMyType &a, const vector<myType> &data);
 void funcGetShares(RSSVectorSmallType &a, const vector<smallType> &data);
 void funcReconstructBit(const RSSVectorSmallType &a, vector<smallType> &b, size_t size, string str, bool print);

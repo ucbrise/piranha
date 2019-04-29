@@ -271,6 +271,11 @@ std::pair<T,U> operator^(const std::pair<T,U> & l,const std::pair<T,U> & r) {
 }
 
 template <typename T>                                                   
+std::pair<T, T> operator*(const myType a, const std::pair<T,T> & r) {   
+    return {a * r.first, a * r.second};
+}
+
+template <typename T>                                                   
 std::pair<T,T> operator<<(const std::pair<T,T> & l, const int shift) {   
     return {l.first << shift, l.second << shift};
 }   

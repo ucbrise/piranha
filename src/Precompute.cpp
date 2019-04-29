@@ -16,8 +16,8 @@ void Precompute::getDividedShares(RSSVectorMyType &r, RSSVectorMyType &rPrime, i
 	{
 		r[i].first = 1;
 		r[i].second = 1;
-		rPrime[i].first = (1 << d);
-		rPrime[i].second = (1 << d);
+		rPrime[i].first = d;
+		rPrime[i].second = d;
 	}
 }
 
