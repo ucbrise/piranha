@@ -14,8 +14,9 @@ MaxpoolLayer::MaxpoolLayer(MaxpoolConfig* conf, int _layerNum)
  deltas(conf->batchSize * conf->features * 
 	   (((conf->imageWidth - conf->poolSize)/conf->stride) + 1) * 
 	   (((conf->imageHeight - conf->poolSize)/conf->stride) + 1)),
- maxPrime(conf->imageWidth * conf-> imageHeight * 
- 			conf->features * conf->batchSize)
+ maxPrime((((conf->imageWidth - conf->poolSize)/conf->stride) + 1) * 
+		 (((conf->imageHeight - conf->poolSize)/conf->stride) + 1) * 
+		 conf->features * conf->batchSize * conf->poolSize * conf->poolSize)
 {};
 
 
@@ -60,7 +61,6 @@ void MaxpoolLayer::forward(const RSSVectorMyType& inputActivation)
 										(beta + q)*sizeBeta + (alpha + p)];
 							}
 	}
-
 
 	//Pooling operation
 	RSSVectorMyType temp2(ow*oh*Din*B);

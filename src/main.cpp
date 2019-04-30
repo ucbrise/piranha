@@ -25,8 +25,8 @@ int main(int argc, char** argv)
 /****************************** SELECT NETWORK ******************************/ 
 	//Network {SecureML, Sarda, MiniONN, LeNet, AlexNet, and VGG16}
 	//Dataset {MNIST, CIFAR10, and ImageNet}
-	string network = "SecureML";
-	string dataset = "MNIST";
+	string network = "AlexNet";
+	string dataset = "CIFAR10";
 	selectNetwork(network, dataset, config);
 	config->checkNetwork();
 	NeuralNetwork* net = new NeuralNetwork(config);
@@ -67,7 +67,7 @@ int main(int argc, char** argv)
 		 << "Running " << network << " on " << dataset << " dataset" << endl;
 	cout << "----------------------------------------------" << endl << endl;  
 
-	// printNetwork(net);
+	printNetwork(net);
 
 /****************************** CLEAN-UP ******************************/ 
 	delete aes_indep;
