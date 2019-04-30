@@ -404,7 +404,55 @@ void selectNetwork(string network, string dataset, NeuralNetConfig* config)
 			config->addLayer(l19);
 		}
 		else if (dataset.compare("ImageNet") == 0)
-			assert(false && "No AlexNet on CIFAR10");
+		{
+			NUM_LAYERS = 21;
+			WITH_NORMALIZATION = false;
+			CNNConfig* l0 = new CNNConfig(227,227,3,96,11,4,0,MINI_BATCH_SIZE);
+			MaxpoolConfig* l1 = new MaxpoolConfig(55,55,96,3,2,MINI_BATCH_SIZE);
+			ReLUConfig* l2 = new ReLUConfig(27*27*96,MINI_BATCH_SIZE);		
+			BNConfig * l3 = new BNConfig(27*27*96,MINI_BATCH_SIZE);
+
+			CNNConfig* l4 = new CNNConfig(27,27,96,256,5,1,2,MINI_BATCH_SIZE);
+			MaxpoolConfig* l5 = new MaxpoolConfig(27,27,256,3,2,MINI_BATCH_SIZE);
+			ReLUConfig* l6 = new ReLUConfig(13*13*256,MINI_BATCH_SIZE);		
+			BNConfig * l7 = new BNConfig(13*13*256,MINI_BATCH_SIZE);
+
+			CNNConfig* l8 = new CNNConfig(13,13,256,384,3,1,1,MINI_BATCH_SIZE);
+			ReLUConfig* l9 = new ReLUConfig(13*13*384,MINI_BATCH_SIZE);
+			CNNConfig* l10 = new CNNConfig(13,13,384,384,3,1,1,MINI_BATCH_SIZE);
+			ReLUConfig* l11 = new ReLUConfig(13*13*384,MINI_BATCH_SIZE);
+			CNNConfig* l12 = new CNNConfig(13,13,384,256,3,1,1,MINI_BATCH_SIZE);
+			MaxpoolConfig* l13 = new MaxpoolConfig(13,13,256,3,2,MINI_BATCH_SIZE);
+			ReLUConfig* l14 = new ReLUConfig(6*6*256,MINI_BATCH_SIZE);
+
+			FCConfig* l15 = new FCConfig(6*6*256,MINI_BATCH_SIZE,4096);
+			ReLUConfig* l16 = new ReLUConfig(4096,MINI_BATCH_SIZE);
+			FCConfig* l17 = new FCConfig(4096,MINI_BATCH_SIZE,4096);
+			ReLUConfig* l18 = new ReLUConfig(4096,MINI_BATCH_SIZE);
+			FCConfig* l19 = new FCConfig(4096,MINI_BATCH_SIZE,1000);
+			ReLUConfig* l20 = new ReLUConfig(1000,MINI_BATCH_SIZE);
+			config->addLayer(l0);
+			config->addLayer(l1);
+			config->addLayer(l2);
+			config->addLayer(l3);
+			config->addLayer(l4);
+			config->addLayer(l5);
+			config->addLayer(l6);
+			config->addLayer(l7);
+			config->addLayer(l8);
+			config->addLayer(l9);
+			config->addLayer(l10);
+			config->addLayer(l11);
+			config->addLayer(l12);
+			config->addLayer(l13);
+			config->addLayer(l14);
+			config->addLayer(l15);
+			config->addLayer(l16);
+			config->addLayer(l17);
+			config->addLayer(l18);
+			config->addLayer(l19);
+			config->addLayer(l20);
+		}
 	}
 	else if (network.compare("VGG16") == 0)
 	{

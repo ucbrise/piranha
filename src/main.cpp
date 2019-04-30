@@ -26,7 +26,7 @@ int main(int argc, char** argv)
 	//Network {SecureML, Sarda, MiniONN, LeNet, AlexNet, and VGG16}
 	//Dataset {MNIST, CIFAR10, and ImageNet}
 	string network = "AlexNet";
-	string dataset = "CIFAR10";
+	string dataset = "ImageNet";
 	selectNetwork(network, dataset, config);
 	config->checkNetwork();
 	NeuralNetwork* net = new NeuralNetwork(config);
