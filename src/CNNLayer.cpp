@@ -65,9 +65,9 @@ void CNNLayer::forward(const RSSVectorMyType& inputActivation)
 
 	//Reshape activations
 	RSSVectorMyType temp1((iw+2*P)*(ih+2*P)*Din*B, make_pair(0,0));
-	if (FUNCTION_TIME)
-		cout << "ZP: " << funcTime(zeroPad, inputActivation, temp1, iw, ih, P, Din, B) << endl;
-	else
+	// if (FUNCTION_TIME)
+	// 	cout << "ZP: \t" << funcTime(zeroPad, inputActivation, temp1, iw, ih, P, Din, B) << endl;
+	// else
 		zeroPad(inputActivation, temp1, iw, ih, P, Din, B);
 
 	//Reshape for convolution
@@ -221,8 +221,11 @@ void CNNLayer::updateEquations(const RSSVectorMyType& prevActivations)
 
 	//Compute product, truncate and subtract
 	RSSVectorMyType temp4((Dout) * (f*f*Din));
-	funcMatMul(temp2, temp3, temp4, 
-			  (Dout), (ow*oh*B), (f*f*Din), 0, 1, 
-			  FLOAT_PRECISION + LOG_MINI_BATCH + LOG_LEARNING_RATE);
+	if (FUNCTION_TIME)
+		cout << "funcMatMul: " << funcTime(funcMatMul, temp2, temp3, temp4, (Dout), (ow*oh*B), (f*f*Din), 0, 1, FLOAT_PRECISION + LOG_MINI_BATCH + LOG_LEARNING_RATE) << endl;
+	else
+		funcMatMul(temp2, temp3, temp4, (Dout), (ow*oh*B), (f*f*Din), 0, 1, 
+					FLOAT_PRECISION + LOG_MINI_BATCH + LOG_LEARNING_RATE);
+	
 	subtractVectors<RSSMyType>(weights, temp4, weights, f*f*Din*Dout);
 }

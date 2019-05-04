@@ -44,7 +44,7 @@ int main(int argc, char** argv)
 	//Run unit tests in two modes: 
 	//	1. Debug {Mat-Mul, DotProd, PC, Wrap, ReLUPrime, ReLU, Division, SSBits, SS, and Maxpool}
 	//	2. Test {Mat-Mul1, Mat-Mul2, Mat-Mul3 (and similarly) Conv*, ReLU*, ReLUPrime*, and Maxpool*}
-	runTest("Debug", "Maxpool", network);
+	// runTest("Debug", "ReLUPrime", network);
 	// runTest("Test", "Maxpool1", network);
 
 	//Run forward/backward for single layers
@@ -54,8 +54,8 @@ int main(int argc, char** argv)
 	// string what = "F";
 	// runOnly(net, l, what, network);
 
-	// network += " train";
-	// train(net, config);
+	network += " train";
+	train(net, config);
 
 	// network += " test";
 	// test(net);

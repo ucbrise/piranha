@@ -48,8 +48,6 @@ void ReLULayer::computeDelta(RSSVectorMyType& prevDelta)
 		cout << "funcSelectShares: " << funcTime(funcSelectShares, deltas, reluPrime, prevDelta, size) << endl;
 	else
 		funcSelectShares(deltas, reluPrime, prevDelta, size);
-
-	
 }
 
 

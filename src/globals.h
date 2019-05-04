@@ -20,7 +20,7 @@
 /********************* AES and other globals *********************/
 #define LOG_DEBUG false
 #define LOG_DEBUG_NETWORK false
-#define FUNCTION_TIME true
+#define FUNCTION_TIME false
 #define RANDOM_COMPUTE 256	//Size of buffer for random elements
 #define STRING_BUFFER_SIZE 256
 #define PARALLEL true
@@ -41,7 +41,7 @@
 
 /********************* Neural Network globals *********************/
 //Batch size has to be a power of two
-#define LOG_MINI_BATCH 0
+#define LOG_MINI_BATCH 7
 #define MINI_BATCH_SIZE (1 << LOG_MINI_BATCH)
 #define LOG_LEARNING_RATE 5
 #define LEARNING_RATE (1 << (FLOAT_PRECISION - LOG_LEARNING_RATE))
