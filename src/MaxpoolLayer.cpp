@@ -63,8 +63,11 @@ void MaxpoolLayer::forward(const RSSVectorMyType& inputActivation)
 	}
 
 	//Pooling operation
-	RSSVectorMyType temp2(ow*oh*Din*B);
-	funcMaxpool(temp1, activations, temp2, maxPrime, ow*oh*Din*B, f*f);
+	if (FUNCTION_TIME)
+		cout << "funcMaxpool: " << funcTime(funcMaxpool, temp1, activations, maxPrime, ow*oh*Din*B, f*f) << endl;
+	else
+		funcMaxpool(temp1, activations, maxPrime, ow*oh*Din*B, f*f);
+	
 }
 
 
@@ -112,7 +115,10 @@ void MaxpoolLayer::computeDelta(RSSVectorMyType& prevDelta)
 					}
 	}
 
-	funcSelectShares(temp2, temp1, prevDelta, iw*ih*Din*B);
+	if (FUNCTION_TIME)
+		cout << "funcSelectShares: " << funcTime(funcSelectShares, temp2, temp1, prevDelta, iw*ih*Din*B) << endl;
+	else
+		funcSelectShares(temp2, temp1, prevDelta, iw*ih*Din*B);
 }
 
 void MaxpoolLayer::updateEquations(const RSSVectorMyType& prevActivations)

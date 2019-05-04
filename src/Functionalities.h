@@ -41,8 +41,8 @@ void funcDivision(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorM
 							size_t size);
 void funcBatchNorm(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyType &quotient, 
 							size_t batchSize, size_t B);
-void funcMaxpool(RSSVectorMyType &a, RSSVectorMyType &max, RSSVectorMyType &maxIndex, 
-					RSSVectorSmallType &maxPrime, size_t rows, size_t columns);
+void funcMaxpool(RSSVectorMyType &a, RSSVectorMyType &max, RSSVectorSmallType &maxPrime, 
+				size_t rows, size_t columns);
 void aggregateCommunication();
 
 

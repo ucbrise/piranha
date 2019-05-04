@@ -1017,56 +1017,20 @@ void funcSelectBitShares(const RSSVectorSmallType &a0, const RSSVectorSmallType 
 	assert(b.size() == rows && "b size incorrect");
 	assert(answer.size() == rows*columns && "answers size incorrect");
 	
-	// vector<smallType> reconst(size), x(size);
-	// funcReconstructBit(a0, reconst, size, "a00000", true);
-
 	RSSVectorSmallType bRepeated(size), tempXOR(size);
 	for (int i = 0; i < rows; ++i)
 		for (size_t j = 0; j < columns; ++j)
 			bRepeated[i*columns + j] = b[i];
 
-	// funcReconstructBit(bRepeated, reconst, size, "bReppp", true);
-	// funcReconstructBit(a0, reconst, size, "a00000", true);
-	// cout << (int)a0[0].first << " " << (int)a0[0].second << " " << (int)a0[1].first << " " << 
-	// (int)a0[1].second << endl;
-
 	for (size_t i = 0; i < rows; ++i)
 		for (size_t j = 0; j < columns; ++j)
-		{
 			tempXOR[i*columns+j] = a0[i*columns+j] ^
 								   a1[loopCounter*rows*columns+i*columns+j];
-			// tempXOR[i*columns+j].first = (bool)a0[i*columns+j].first ^
-			// 					   (bool)a1[loopCounter*rows*columns+i*columns+j].first;								   
-			// tempXOR[i*columns+j].second = (bool)a0[i*columns+j].second ^
-			// 					   (bool)a1[loopCounter*rows*columns+i*columns+j].second;					   
-		}
 
-	// funcReconstructBit(a0, reconst, size, "a010101", true);
 	funcDotProductBits(tempXOR, bRepeated, answer, size);
-	// funcReconstructBit(a0, x, size, "a011111", true);
-
-	// funcReconstructBit(tempXOR, reconst, size, "tempXOR", true);
-	// funcReconstructBit(answer, reconst, size, "answer", true);
-	// funcReconstructBit(a0, reconst, size, "a00000", true);
-
-	// cout << (int)a0[0].first << " " << (int)a0[0].second << " " << (int)a0[1].first << " " << 
-	// (int)a0[1].second << endl;
-
-	// for (int i = 0; i < rows; ++i)
-	// 	for (size_t j = 0; j < columns; ++j)
-	// 	{
-	// 		RSSSmallType temp = answer[i*columns + j];
-	// 		answer[i*columns + j] = temp ^ a0[i*columns + j];
-	// 	}
 
 	for (int i = 0; i < size; ++i)
-	{
 		answer[i] = answer[i] ^ a0[i];
-		// answer[i].first = answer[i].first ^ a0[i].first;
-		// answer[i].second = answer[i].second ^ a0[i].second;
-	}
-	// funcReconstructBit(a0, reconst, size, "a00000", true);
-	// funcReconstructBit(answer, reconst, size, "answer", true);
 }
 
 
@@ -1221,24 +1185,17 @@ void funcBatchNorm(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVector
 
 
 //Chunk wise maximum of a vector of size rows*columns and maximum is caclulated of every 
-//column number of elements. max, maxIndex are vectors of size rows. 
-//maxIndex contains the index of the maximum value.
-void funcMaxpool(RSSVectorMyType &a, RSSVectorMyType &max, RSSVectorMyType &maxIndex, 
-					RSSVectorSmallType &maxPrime, size_t rows, size_t columns)
+//column number of elements. max is a vector of size rows, maxPrime, of rows*columns*columns; 
+void funcMaxpool(RSSVectorMyType &a, RSSVectorMyType &max, RSSVectorSmallType &maxPrime,
+						 size_t rows, size_t columns)
 {
 	log_print("funcMaxpool");
 	assert(columns < 256 && "Pooling size has to be smaller than 8-bits");
 
 	size_t size = rows*columns;
-	RSSVectorMyType diff(rows), diffIndex(rows), indexShares(size);
-	RSSVectorSmallType rp(rows), dmpIndexShares(columns*size);
-	vector<myType> temp(size);
+	RSSVectorMyType diff(rows);
+	RSSVectorSmallType rp(rows), dmpIndexShares(columns*size), temp(size);
 	vector<smallType> dmpTemp(columns*size, 0);
-
-	for (size_t i = 0; i < rows; ++i)
-		for (size_t j = 0; j < columns; ++j)
-			temp[i*columns + j] = j;
-	funcGetShares(indexShares, temp);
 
 	for (int loopCounter = 0; loopCounter < columns; ++loopCounter)
 		for (size_t i = 0; i < rows; ++i)
@@ -1248,34 +1205,22 @@ void funcMaxpool(RSSVectorMyType &a, RSSVectorMyType &max, RSSVectorMyType &maxI
 	for (size_t i = 0; i < size; ++i)
 		maxPrime[i] = dmpIndexShares[i];
 
-	// funcReconstructBit(dmpIndexShares, dmpTemp, size*columns, "dmpIndexShares", true);
-	// cout << (int)maxPrime[0].first << " " << (int)maxPrime[0].second << endl;
-
 	for (size_t i = 0; i < rows; ++i)
-	{
 		max[i] = a[i*columns];
-		maxIndex[i] = std::make_pair(0,0);
-	}
 
 	for (size_t i = 1; i < columns; ++i)
 	{
 		for (size_t	j = 0; j < rows; ++j)
 			diff[j] = max[j] - a[j*columns + i];
 
-		for (size_t	j = 0; j < rows; ++j)
-			diffIndex[j] = maxIndex[j] - indexShares[j*columns + i];
-
 		funcRELU(diff, rp, max, rows);
-		funcSelectShares(diffIndex, rp, maxIndex, rows);
-		// funcReconstructBit(maxPrime, dmpTemp, size, "maxPrime", true);
-		// funcReconstructBit(rp, dmpTemp, rows, "rp", true);
-		funcSelectBitShares(maxPrime, dmpIndexShares, rp, maxPrime, rows, columns, i);
+		funcSelectBitShares(maxPrime, dmpIndexShares, rp, temp, rows, columns, i);
+
+		for (size_t i = 0; i < size; ++i)
+			maxPrime[i] = temp[i];
 
 		for (size_t	j = 0; j < rows; ++j)
 			max[j] = max[j] + a[j*columns + i];
-
-		for (size_t	j = 0; j < rows; ++j)
-			maxIndex[j] = maxIndex[j] + indexShares[j*columns + i];
 	}
 }
 
@@ -1556,16 +1501,15 @@ void debugMaxpool()
 						   1,5,3,
 						   5,1,6,
 						   6,3,9}, reconst(size);
-	RSSVectorMyType a(size), max(rows), maxIndex(rows);
+	RSSVectorMyType a(size), max(rows);
 	RSSVectorSmallType maxPrime(rows*columns);
 	vector<smallType> reconst_maxPrime(maxPrime.size());
 	funcGetShares(a, data);
-	funcMaxpool(a, max, maxIndex, maxPrime, rows, columns);
+	funcMaxpool(a, max, maxPrime, rows, columns);
 
 #if (!LOG_DEBUG)
 	funcReconstruct(a, reconst, size, "a", true);
 	funcReconstruct(max, reconst, rows, "val", true);
-	funcReconstruct(maxIndex, reconst, rows, "Idx", true);
 	funcReconstructBit(maxPrime, reconst_maxPrime, rows*columns, "maxP", true);
 #endif	
 }
@@ -1654,7 +1598,6 @@ void testMaxpool(size_t ih, size_t iw, size_t Din, size_t f, size_t S, size_t B,
 	RSSVectorMyType b(ow*oh*Din*B);
 	RSSVectorSmallType c(iw*ih*Din*B);
 	RSSVectorMyType temp1(ow*oh*Din*B*f*f);
-	RSSVectorMyType temp2(ow*oh*Din*B);
 	size_t sizeBeta = iw;
 	size_t sizeD 	= sizeBeta*ih;
 	size_t sizeB 	= sizeD*Din;
@@ -1674,6 +1617,6 @@ void testMaxpool(size_t ih, size_t iw, size_t Din, size_t f, size_t S, size_t B,
 								a[b*sizeB + r*sizeD + (beta + q)*sizeBeta + (alpha + p)];
 							}
 		//Pooling operation
-		funcMaxpool(temp1, b, temp2, c, ow*oh*Din*B, f*f);
+		funcMaxpool(temp1, b, c, ow*oh*Din*B, f*f);
 	}
 }

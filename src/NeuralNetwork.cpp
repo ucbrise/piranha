@@ -148,7 +148,7 @@ void NeuralNetwork::predict(RSSVectorMyType &maxIndex)
 	RSSVectorMyType max(rows);
 	RSSVectorSmallType maxPrime(rows*columns);
 
-	funcMaxpool(*(layers[NUM_LAYERS-1]->getActivation()), max, maxIndex, maxPrime, rows, columns);
+	funcMaxpool(*(layers[NUM_LAYERS-1]->getActivation()), max, maxPrime, rows, columns);
 }
 
 void NeuralNetwork::getAccuracy(const RSSVectorMyType &maxIndex, vector<size_t> &counter)
@@ -157,11 +157,11 @@ void NeuralNetwork::getAccuracy(const RSSVectorMyType &maxIndex, vector<size_t> 
 
 	size_t rows = MINI_BATCH_SIZE;
 	size_t columns = LAST_LAYER_SIZE;
-	RSSVectorMyType max(rows), groundTruth(rows, make_pair(0,0));
+	RSSVectorMyType max(rows);
 	RSSVectorSmallType maxPrime(rows*columns);
 
-
-	funcMaxpool(outputData, max, groundTruth, maxPrime, rows, columns);
+	//Needed maxIndex here
+	funcMaxpool(outputData, max, maxPrime, rows, columns);
 
 	//Reconstruct things
 /******************************** TODO ****************************************/

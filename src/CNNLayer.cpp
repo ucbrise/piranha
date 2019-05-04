@@ -65,15 +65,25 @@ void CNNLayer::forward(const RSSVectorMyType& inputActivation)
 
 	//Reshape activations
 	RSSVectorMyType temp1((iw+2*P)*(ih+2*P)*Din*B, make_pair(0,0));
-	zeroPad(inputActivation, temp1, iw, ih, P, Din, B);
+	if (FUNCTION_TIME)
+		cout << "ZP: " << funcTime(zeroPad, inputActivation, temp1, iw, ih, P, Din, B) << endl;
+	else
+		zeroPad(inputActivation, temp1, iw, ih, P, Din, B);
 
 	//Reshape for convolution
 	RSSVectorMyType temp2((f*f*Din) * (ow * oh * B));
-	convToMult(temp1, temp2, (iw+2*P), (ih+2*P), f, Din, S, B);
+	if (FUNCTION_TIME)
+		cout << "convToMult: " << funcTime(convToMult, temp1, temp2, (iw+2*P), (ih+2*P), f, Din, S, B) << endl;
+	else
+		convToMult(temp1, temp2, (iw+2*P), (ih+2*P), f, Din, S, B);
 
 	//Perform the multiplication, transpose the actications.
 	RSSVectorMyType temp3(Dout * (ow*oh*B));
-	funcMatMul(weights, temp2, temp3, Dout, (f*f*Din), (ow*oh*B), 0, 1, FLOAT_PRECISION);
+	if (FUNCTION_TIME)
+		cout << "funcMatMul: " << funcTime(funcMatMul, weights, temp2, temp3, Dout, (f*f*Din), (ow*oh*B), 0, 1, FLOAT_PRECISION) << endl;
+	else
+		funcMatMul(weights, temp2, temp3, Dout, (f*f*Din), (ow*oh*B), 0, 1, FLOAT_PRECISION);
+
 
 	//Add biases and meta-transpose
 	size_t tempSize = ow*oh;
@@ -126,7 +136,10 @@ void CNNLayer::computeDelta(RSSVectorMyType& prevDelta)
 									(beta + P - y*S)*weightsSizeQ + (alpha + P - x*S)];
 							}
 
-	funcMatMul(temp, deltas, prevDelta, (iw*ih*Din), (ow*oh*Dout), B, 0, 1, FLOAT_PRECISION);
+	if (FUNCTION_TIME)
+		cout << "funcMatMul: " << funcTime(funcMatMul, temp, deltas, prevDelta, (iw*ih*Din), (ow*oh*Dout), B, 0, 1, FLOAT_PRECISION) << endl;
+	else
+		funcMatMul(temp, deltas, prevDelta, (iw*ih*Din), (ow*oh*Dout), B, 0, 1, FLOAT_PRECISION);
 }
 
 void CNNLayer::updateEquations(const RSSVectorMyType& prevActivations)

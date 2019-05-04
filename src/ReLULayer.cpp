@@ -28,7 +28,10 @@ void ReLULayer::forward(const RSSVectorMyType &inputActivation)
 	size_t columns = conf.inputDim;
 	size_t size = rows*columns;
 
-	funcRELU(inputActivation, reluPrime, activations, size);
+	if (FUNCTION_TIME)
+		cout << "funcRELU: " << funcTime(funcRELU, inputActivation, reluPrime, activations, size) << endl;
+	else
+		funcRELU(inputActivation, reluPrime, activations, size);
 }
 
 
@@ -41,7 +44,12 @@ void ReLULayer::computeDelta(RSSVectorMyType& prevDelta)
 	size_t columns = conf.inputDim;
 	size_t size = rows*columns;
 
-	funcSelectShares(deltas, reluPrime, prevDelta, size);
+	if (FUNCTION_TIME)
+		cout << "funcSelectShares: " << funcTime(funcSelectShares, deltas, reluPrime, prevDelta, size) << endl;
+	else
+		funcSelectShares(deltas, reluPrime, prevDelta, size);
+
+	
 }
 
 

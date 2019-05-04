@@ -178,13 +178,13 @@ void resume_communication()
 
 void end_communication(string str)
 {
-	cout << "------------------------------------" << endl;
+	cout << "----------------------------------------------" << endl;
 	cout << "Communication, " << str << ", P" << partyNum << ": " 
 		 << (float)commObject.getSent()/1000000 << "MB (sent) " 
 		 << (float)commObject.getRecv()/1000000 << "MB (recv)" << endl;
 	cout << "Rounds, " << str << ", P" << partyNum << ": " 
 		 << commObject.getRoundsSent() << "(sends) " 
 		 << commObject.getRoundsRecv() << "(recvs)" << endl; 
-	cout << "------------------------------------" << endl;	
+	cout << "----------------------------------------------" << endl;	
 	commObject.reset();
 }
