@@ -121,7 +121,7 @@ void loadData(string net, string dataset)
 	}
 	else if (dataset.compare("ImageNet") == 0)
 	{
-		LARGE_NETWORK = true;
+		LARGE_NETWORK = false;
 		//https://medium.com/@smallfishbigsea/a-walk-through-of-alexnet-6cbd137a5637
 		//https://medium.com/@RaghavPrabhu/cnn-architectures-lenet-alexnet-vgg-googlenet-and-resnet-7c81c017b848
 		//https://neurohive.io/en/popular-networks/vgg16/
@@ -412,7 +412,7 @@ void selectNetwork(string network, string dataset, NeuralNetConfig* config)
 			NUM_LAYERS = 19;
 			WITH_NORMALIZATION = false;
 			CNNConfig* l0 = new CNNConfig(56,56,3,64,7,1,3,MINI_BATCH_SIZE);
-			CNNConfig* l1 = new CNNConfig(56,56,3,64,5,1,2,MINI_BATCH_SIZE);
+			CNNConfig* l1 = new CNNConfig(56,56,64,64,5,1,2,MINI_BATCH_SIZE);
 			MaxpoolConfig* l2 = new MaxpoolConfig(56,56,64,2,2,MINI_BATCH_SIZE);
 			ReLUConfig* l3 = new ReLUConfig(28*28*64,MINI_BATCH_SIZE);		
 			BNConfig * l4 = new BNConfig(28*28*64,MINI_BATCH_SIZE);
