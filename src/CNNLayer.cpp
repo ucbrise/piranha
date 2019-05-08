@@ -121,11 +121,14 @@ void CNNLayer::computeDelta(RSSVectorMyType& prevDelta)
 	size_t weightsSizeR = weightsSizeQ*f;
 	size_t weightsSizeD = weightsSizeR*Din;
 
-	// RSSVectorMyType* temp = new RSSVectorMyType ((iw*ih*Din) * (ow*oh*Dout));
-	// funcMatMul(*temp, deltas, prevDelta, (iw*ih*Din), (ow*oh*Dout), B, 0, 1, FLOAT_PRECISION);
-	// delete temp;
-		
-	//Actual code
+
+	RSSVectorMyType temp1((iw*ih*Din) * (Dout), make_pair(0,0));
+	RSSVectorMyType temp2((Dout) * B, make_pair(0,0));
+	RSSVectorMyType temp3((iw*ih*Din) * B, make_pair(0,0));
+	for (int i = 0; i < (ow*oh/(2 * NO_CORES)); ++i)
+		funcMatMul(temp1, temp2, temp3, (iw*ih*Din), (Dout), B, 0, 0, FLOAT_PRECISION);
+	
+	//Actual code, need Dynamic memory allocation for temp.
 	// RSSVectorMyType temp((iw*ih*Din) * (ow*oh*Dout), make_pair(0,0));
 	// for (size_t r = 0; r < Din; ++r)
 	// 	for (size_t beta = 0; beta < ih; ++beta) 
