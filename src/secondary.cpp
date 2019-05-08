@@ -121,7 +121,7 @@ void loadData(string net, string dataset)
 	}
 	else if (dataset.compare("ImageNet") == 0)
 	{
-		LARGE_NETWORK = false;
+		LARGE_NETWORK = true;
 		//https://medium.com/@smallfishbigsea/a-walk-through-of-alexnet-6cbd137a5637
 		//https://medium.com/@RaghavPrabhu/cnn-architectures-lenet-alexnet-vgg-googlenet-and-resnet-7c81c017b848
 		//https://neurohive.io/en/popular-networks/vgg16/

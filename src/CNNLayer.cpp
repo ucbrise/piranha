@@ -3,6 +3,7 @@
 #include "Functionalities.h"
 using namespace std;
 
+extern bool LARGE_NETWORK;
 
 CNNLayer::CNNLayer(CNNConfig* conf, int _layerNum)
 :Layer(_layerNum),
@@ -119,27 +120,35 @@ void CNNLayer::computeDelta(RSSVectorMyType& prevDelta)
 	size_t weightsSizeQ = f;
 	size_t weightsSizeR = weightsSizeQ*f;
 	size_t weightsSizeD = weightsSizeR*Din;
-	RSSVectorMyType temp((iw*ih*Din) * (ow*oh*Dout), make_pair(0,0));
 
-	for (size_t r = 0; r < Din; ++r)
-		for (size_t beta = 0; beta < ih; ++beta) 
-			for (size_t alpha = 0; alpha < iw; ++alpha)
-				for (int d = 0; d < Dout; ++d)
-					for (int y = 0; y < oh; ++y)
-						for (int x = 0; x < ow; ++x)
-							if ((alpha + P - x*S) >= 0 and (alpha + P - x*S) < f and 
-								(beta + P - y*S) >= 0 and (beta + P - y*S) < f )
-							{
-								temp[r*sizeR + beta*sizeBeta + alpha*sizeAlpha +
-									d*sizeD + y*sizeY + x] = 
-								weights[d*weightsSizeD + r*weightsSizeR + 
-									(beta + P - y*S)*weightsSizeQ + (alpha + P - x*S)];
-							}
+	RSSVectorMyType temp((iw*ih*Din) * (ow*oh*Dout), make_pair(0,0));
 
 	if (FUNCTION_TIME)
 		cout << "funcMatMul: " << funcTime(funcMatMul, temp, deltas, prevDelta, (iw*ih*Din), (ow*oh*Dout), B, 0, 1, FLOAT_PRECISION) << endl;
 	else
 		funcMatMul(temp, deltas, prevDelta, (iw*ih*Din), (ow*oh*Dout), B, 0, 1, FLOAT_PRECISION);
+		
+	//Actual code
+	// RSSVectorMyType temp((iw*ih*Din) * (ow*oh*Dout), make_pair(0,0));
+	// for (size_t r = 0; r < Din; ++r)
+	// 	for (size_t beta = 0; beta < ih; ++beta) 
+	// 		for (size_t alpha = 0; alpha < iw; ++alpha)
+	// 			for (int d = 0; d < Dout; ++d)
+	// 				for (int y = 0; y < oh; ++y)
+	// 					for (int x = 0; x < ow; ++x)
+	// 						if ((alpha + P - x*S) >= 0 and (alpha + P - x*S) < f and 
+	// 							(beta + P - y*S) >= 0 and (beta + P - y*S) < f )
+	// 						{
+	// 							temp[r*sizeR + beta*sizeBeta + alpha*sizeAlpha +
+	// 								d*sizeD + y*sizeY + x] = 
+	// 							weights[d*weightsSizeD + r*weightsSizeR + 
+	// 								(beta + P - y*S)*weightsSizeQ + (alpha + P - x*S)];
+	// 						}
+
+	// if (FUNCTION_TIME)
+	// 	cout << "funcMatMul: " << funcTime(funcMatMul, temp, deltas, prevDelta, (iw*ih*Din), (ow*oh*Dout), B, 0, 1, FLOAT_PRECISION) << endl;
+	// else
+	// 	funcMatMul(temp, deltas, prevDelta, (iw*ih*Din), (ow*oh*Dout), B, 0, 1, FLOAT_PRECISION);
 }
 
 void CNNLayer::updateEquations(const RSSVectorMyType& prevActivations)
