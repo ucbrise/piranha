@@ -25,8 +25,8 @@ int main(int argc, char** argv)
 /****************************** SELECT NETWORK ******************************/ 
 	//Network {SecureML, Sarda, MiniONN, LeNet, AlexNet, and VGG16}
 	//Dataset {MNIST, CIFAR10, and ImageNet}
-	string network = "AlexNet";
-	string dataset = "ImageNet";
+	string network = "MiniONN";
+	string dataset = "MNIST";
 	selectNetwork(network, dataset, config);
 	config->checkNetwork();
 	NeuralNetwork* net = new NeuralNetwork(config);

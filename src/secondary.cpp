@@ -544,7 +544,6 @@ void selectNetwork(string network, string dataset, NeuralNetConfig* config)
 		}
 		else if (dataset.compare("ImageNet") == 0)
 		{
-			assert(false && "No VGG16 on ImageNet");
 			NUM_LAYERS = 37;
 			WITH_NORMALIZATION = false;
 			CNNConfig* l0 = new CNNConfig(64,64,3,64,3,1,1,MINI_BATCH_SIZE);

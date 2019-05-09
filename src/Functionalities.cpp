@@ -649,7 +649,7 @@ void parallelFirst(smallType* temp3, const RSSSmallType* beta, const myType* r,
 		for (size_t k = 0; k < BIT_SIZE; ++k)
 		{
 			index3 = index2*BIT_SIZE + k;
-			bit_r = (smallType)((r[index2] >> (63-k)) & 1);
+			bit_r = (smallType)((r[index2] >> (BIT_SIZE-1-k)) & 1);
 			diff = share_m[index3];
 					
 			if (bit_r == 1)
@@ -685,7 +685,7 @@ void parallelSecond(RSSSmallType* c, const smallType* temp3, const smallType* re
 				//Resume rest of the loop
 				c[index3] = a;	
 				tempM = share_m[index3];
-				bit_r = (smallType)((r[index2] >> (63-k)) & 1);
+				bit_r = (smallType)((r[index2] >> (BIT_SIZE-1-k)) & 1);
 
 				tempN = XORPublicModPrime(tempM, bit_r);
 				a = addModPrime(a, tempN);
@@ -713,7 +713,7 @@ void parallelSecond(RSSSmallType* c, const smallType* temp3, const smallType* re
 				//Resume rest of the loop
 				c[index3] = a;	
 				tempM = share_m[index3];
-				bit_r = (smallType)((r[index2] >> (63-k)) & 1);
+				bit_r = (smallType)((r[index2] >> (BIT_SIZE-1-k)) & 1);
 
 				tempN = XORPublicModPrime(tempM, bit_r);
 				a = addModPrime(a, tempN);
@@ -740,7 +740,7 @@ void parallelSecond(RSSSmallType* c, const smallType* temp3, const smallType* re
 				//Resume rest of the loop
 				c[index3] = a;	
 				tempM = share_m[index3];
-				bit_r = (smallType)((r[index2] >> (63-k)) & 1);
+				bit_r = (smallType)((r[index2] >> (BIT_SIZE-1-k)) & 1);
 
 				tempN = XORPublicModPrime(tempM, bit_r);
 				a = addModPrime(a, tempN);
@@ -829,7 +829,7 @@ void funcPrivateCompare(const RSSVectorSmallType &share_m, const vector<myType> 
 				index3 = index2*BIT_SIZE + k;
 				twoBetaMinusOne[index3] = twoBetaMinusOne[index2*BIT_SIZE];
 
-				bit_r = (smallType)((r[index2] >> (63-k)) & 1);
+				bit_r = (smallType)((r[index2] >> (BIT_SIZE-1-k)) & 1);
 				diff[index3] = share_m[index3];
 						
 				if (bit_r == 1)
@@ -849,7 +849,7 @@ void funcPrivateCompare(const RSSVectorSmallType &share_m, const vector<myType> 
 				c[index3] = a;
 				tempM = share_m[index3];
 
-				bit_r = (smallType)((r[index2] >> (63-k)) & 1);
+				bit_r = (smallType)((r[index2] >> (BIT_SIZE-1-k)) & 1);
 
 				tempN = XORPublicModPrime(tempM, bit_r);
 				a = addModPrime(a, tempN);

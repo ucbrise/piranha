@@ -121,7 +121,7 @@ void CNNLayer::computeDelta(RSSVectorMyType& prevDelta)
 	size_t weightsSizeR = weightsSizeQ*f;
 	size_t weightsSizeD = weightsSizeR*Din;
 
-
+	//This part introduces round dependence on NO_CORES
 	RSSVectorMyType temp1((iw*ih*Din) * (Dout), make_pair(0,0));
 	RSSVectorMyType temp2((Dout) * B, make_pair(0,0));
 	RSSVectorMyType temp3((iw*ih*Din) * B, make_pair(0,0));
