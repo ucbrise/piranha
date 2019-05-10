@@ -37,6 +37,7 @@ bool WITH_NORMALIZATION;
 bool LARGE_NETWORK;
 size_t TRAINING_DATA_SIZE;
 size_t TEST_DATA_SIZE;
+string SECURITY_TYPE;
 
 /******************* Main train and test functions *******************/
 void parseInputs(int argc, char* argv[])
@@ -263,8 +264,11 @@ void printNetwork(NeuralNetwork* net)
 }
 
 
-void selectNetwork(string network, string dataset, NeuralNetConfig* config)
+void selectNetwork(string network, string dataset, string security, NeuralNetConfig* config)
 {
+	assert(((security.compare("Semi-honest") == 0) or (security.compare("Malicious") == 0)) && 
+			"Only Semi-honest or Malicious security allowed");
+	SECURITY_TYPE = security;
 	loadData(network, dataset);
 
 	if (network.compare("SecureML") == 0)

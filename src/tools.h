@@ -265,13 +265,18 @@ std::pair<T,U> operator-(const std::pair<T,U> & l,const std::pair<T,U> & r) {
     return {l.first-r.first,l.second-r.second};
 }
 
-template <typename T,typename U>                                                   
-std::pair<T,U> operator^(const std::pair<T,U> & l,const std::pair<T,U> & r) {   
+template <typename T, typename U>                                                   
+std::pair<T,U> operator^(const std::pair<T,U> & l, const std::pair<T,U> & r) {   
     return {l.first ^ r.first, l.second ^ r.second};
 }
 
 template <typename T>                                                   
-std::pair<T, T> operator*(const myType a, const std::pair<T,T> & r) {   
+T operator*(const std::pair<T,T> & l, const std::pair<T,T> & r) {   
+    return {l.first * r.first + l.second * r.first + l.first * r.second};
+}
+
+template <typename T, typename U>                                                   
+std::pair<U, U> operator*(const T a, const std::pair<U,U> & r) {   
     return {a * r.first, a * r.second};
 }
 

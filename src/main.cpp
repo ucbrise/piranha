@@ -25,9 +25,11 @@ int main(int argc, char** argv)
 /****************************** SELECT NETWORK ******************************/ 
 	//Network {SecureML, Sarda, MiniONN, LeNet, AlexNet, and VGG16}
 	//Dataset {MNIST, CIFAR10, and ImageNet}
-	string network = "MiniONN";
-	string dataset = "MNIST";
-	selectNetwork(network, dataset, config);
+	//Security {Semi-honest or Malicious}
+	string network = "AlexNet";
+	string dataset = "CIFAR10";
+	string security = "Malicious";
+	selectNetwork(network, dataset, security, config);
 	config->checkNetwork();
 	NeuralNetwork* net = new NeuralNetwork(config);
 
@@ -44,7 +46,7 @@ int main(int argc, char** argv)
 	//Run unit tests in two modes: 
 	//	1. Debug {Mat-Mul, DotProd, PC, Wrap, ReLUPrime, ReLU, Division, SSBits, SS, and Maxpool}
 	//	2. Test {Mat-Mul1, Mat-Mul2, Mat-Mul3 (and similarly) Conv*, ReLU*, ReLUPrime*, and Maxpool*}
-	// runTest("Debug", "ReLUPrime", network);
+	// runTest("Debug", "Mat-Mul", network);
 	// runTest("Test", "Maxpool1", network);
 
 	//Run forward/backward for single layers
@@ -54,11 +56,11 @@ int main(int argc, char** argv)
 	// string what = "F";
 	// runOnly(net, l, what, network);
 
-	network += " train";
-	train(net, config);
+	// network += " train";
+	// train(net, config);
 
-	// network += " test";
-	// test(net);
+	network += " test";
+	test(net);
 
 	end_m(network);
 	cout << "----------------------------------------------" << endl;  	

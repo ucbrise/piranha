@@ -42,26 +42,7 @@ void Precompute::getSelectorBitShares(RSSVectorSmallType &c, RSSVectorMyType &m_
 		it = std::make_pair(0,0);
 }
 
-// void getRefreshShares(RSSVectorMyType &a, size_t size)
-// {
-// 	assert(a.size() == size && "size mismatch for refreshing shares");
-// 	for (int i = 0; i < size; ++i)
-// 	{
-// 		a[i].first = 0;
-// 		a[i].second = 0;
-// 	}
-// }
-
-// void getRefreshShares(RSSVectorSmallType &a, size_t size)
-// {
-// 	assert(a.size() == size && "size mismatch for refreshing shares");
-// 	for (int i = 0; i < size; ++i)
-// 	{
-// 		a[i].first = 0;
-// 		a[i].second = 0;
-// 	}
-// }
-
+//Shares of random r, shares of bits of that, and shares of wrap3 of that.
 void Precompute::getShareConvertObjects(RSSVectorMyType &r, RSSVectorSmallType &shares_r, 
 										RSSVectorSmallType &alpha, size_t size)
 {
@@ -73,5 +54,54 @@ void Precompute::getShareConvertObjects(RSSVectorMyType &r, RSSVectorSmallType &
 		it = std::make_pair(0,0);
 
 	for(auto &it : alpha)
+		it = std::make_pair(0,0);
+}
+
+
+//Triplet verification myType
+void Precompute::getTriplets(RSSVectorMyType &a, RSSVectorMyType &b, RSSVectorMyType &c, 
+						size_t rows, size_t common_dim, size_t columns)
+{
+	assert(((a.size() == rows*common_dim) 
+		and (b.size() == common_dim*columns) 
+		and (c.size() == rows*columns)) && "getTriplet size mismatch");
+	
+	for(auto &it : a)
+		it = std::make_pair(0,0);
+
+	for(auto &it : b)
+		it = std::make_pair(0,0);
+
+	for(auto &it : c)
+		it = std::make_pair(0,0);
+}
+
+//Triplet verification myType
+void Precompute::getTriplets(RSSVectorMyType &a, RSSVectorMyType &b, RSSVectorMyType &c, size_t size)
+{
+	assert(((a.size() == size) and (b.size() == size) and (c.size() == size)) && "getTriplet size mismatch");
+	
+	for(auto &it : a)
+		it = std::make_pair(0,0);
+
+	for(auto &it : b)
+		it = std::make_pair(0,0);
+
+	for(auto &it : c)
+		it = std::make_pair(0,0);
+}
+
+//Triplet verification smallType
+void Precompute::getTriplets(RSSVectorSmallType &a, RSSVectorSmallType &b, RSSVectorSmallType &c, size_t size)
+{
+	assert(((a.size() == size) and (b.size() == size) and (c.size() == size)) && "getTriplet size mismatch");
+	
+	for(auto &it : a)
+		it = std::make_pair(0,0);
+
+	for(auto &it : b)
+		it = std::make_pair(0,0);
+
+	for(auto &it : c)
 		it = std::make_pair(0,0);
 }

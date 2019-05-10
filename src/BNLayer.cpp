@@ -109,7 +109,7 @@ void BNLayer::computeDelta(RSSVectorMyType& prevDelta)
 	RSSVectorMyType temp1(B*m);
 	for (int i = 0; i < B; ++i)
 		for (int j = 0; j < m; ++j)
-			temp1[i*m+j] = m * dxhat[i*m+j];
+			temp1[i*m+j] = ((myType)m) * dxhat[i*m+j];
 
 	//Second term	
 	RSSVectorMyType temp2(B*m, make_pair(0,0));
@@ -140,7 +140,7 @@ void BNLayer::computeDelta(RSSVectorMyType& prevDelta)
 
 	RSSVectorMyType temp4(B);
 	for (int i = 0; i < B; ++i)
-		temp4[i] = m*sigma[i];
+		temp4[i] = ((myType)m) * sigma[i];
 
 	funcBatchNorm(temp1, temp4, prevDelta, m, B);
 }
