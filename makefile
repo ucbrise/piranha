@@ -11,10 +11,12 @@ FLAGS := -O3 -w -std=c++11 -pthread -msse4.1 -maes -msse2 -mpclmul -fpermissive 
 LIBS := -lcrypto -lssl
 OBJ_INCLUDES := -I 'lib_eigen/' -I 'util/Miracl/' -I 'util/'
 BMR_INCLUDES := $($(OBJ_INCLUDES), -L./)
-############################################################################
-RUN_TYPE := localhost 					# RUN_TYPE {localhost, LAN or WAN} 
-############################################################################
-
+#########################################################################################
+RUN_TYPE := localhost # RUN_TYPE {localhost, LAN or WAN} 
+NETWORK := SecureML # NETWORK {SecureML, Sarda, MiniONN, LeNet, AlexNet, and VGG16}
+DATASET	:= MNIST # Dataset {MNIST, CIFAR10, and ImageNet}
+SECURITY:= Semi-honest # Security {Semi-honest or Malicious} 
+#########################################################################################
 
 
 all: BMRPassive.out
@@ -26,6 +28,7 @@ BMRPassive.out: $(OBJ_FILES)
 clean:
 	rm -rf BMRPassive.out
 	rm -rf src/*.o util/*.o
+
 
 ################################# Remote runs ##########################################
 terminal: BMRPassive.out
@@ -45,4 +48,9 @@ valg: BMRPassive.out
 	./BMRPassive.out 1 files/IP_$(RUN_TYPE) files/keyB files/keyBC files/keyAB >/dev/null &
 	valgrind --tool=memcheck --leak-check=full --track-origins=yes --dsymutil=yes ./BMRPassive.out 0 files/IP_$(RUN_TYPE) files/keyA files/keyAB files/keyAC
 
+command: BMRPassive.out
+	./BMRPassive.out 2 files/IP_$(RUN_TYPE) files/keyC files/keyAC files/keyBC $(NETWORK) $(DATASET) $(SECURITY) >/dev/null &
+	./BMRPassive.out 1 files/IP_$(RUN_TYPE) files/keyB files/keyBC files/keyAB $(NETWORK) $(DATASET) $(SECURITY) >/dev/null &
+	./BMRPassive.out 0 files/IP_$(RUN_TYPE) files/keyA files/keyAB files/keyAC $(NETWORK) $(DATASET) $(SECURITY) 
+	@echo "Execution completed"
 #########################################################################################
