@@ -31,7 +31,7 @@ int main(int argc, char** argv)
 	{network = argv[6]; dataset = argv[7]; security = argv[8];}
 	else
 	{
-		network = "VGG16";
+		network = "AlexNet";
 		dataset = "ImageNet";
 		security = "Semi-honest";
 	}
@@ -62,17 +62,17 @@ int main(int argc, char** argv)
 	// string what = "F";
 	// runOnly(net, l, what, network);
 
-	network += " train";
-	train(net, config);
+	// network += " train";
+	// train(net, config);
 
-	// network += " test";
-	// test(net);
+	network += " test";
+	test(net);
 
 	end_m(network);
 	cout << "----------------------------------------------" << endl;  	
 	cout << "Run details: " << NUM_OF_PARTIES << "PC (P" << partyNum 
 		 << "), " << NUM_ITERATIONS << " iterations, batch size " << MINI_BATCH_SIZE << endl 
-		 << "Running " << network << " on " << dataset << " dataset" << endl;
+		 << "Running " << security << " " << network << " on " << dataset << " dataset" << endl;
 	cout << "----------------------------------------------" << endl << endl;  
 
 	// printNetwork(net);
