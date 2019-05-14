@@ -62,11 +62,11 @@ int main(int argc, char** argv)
 	// string what = "F";
 	// runOnly(net, l, what, network);
 
-	network += " train";
-	train(net, config);
+	// network += " train";
+	// train(net, config);
 
-	// network += " test";
-	// test(net);
+	network += " test";
+	test(net);
 
 	end_m(network);
 	cout << "----------------------------------------------" << endl;  	

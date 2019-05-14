@@ -12,7 +12,7 @@ IP4=35.166.8.86			#Ohio
 
 
 #########################################################################################
-NETWORK=SecureML		# NETWORK {SecureML, Sarda, MiniONN, LeNet, AlexNet, and VGG16}
+NETWORK=Sarda		# NETWORK {SecureML, Sarda, MiniONN, LeNet, AlexNet, and VGG16}
 DATASET=MNIST 			# DATASET {MNIST, CIFAR10, and ImageNet}
 SECURITY=Semi-honest	# SECURITY {Semi-honest or Malicious} 
 RUN_TYPE=LAN 			# RUN_TYPE {LAN or WAN or localhost}
