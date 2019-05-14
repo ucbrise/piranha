@@ -31,8 +31,8 @@ int main(int argc, char** argv)
 	{network = argv[6]; dataset = argv[7]; security = argv[8];}
 	else
 	{
-		network = "SecureML";
-		dataset = "MNIST";
+		network = "VGG16";
+		dataset = "ImageNet";
 		security = "Semi-honest";
 	}
 	selectNetwork(network, dataset, security, config);
@@ -62,11 +62,11 @@ int main(int argc, char** argv)
 	// string what = "F";
 	// runOnly(net, l, what, network);
 
-	// network += " train";
-	// train(net, config);
+	network += " train";
+	train(net, config);
 
-	network += " test";
-	test(net);
+	// network += " test";
+	// test(net);
 
 	end_m(network);
 	cout << "----------------------------------------------" << endl;  	
