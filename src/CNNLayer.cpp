@@ -122,11 +122,11 @@ void CNNLayer::computeDelta(RSSVectorMyType& prevDelta)
 	size_t weightsSizeD = weightsSizeR*Din;
 
 	//This part introduces round dependence on NO_CORES
-	RSSVectorMyType temp1((iw*ih*Din) * (Dout), make_pair(0,0));
-	RSSVectorMyType temp2((Dout) * B, make_pair(0,0));
-	RSSVectorMyType temp3((iw*ih*Din) * B, make_pair(0,0));
-	for (int i = 0; i < (ow*oh/(2 * NO_CORES)); ++i)
-		funcMatMul(temp1, temp2, temp3, (iw*ih*Din), (Dout), B, 0, 0, FLOAT_PRECISION);
+	// RSSVectorMyType temp1((iw*ih*Din) * (Dout), make_pair(0,0));
+	// RSSVectorMyType temp2((Dout) * B, make_pair(0,0));
+	// RSSVectorMyType temp3((iw*ih*Din) * B, make_pair(0,0));
+	// for (int i = 0; i < (ow*oh/(2 * NO_CORES)); ++i)
+	// 	funcMatMul(temp1, temp2, temp3, (iw*ih*Din), (Dout), B, 0, 0, FLOAT_PRECISION);
 	
 	//Actual code, need Dynamic memory allocation for temp.
 	// RSSVectorMyType temp((iw*ih*Din) * (ow*oh*Dout), make_pair(0,0));
@@ -145,10 +145,84 @@ void CNNLayer::computeDelta(RSSVectorMyType& prevDelta)
 	// 								(beta + P - y*S)*weightsSizeQ + (alpha + P - x*S)];
 	// 						}
 
-	// if (FUNCTION_TIME)
-	// 	cout << "funcMatMul: " << funcTime(funcMatMul, temp, deltas, prevDelta, (iw*ih*Din), (ow*oh*Dout), B, 0, 1, FLOAT_PRECISION) << endl;
-	// else
-	// 	funcMatMul(temp, deltas, prevDelta, (iw*ih*Din), (ow*oh*Dout), B, 0, 1, FLOAT_PRECISION);
+	RSSVectorMyType temp1((f*f*Dout) * (iw*ih*B), make_pair(0,0));
+	{
+		size_t x, y;
+		size_t sizeDeltaBeta 	= iw;
+		size_t sizeDeltaB 		= sizeDeltaBeta*ih;
+		size_t sizeDeltaP 		= sizeDeltaB*B;
+		size_t sizeDeltaQ 		= sizeDeltaP*f;
+		size_t sizeDeltaD 		= sizeDeltaQ*f;
+
+		size_t sizeY 		= ow;
+		size_t sizeD 		= sizeY*oh;
+		size_t sizeB 		= sizeD*Dout;
+
+		for (int d = 0; d < Dout; ++d)
+			for (size_t q = 0; q < f; ++q)					
+				for (size_t p = 0; p < f; ++p) 
+					for (int b = 0; b < B; ++b)		
+						for (size_t beta = 0; beta < ih; ++beta) 
+							for (size_t alpha = 0; alpha < iw; ++alpha)
+								if ((alpha + P - p) % S == 0 and (beta + P - q) % S == 0)
+								{
+									x = (alpha + P - p)/S;
+									y = (beta + P - q)/S;
+									if (x >= 0 and x < ow and y >= 0 and y < oh)
+									{
+										temp1[d*sizeDeltaD + q*sizeDeltaQ + p*sizeDeltaP +
+											b*sizeDeltaB + beta*sizeDeltaBeta + alpha] = 
+										deltas[b*sizeB + d*sizeD + y*sizeY + x];
+									}
+								}
+	}
+
+	RSSVectorMyType temp2((Din) * (f*f*Dout), make_pair(0,0));
+	{
+		size_t sizeQ 		= f;
+		size_t sizeR 		= sizeQ*f;
+		size_t sizeD 		= sizeR*Din;
+
+		size_t sizeWeightsQ	= f;
+		size_t sizeWeightsD	= sizeWeightsQ*f;
+		size_t sizeWeightsR	= sizeWeightsD*Dout;
+
+		for (int d = 0; d < Dout; ++d)
+			for (size_t r = 0; r < Din; ++r)
+				for (size_t q = 0; q < f; ++q)					
+					for (size_t p = 0; p < f; ++p) 
+					{
+						temp2[r*sizeWeightsR + d*sizeWeightsD + q*sizeWeightsQ + p] = 
+						weights[d*sizeD + r*sizeR + q*sizeQ + p];
+					}
+	}
+
+
+	RSSVectorMyType temp3((Din) * (iw*ih*B), make_pair(0,0));
+
+	if (FUNCTION_TIME)
+		cout << "funcMatMul: " << funcTime(funcMatMul, temp2, temp1, temp3, Din, (f*f*Dout), (iw*ih*B), 0, 0, FLOAT_PRECISION) << endl;
+	else
+		funcMatMul(temp2, temp1, temp3, Din, (f*f*Dout), (iw*ih*B), 0, 0, FLOAT_PRECISION);
+
+	{
+		size_t sizeDeltaBeta 	= iw;
+		size_t sizeDeltaB 		= sizeDeltaBeta*ih;
+		size_t sizeDeltaR 		= sizeDeltaB*B;
+
+		size_t sizeBeta 		= iw;
+		size_t sizeR 			= sizeBeta*ih;
+		size_t sizeB 			= sizeR*Din;
+
+		for (int r = 0; r < Din; ++r)
+			for (int b = 0; b < B; ++b)		
+				for (size_t beta = 0; beta < ih; ++beta) 
+					for (size_t alpha = 0; alpha < iw; ++alpha)
+					{
+						prevDelta[b*sizeB + r*sizeR + beta*sizeBeta + alpha] = 
+						temp3[r*sizeDeltaR + b*sizeDeltaB + beta*sizeDeltaBeta + alpha];
+					}
+	}
 }
 
 void CNNLayer::updateEquations(const RSSVectorMyType& prevActivations)
