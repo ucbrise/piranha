@@ -157,7 +157,7 @@ void funcGetShares(RSSVectorSmallType &a, const vector<smallType> &data)
 
 void funcReconstructBit(const RSSVectorSmallType &a, vector<smallType> &b, size_t size, string str, bool print)
 {
-	log_print("Reconst: RSSSmallType, smallType");
+	log_print("Reconst: RSSSmallType (bits), smallType (bit)");
 
 	if (SECURITY_TYPE.compare("Semi-honest") == 0)
 	{
@@ -1457,12 +1457,46 @@ void funcRELU(const RSSVectorMyType &a, RSSVectorSmallType &temp, RSSVectorMyTyp
 }
 
 
+void funcPow(const RSSVectorMyType &b, vector<smallType> &alpha, size_t size)
+{
+	size_t ell = 5;
+	if (BIT_SIZE == 64)
+		ell = 6;
+
+	RSSVectorMyType x(size), d(size), temp(size);
+	copyVectors<RSSMyType>(b, x, size);
+
+	RSSVectorSmallType c(size);
+	for (int i = 0; i < size; ++i)
+		alpha[i] = 0;
+
+	vector<smallType> r_c(size);
+	for (int i = ell-1; i > 0; --i)
+	{
+		vector<myType> temp_1(size, (1 << ((1 << i) + alpha[0])));
+		funcGetShares(temp, temp_1);
+		subtractVectors<RSSMyType>(x, temp, d, size);
+		funcRELUPrime(d, c, size);
+		funcReconstructBit(c, r_c, size, "null", false);
+		if (r_c[0] == 1)
+		{
+			copyVectors<RSSMyType>(d, x, size);
+			for (int i = 0; i < size; ++i)
+				alpha[i] += (1 << i);
+		}
+	}
+}
+
+
 //All parties start with shares of a number in a and b and the quotient is in quotient.
 //alpha is the order of divisiors, 2^alpha < b < 2^{alpha+1}.
 void funcDivision(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyType &quotient, 
 							size_t size)
 {
 	log_print("funcDivision");
+
+	vector<smallType> alpha_temp(size);
+	funcPow(b, alpha_temp, size);
 
 	size_t alpha = 3;
 	size_t precision = alpha + FLOAT_PRECISION + 1;
@@ -1502,6 +1536,9 @@ void funcBatchNorm(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVector
 	assert(a.size() == batchSize*B && "funcBatchNorm a size incorrect");
 	assert(b.size() == B && "funcBatchNorm b size incorrect");
 	assert(quotient.size() == batchSize*B && "funcBatchNorm quotient size incorrect");
+
+	vector<smallType> alpha_temp(B);
+	funcPow(b, alpha_temp, B);
 
 	size_t alpha = 3;
 	size_t precision = alpha + FLOAT_PRECISION + 1;

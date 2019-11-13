@@ -8,14 +8,14 @@ IP2=54.214.106.239		#Oregon Anonymous
 IP3=34.223.225.30		#Oregon John
 
 #WAN->1,2,4
-IP4=18.223.237.196			#Ohio
+IP4=18.223.237.196		#Ohio
 
 
 #########################################################################################
-NETWORK=AlexNet		# NETWORK {SecureML, Sarda, MiniONN, LeNet, AlexNet, and VGG16}
-DATASET=ImageNet 			# DATASET {MNIST, CIFAR10, and ImageNet}
+NETWORK=SecureML		# NETWORK {SecureML, Sarda, MiniONN, LeNet, AlexNet, and VGG16}
+DATASET=MNIST 			# DATASET {MNIST, CIFAR10, and ImageNet}
 SECURITY=Semi-honest	# SECURITY {Semi-honest or Malicious} 
-RUN_TYPE=WAN 			# RUN_TYPE {LAN or WAN or localhost}
+RUN_TYPE=localhost 		# RUN_TYPE {LAN or WAN or localhost}
 PRINT_TO_FILE=false		# PRINT_TO_FILE {true or false}
 FILENAME=time.txt
 #########################################################################################

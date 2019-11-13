@@ -40,6 +40,7 @@ void funcSelectBitShares(const RSSVectorSmallType &a0, const RSSVectorSmallType 
 						 size_t rows, size_t columns, size_t loopCounter);
 void funcRELUPrime(const RSSVectorMyType &a, RSSVectorSmallType &b, size_t size);
 void funcRELU(const RSSVectorMyType &a, RSSVectorSmallType &temp, RSSVectorMyType &b, size_t size);
+void funcPow(const RSSVectorMyType &b, vector<smallType> &alpha, size_t size);
 void funcDivision(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyType &quotient, 
 							size_t size);
 void funcBatchNorm(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyType &quotient, 

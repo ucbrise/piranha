@@ -299,6 +299,13 @@ void subtractVectors(const vector<T> &a, const vector<T> &b, vector<T> &c, size_
 		c[i] = a[i] - b[i];
 }
 
+template<typename T>
+void copyVectors(const vector<T> &a, vector<T> &b, size_t size)
+{
+	for (size_t i = 0; i < size; ++i)
+		b[i] = a[i];
+}
+
 
 
 

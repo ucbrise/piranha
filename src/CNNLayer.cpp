@@ -111,40 +111,6 @@ void CNNLayer::computeDelta(RSSVectorMyType& prevDelta)
 	size_t ow 	= (((iw-f+2*P)/S)+1);
 	size_t oh	= (((ih-f+2*P)/S)+1);
 
-	size_t sizeY 		= ow;
-	size_t sizeD 		= sizeY*oh;
-	size_t sizeAlpha 	= sizeD*Dout;
-	size_t sizeBeta 	= sizeAlpha*iw;
-	size_t sizeR 		= sizeBeta*ih;
-
-	size_t weightsSizeQ = f;
-	size_t weightsSizeR = weightsSizeQ*f;
-	size_t weightsSizeD = weightsSizeR*Din;
-
-	//This part introduces round dependence on NO_CORES
-	// RSSVectorMyType temp1((iw*ih*Din) * (Dout), make_pair(0,0));
-	// RSSVectorMyType temp2((Dout) * B, make_pair(0,0));
-	// RSSVectorMyType temp3((iw*ih*Din) * B, make_pair(0,0));
-	// for (int i = 0; i < (ow*oh/(2 * NO_CORES)); ++i)
-	// 	funcMatMul(temp1, temp2, temp3, (iw*ih*Din), (Dout), B, 0, 0, FLOAT_PRECISION);
-	
-	//Actual code, need Dynamic memory allocation for temp.
-	// RSSVectorMyType temp((iw*ih*Din) * (ow*oh*Dout), make_pair(0,0));
-	// for (size_t r = 0; r < Din; ++r)
-	// 	for (size_t beta = 0; beta < ih; ++beta) 
-	// 		for (size_t alpha = 0; alpha < iw; ++alpha)
-	// 			for (int d = 0; d < Dout; ++d)
-	// 				for (int y = 0; y < oh; ++y)
-	// 					for (int x = 0; x < ow; ++x)
-	// 						if ((alpha + P - x*S) >= 0 and (alpha + P - x*S) < f and 
-	// 							(beta + P - y*S) >= 0 and (beta + P - y*S) < f )
-	// 						{
-	// 							temp[r*sizeR + beta*sizeBeta + alpha*sizeAlpha +
-	// 								d*sizeD + y*sizeY + x] = 
-	// 							weights[d*weightsSizeD + r*weightsSizeR + 
-	// 								(beta + P - y*S)*weightsSizeQ + (alpha + P - x*S)];
-	// 						}
-
 	RSSVectorMyType temp1((f*f*Dout) * (iw*ih*B), make_pair(0,0));
 	{
 		size_t x, y;
