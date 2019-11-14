@@ -3,19 +3,19 @@
 USERNAME=ubuntu
 
 #LAN->1,2,3
-IP1=54.202.58.29		#Oregon Sameer 
-IP2=54.214.106.239		#Oregon Anonymous
-IP3=34.223.225.30		#Oregon John
+IP1=18.237.39.209		#Oregon Sameer 
+IP2=34.221.35.166		#Oregon Anonymous
+IP3=34.219.97.126		#Oregon John
 
 #WAN->1,2,4
 IP4=18.223.237.196		#Ohio
 
 
 #########################################################################################
-NETWORK=SecureML		# NETWORK {SecureML, Sarda, MiniONN, LeNet, AlexNet, and VGG16}
-DATASET=MNIST 			# DATASET {MNIST, CIFAR10, and ImageNet}
+NETWORK=SecureML			# NETWORK {SecureML, Sarda, MiniONN, LeNet, AlexNet, and VGG16}
+DATASET=MNIST 		# DATASET {MNIST, CIFAR10, and ImageNet}
 SECURITY=Semi-honest	# SECURITY {Semi-honest or Malicious} 
-RUN_TYPE=localhost 		# RUN_TYPE {LAN or WAN or localhost}
+RUN_TYPE=LAN 			# RUN_TYPE {LAN or WAN or localhost}
 PRINT_TO_FILE=false		# PRINT_TO_FILE {true or false}
 FILENAME=time.txt
 #########################################################################################
@@ -28,9 +28,9 @@ fi
 
 
 if [[ $RUN_TYPE = LAN ]]; then
-	ssh -i ~/.ssh/ccs_oregon_snwagh.pem $USERNAME@$IP1 "pkill BMRPassive.out; echo clean completed; cd malicious-security; make; chmod +x BMRPassive.out; ./BMRPassive.out 0 files/IP_$RUN_TYPE files/keyA files/keyAB files/keyAC $NETWORK $DATASET $SECURITY 1>./time.txt; less time.txt" & 
-	ssh -i ~/.ssh/ccs_oregon_anonymous.pem $USERNAME@$IP2 "pkill BMRPassive.out; echo clean completed; cd malicious-security; make; chmod +x BMRPassive.out; ./BMRPassive.out 1 files/IP_$RUN_TYPE files/keyA files/keyAB files/keyAC $NETWORK $DATASET $SECURITY 1>./time.txt" & 
-	ssh -i ~/.ssh/ccs_oregon_john.pem $USERNAME@$IP3 "pkill BMRPassive.out; echo clean completed; cd malicious-security; make; chmod +x BMRPassive.out; ./BMRPassive.out 2 files/IP_$RUN_TYPE files/keyA files/keyAB files/keyAC $NETWORK $DATASET $SECURITY 1>./time.txt" & 
+	ssh -i ~/.ssh/falcon_sp_oregon.pem $USERNAME@$IP1 "pkill BMRPassive.out; echo clean completed; cd malicious-security; make; chmod +x BMRPassive.out; ./BMRPassive.out 0 files/IP_$RUN_TYPE files/keyA files/keyAB files/keyAC $NETWORK $DATASET $SECURITY 1>./time.txt; less time.txt" & 
+	ssh -i ~/.ssh/falcon_sp_oregon.pem $USERNAME@$IP2 "pkill BMRPassive.out; echo clean completed; cd malicious-security; make; chmod +x BMRPassive.out; ./BMRPassive.out 1 files/IP_$RUN_TYPE files/keyA files/keyAB files/keyAC $NETWORK $DATASET $SECURITY 1>./time.txt" & 
+	ssh -i ~/.ssh/falcon_sp_oregon.pem $USERNAME@$IP3 "pkill BMRPassive.out; echo clean completed; cd malicious-security; make; chmod +x BMRPassive.out; ./BMRPassive.out 2 files/IP_$RUN_TYPE files/keyA files/keyAB files/keyAC $NETWORK $DATASET $SECURITY 1>./time.txt" & 
 elif [[ $RUN_TYPE = WAN ]]; then
 	ssh -i ~/.ssh/ccs_oregon_snwagh.pem $USERNAME@$IP1 "pkill BMRPassive.out; echo clean completed; cd malicious-security; make; chmod +x BMRPassive.out; ./BMRPassive.out 0 files/IP_$RUN_TYPE files/keyA files/keyAB files/keyAC $NETWORK $DATASET $SECURITY 1>./time.txt; less time.txt" & 
 	ssh -i ~/.ssh/ccs_oregon_anonymous.pem $USERNAME@$IP2 "pkill BMRPassive.out; echo clean completed; cd malicious-security; make; chmod +x BMRPassive.out; ./BMRPassive.out 1 files/IP_$RUN_TYPE files/keyA files/keyAB files/keyAC $NETWORK $DATASET $SECURITY 1>./time.txt" & 
