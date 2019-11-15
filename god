@@ -12,8 +12,8 @@ IP4=18.223.237.196		#Ohio
 
 
 #########################################################################################
-NETWORK=SecureML			# NETWORK {SecureML, Sarda, MiniONN, LeNet, AlexNet, and VGG16}
-DATASET=MNIST 		# DATASET {MNIST, CIFAR10, and ImageNet}
+NETWORK=SecureML		# NETWORK {SecureML, Sarda, MiniONN, LeNet, AlexNet, and VGG16}
+DATASET=MNIST 			# DATASET {MNIST, CIFAR10, and ImageNet}
 SECURITY=Semi-honest	# SECURITY {Semi-honest or Malicious} 
 RUN_TYPE=LAN 			# RUN_TYPE {LAN or WAN or localhost}
 PRINT_TO_FILE=false		# PRINT_TO_FILE {true or false}
@@ -53,6 +53,8 @@ fi
 
 ########################################## SET-UP COMMANDS ##########################################
 #sudo apt-get update; sudo apt-get install g++; sudo apt-get install libssl-dev; sudo apt install make; sudo apt-get install iperf3 
-#git clone https://github.com/snwagh/malicious-security.git
+#git clone https://github.com/snwagh/malicious-security.git; cd malicious-security; git config credential.helper cache
 
-
+# ssh -i ~/.ssh/falcon_sp_oregon.pem ubuntu@18.237.39.209
+# ssh -i ~/.ssh/falcon_sp_oregon.pem ubuntu@34.221.35.166
+# ssh -i ~/.ssh/falcon_sp_oregon.pem ubuntu@34.219.97.126
