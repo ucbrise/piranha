@@ -14,9 +14,9 @@ IP5=18.191.15.61		#Ohio
 
 #########################################################################################
 NETWORK=AlexNet # NETWORK {SecureML, Sarda, MiniONN, LeNet, AlexNet, and VGG16}
-DATASET=ImageNet # DATASET {MNIST, CIFAR10, and ImageNet}
-SECURITY=Malicious # SECURITY {Semi-honest or Malicious} 
-RUN_TYPE=LAN 			# RUN_TYPE {LAN or WAN or localhost}
+DATASET=CIFAR10 # DATASET {MNIST, CIFAR10, and ImageNet}
+SECURITY=Semi-honest # SECURITY {Semi-honest or Malicious} 
+RUN_TYPE=localhost # RUN_TYPE {LAN or WAN or localhost}
 PRINT_TO_FILE=false		# PRINT_TO_FILE {true or false}
 FILENAME=time.txt
 #########################################################################################

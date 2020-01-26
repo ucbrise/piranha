@@ -31,8 +31,8 @@ int main(int argc, char** argv)
 	{network = argv[6]; dataset = argv[7]; security = argv[8];}
 	else
 	{
-		network = "AlexNet";
-		dataset = "ImageNet";
+		network = "SecureML";
+		dataset = "MNIST";
 		security = "Semi-honest";
 	}
 	selectNetwork(network, dataset, security, config);
@@ -51,19 +51,19 @@ int main(int argc, char** argv)
 	start_m();
 	//Run unit tests in two modes: 
 	//	1. Debug {Mat-Mul, DotProd, PC, Wrap, ReLUPrime, ReLU, Division, SSBits, SS, and Maxpool}
-	//	2. Test {Mat-Mul1, Mat-Mul2, Mat-Mul3 (and similarly) Conv*, ReLU*, ReLUPrime*, and Maxpool*}
+	//	2. Test {Mat-Mul1, Mat-Mul2, Mat-Mul3 (and similarly) Conv*, ReLU*, ReLUPrime*, and Maxpool*} where * = {1,2,3}
 	// runTest("Debug", "PC", network);
-	// runTest("Test", "Maxpool1", network);
+	runTest("Test", "ReLUPrime1", network);
 
-	//Run forward/backward for single layers
+	// Run forward/backward for single layers
 	//  1. what {F, D, U}
-	//	2. l {0,1,....NUM_LAYERS-1}
-	// size_t l = 1;
+	// 	2. l {0,1,....NUM_LAYERS-1}
+	// size_t l = 0;
 	// string what = "F";
 	// runOnly(net, l, what, network);
 
-	network += " train";
-	train(net, config);
+	// network += " train";
+	// train(net, config);
 
 	// network += " test";
 	// test(net);
