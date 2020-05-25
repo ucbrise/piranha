@@ -31,8 +31,8 @@ int main(int argc, char** argv)
 	{network = argv[6]; dataset = argv[7]; security = argv[8];}
 	else
 	{
-		network = "SecureML";
-		dataset = "MNIST";
+		network = "AlexNet";
+		dataset = "ImageNet";
 		security = "Semi-honest";
 	}
 	selectNetwork(network, dataset, security, config);
@@ -53,7 +53,7 @@ int main(int argc, char** argv)
 	//	1. Debug {Mat-Mul, DotProd, PC, Wrap, ReLUPrime, ReLU, Division, SSBits, SS, and Maxpool}
 	//	2. Test {Mat-Mul1, Mat-Mul2, Mat-Mul3 (and similarly) Conv*, ReLU*, ReLUPrime*, and Maxpool*} where * = {1,2,3}
 	// runTest("Debug", "PC", network);
-	runTest("Test", "ReLUPrime1", network);
+	// runTest("Test", "ReLUPrime1", network);
 
 	// Run forward/backward for single layers
 	//  1. what {F, D, U}
@@ -65,8 +65,8 @@ int main(int argc, char** argv)
 	// network += " train";
 	// train(net, config);
 
-	// network += " test";
-	// test(net);
+	network += " test";
+	test(net);
 
 	end_m(network);
 	cout << "----------------------------------------------" << endl;  	

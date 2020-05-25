@@ -13,7 +13,7 @@ OBJ_INCLUDES := -I 'lib_eigen/' -I 'util/Miracl/' -I 'util/'
 BMR_INCLUDES := $($(OBJ_INCLUDES), -L./)
 #########################################################################################
 RUN_TYPE := localhost # RUN_TYPE {localhost, LAN or WAN} 
-NETWORK := SecureML # NETWORK {SecureML, Sarda, MiniONN, LeNet, AlexNet, and VGG16}
+NETWORK := MiniONN # NETWORK {SecureML, Sarda, MiniONN, LeNet, AlexNet, and VGG16}
 DATASET	:= MNIST # Dataset {MNIST, CIFAR10, and ImageNet}
 SECURITY:= Semi-honest # Security {Semi-honest or Malicious} 
 #########################################################################################

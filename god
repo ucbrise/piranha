@@ -3,13 +3,13 @@
 USERNAME=ubuntu
 
 #LAN->1,2,3
-IP1=18.237.39.209		#Oregon Sameer 
-IP2=34.221.35.166		#Oregon Anonymous
-IP3=34.219.97.126		#Oregon John
+IP1=54.189.9.223		#Oregon Sameer 
+IP2=18.236.118.29		#Oregon Sameer
+IP3=54.202.116.205		#Oregon Sameer
 
-#WAN->1,2,4
-IP4=54.193.66.249		#Cali
-IP5=18.191.15.61		#Ohio
+#WAN->1,4,5
+IP4=54.202.116.205		#Oregon
+IP5=3.22.241.177		#Ohio
 
 
 #########################################################################################
@@ -34,7 +34,7 @@ if [[ $RUN_TYPE = LAN ]]; then
 	ssh -i ~/.ssh/falcon_sp_oregon.pem $USERNAME@$IP3 "pkill BMRPassive.out; echo clean completed; cd malicious-security; make; chmod +x BMRPassive.out; ./BMRPassive.out 2 files/IP_$RUN_TYPE files/keyA files/keyAB files/keyAC $NETWORK $DATASET $SECURITY 1>./time.txt" & 
 elif [[ $RUN_TYPE = WAN ]]; then
 	ssh -i ~/.ssh/falcon_sp_oregon.pem $USERNAME@$IP1 "pkill BMRPassive.out; echo clean completed; cd malicious-security; make; chmod +x BMRPassive.out; ./BMRPassive.out 0 files/IP_$RUN_TYPE files/keyA files/keyAB files/keyAC $NETWORK $DATASET $SECURITY 1>./time.txt; less time.txt" & 
-	ssh -i ~/.ssh/falcon_sp_cali.pem $USERNAME@$IP4 "pkill BMRPassive.out; echo clean completed; cd malicious-security; make; chmod +x BMRPassive.out; ./BMRPassive.out 1 files/IP_$RUN_TYPE files/keyA files/keyAB files/keyAC $NETWORK $DATASET $SECURITY 1>./time.txt" & 
+	ssh -i ~/.ssh/falcon_sp_oregon.pem $USERNAME@$IP4 "pkill BMRPassive.out; echo clean completed; cd malicious-security; make; chmod +x BMRPassive.out; ./BMRPassive.out 1 files/IP_$RUN_TYPE files/keyA files/keyAB files/keyAC $NETWORK $DATASET $SECURITY 1>./time.txt" & 
 	ssh -i ~/.ssh/falcon_sp_ohio.pem $USERNAME@$IP5 "pkill BMRPassive.out; echo clean completed; cd malicious-security; make; chmod +x BMRPassive.out; ./BMRPassive.out 2 files/IP_$RUN_TYPE files/keyA files/keyAB files/keyAC $NETWORK $DATASET $SECURITY 1>./time.txt" & 
 elif [[ $RUN_TYPE = localhost ]]; then
 	make
