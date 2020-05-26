@@ -16,7 +16,7 @@ IP5=3.22.241.177		#Ohio
 NETWORK=VGG16 # NETWORK {SecureML, Sarda, MiniONN, LeNet, AlexNet, and VGG16}
 DATASET=ImageNet # DATASET {MNIST, CIFAR10, and ImageNet}
 SECURITY=Semi-honest # SECURITY {Semi-honest or Malicious} 
-RUN_TYPE=LAN # RUN_TYPE {LAN or WAN or localhost}
+RUN_TYPE=WAN # RUN_TYPE {LAN or WAN or localhost}
 PRINT_TO_FILE=false		# PRINT_TO_FILE {true or false}
 FILENAME=time.txt
 #########################################################################################
