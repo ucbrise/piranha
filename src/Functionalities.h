@@ -58,6 +58,7 @@ void debugWrap();
 void debugReLUPrime();
 void debugReLU();
 void debugDivision();
+void debugBN();
 void debugSSBits();
 void debugSS();
 void debugMaxpool();

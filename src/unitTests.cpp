@@ -41,6 +41,11 @@ void runTest(string str, string whichTest, string &network)
 			network = "Debug Division";
 			debugDivision();
 		}
+		else if (whichTest.compare("BN") == 0)
+		{
+			network = "Debug BN";
+			debugBN();
+		}		
 		else if (whichTest.compare("SSBits") == 0)
 		{
 			network = "Debug SS Bits";

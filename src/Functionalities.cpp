@@ -1495,10 +1495,11 @@ void funcDivision(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorM
 {
 	log_print("funcDivision");
 
+	//TODO incorporate funcPow
 	vector<smallType> alpha_temp(size);
 	funcPow(b, alpha_temp, size);
 
-	size_t alpha = 3;
+	size_t alpha = 5;
 	size_t precision = alpha + FLOAT_PRECISION + 1;
 	const myType constTwoPointNine = ((myType)(2.9142 * (1 << precision)));
 	const myType constOne = ((myType)(1 * (1 << precision)));
@@ -1540,7 +1541,7 @@ void funcBatchNorm(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVector
 	vector<smallType> alpha_temp(B);
 	funcPow(b, alpha_temp, B);
 
-	size_t alpha = 3;
+	size_t alpha = 5;
 	size_t precision = alpha + FLOAT_PRECISION + 1;
 	const myType constTwoPointNine = ((myType)(2.9142 * (1 << precision)));
 	const myType constOne = ((myType)(1 * (1 << precision)));
@@ -1809,7 +1810,7 @@ void debugReLU()
 
 void debugDivision()
 {
-	vector<myType> data_a = {1<<13}, data_b = {4<<13};
+	vector<myType> data_a = {1<<5}, data_b = {4<<5};
 	size_t size = data_a.size();
 	RSSVectorMyType a(size), b(size), quotient(size);
 	vector<myType> reconst(size);
@@ -1817,6 +1818,26 @@ void debugDivision()
 	funcGetShares(a, data_a);
 	funcGetShares(b, data_b);
 	funcDivision(a, b, quotient, size);
+
+#if (!LOG_DEBUG)
+	funcReconstruct(a, reconst, size, "a", true);
+	funcReconstruct(b, reconst, size, "b", true);
+	funcReconstruct(quotient, reconst, size, "Quot", true);
+	print_myType(reconst[0], "Quotient[0]", "FLOAT");
+#endif	
+}
+
+
+void debugBN()
+{
+	vector<myType> data_a = {1<<5}, data_b = {4<<5};
+	size_t size = data_a.size();
+	RSSVectorMyType a(size), b(size), quotient(size);
+	vector<myType> reconst(size);
+
+	funcGetShares(a, data_a);
+	funcGetShares(b, data_b);
+	funcBatchNorm(a, b, quotient, 1, 1);
 
 #if (!LOG_DEBUG)
 	funcReconstruct(a, reconst, size, "a", true);
