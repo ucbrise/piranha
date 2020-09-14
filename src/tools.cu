@@ -3,11 +3,19 @@
 #include <stdint.h>
 #include <mutex> 
 #include <bitset>
+
+#ifdef USING_GPU 
+#include <cuda_runtime.h>
+#include "dev_array.h"
+#include "kernel.cuh"
+#endif
+
+#ifdef USING_EIGEN
 #include "EigenMatMul.h"
+using namespace Eigen;
+#endif
 
 using namespace std;
-using namespace Eigen;
-
 
 smallType additionModPrime[PRIME_NUMBER][PRIME_NUMBER];
 smallType subtractModPrime[PRIME_NUMBER][PRIME_NUMBER];
@@ -380,18 +388,23 @@ void matrixMultRSS(const RSSVectorMyType &a, const RSSVectorMyType &b, vector<my
 					size_t rows, size_t common_dim, size_t columns,
 				 	size_t transpose_a, size_t transpose_b)
 {
-#if (!USING_EIGEN)
-/********************************* Triple For Loop *********************************/
-	RSSVectorMyType triple_a(rows*common_dim), triple_b(common_dim*columns);
+#ifdef USING_GPU 
+/********************************* With GPU Matmul *********************************/	
+
+    vector<myType> a_first(rows*common_dim), a_second(rows*common_dim);
+    vector<myType> b_first(common_dim*columns), b_second(common_dim*columns);
 
     for (size_t i = 0; i < rows; ++i)
     {
         for (size_t j = 0; j < common_dim; ++j)
         {
-            if (transpose_a)
-                triple_a[i*common_dim + j] = a[j*rows + i];
-            else
-                triple_a[i*common_dim + j] = a[i*common_dim + j];
+            if (transpose_a) {
+                a_first[i*common_dim + j] = a[j*rows + i].first;
+                a_second[i*common_dim + j] = a[j*rows + i].second;
+            } else {
+                a_first[i*common_dim + j] = a[i*common_dim + j].first;
+                a_second[i*common_dim + j] = a[i*common_dim + j].second;
+            }
         }
     }
  
@@ -399,29 +412,47 @@ void matrixMultRSS(const RSSVectorMyType &a, const RSSVectorMyType &b, vector<my
     {
         for (size_t j = 0; j < columns; ++j)
         {
-            if (transpose_b)
-                triple_b[i*columns + j] = b[j*common_dim + i];  
-            else
-                triple_b[i*columns + j] = b[i*columns + j]; 
-        }
-    }
- 
-    for (int i = 0; i < rows; ++i)
-    {
-        for (int j = 0; j < columns; ++j)
-        {
-            temp[i*columns + j] = 0;
-            for (int k = 0; k < common_dim; ++k)
-            {
-                temp3[i*columns + j] += triple_a[i*common_dim + k].first * triple_b[k*columns + j].first +
-                                        triple_a[i*common_dim + k].first * triple_b[k*columns + j].second +
-                                        triple_a[i*common_dim + k].second * triple_b[k*columns + j].first;
+            if (transpose_b) {
+                b_first[i*columns + j] = b[j*common_dim + i].first;
+                b_second[i*columns + j] = b[j*common_dim + i].second;
+            } else {
+                a_first[i*columns + j] = b[i*columns + j].first;
+                a_second[i*columns + j] = b[i*columns + j].second;
             }
         }
     }
-/********************************* Triple For Loop *********************************/	
-#endif
-#if (USING_EIGEN)
+
+    dev_array<myType> d_A(rows*common_dim);
+    dev_array<myType> d_B(common_dim*columns);
+    dev_array<myType> d_C(rows*columns);
+
+    // Do the three matmuls
+    // 1 - first x first
+    d_A.set(&a_first[0], rows*common_dim);
+    d_B.set(&b_first[0], common_dim*columns);
+
+    matrixMultiplication<myType>(d_A.getData(), d_B.getData(), d_C.getData(), rows, common_dim, columns);
+    cudaDeviceSynchronize();
+
+    // 2 - first x second
+    d_A.set(&a_first[0], rows*common_dim);
+    d_B.set(&b_second[0], common_dim*columns);
+
+    matrixMultiplication<myType>(d_A.getData(), d_B.getData(), d_C.getData(), rows, common_dim, columns);
+    cudaDeviceSynchronize();
+
+    // 3 - second x first
+    d_A.set(&a_second[0], rows*common_dim);
+    d_B.set(&b_first[0], common_dim*columns);
+
+    matrixMultiplication<myType>(d_A.getData(), d_B.getData(), d_C.getData(), rows, common_dim, columns);
+    cudaDeviceSynchronize();
+
+    d_C.get(&temp3[0], rows*columns);
+    cudaDeviceSynchronize();
+
+/********************************* With GPU Matmul*********************************/	
+#elif defined USING_EIGEN
 /********************************* WITH EIGEN Mat-Mul *********************************/
 	eigenMatrix eigen_a(rows, common_dim), eigen_b(common_dim, columns), eigen_c(rows, columns);
 
@@ -465,6 +496,58 @@ void matrixMultRSS(const RSSVectorMyType &a, const RSSVectorMyType &b, vector<my
 		for (size_t j = 0; j < columns; ++j)
 				temp3[i*columns + j] = eigen_c.m_share[0](i,j);
 /********************************* WITH EIGEN Mat-Mul *********************************/
+#else
+/********************************* Triple For Loop *********************************/
+	RSSVectorMyType triple_a(rows*common_dim), triple_b(common_dim*columns);
+
+    for (size_t i = 0; i < rows; ++i)
+    {
+        for (size_t j = 0; j < common_dim; ++j)
+        {
+            if (transpose_a)
+                triple_a[i*common_dim + j] = a[j*rows + i];
+            else
+                triple_a[i*common_dim + j] = a[i*common_dim + j];
+        }
+    }
+ 
+    for (size_t i = 0; i < common_dim; ++i)
+    {
+        for (size_t j = 0; j < columns; ++j)
+        {
+            if (transpose_b)
+                triple_b[i*columns + j] = b[j*common_dim + i];  
+            else
+                triple_b[i*columns + j] = b[i*columns + j]; 
+        }
+    }
+
+    for (int k = 0; k < common_dim; k++) {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                temp3[i*columns + j] += triple_a[i*common_dim + k].first * triple_b[k*columns + j].first +
+                                        triple_a[i*common_dim + k].first * triple_b[k*columns + j].second +
+                                        triple_a[i*common_dim + k].second * triple_b[k*columns + j].first;
+            }
+        }
+    }
+ 
+    /*
+    for (int i = 0; i < rows; ++i)
+    {
+        for (int j = 0; j < columns; ++j)
+        {
+            temp[i*columns + j] = 0;
+            for (int k = 0; k < common_dim; ++k)
+            {
+                temp3[i*columns + j] += triple_a[i*common_dim + k].first * triple_b[k*columns + j].first +
+                                        triple_a[i*common_dim + k].first * triple_b[k*columns + j].second +
+                                        triple_a[i*common_dim + k].second * triple_b[k*columns + j].first;
+            }
+        }
+    }
+    */
+/********************************* Triple For Loop *********************************/	
 #endif
 }
 

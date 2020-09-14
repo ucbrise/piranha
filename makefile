@@ -1,34 +1,68 @@
+CONDA_BASE=/data/jlwatson/anaconda3
+BUILDDIR=build
 
+USING_GPU := ENABLED
+
+ifdef USING_GPU
+CXX=nvcc
+FLAGS := -Xcompiler="-O3,-w,-std=c++11,-pthread,-msse4.1,-maes,-msse2,-mpclmul,-fpermissive,-fpic,-DUSING_GPU"
+else
 CXX=g++
-SRC_CPP_FILES     := $(wildcard src/*.cpp)
-OBJ_CPP_FILES     := $(wildcard util/*.cpp)
-OBJ_FILES    	  := $(patsubst src/%.cpp, src/%.o,$(SRC_CPP_FILES))
-OBJ_FILES    	  += $(patsubst util/%.cpp, util/%.o,$(OBJ_CPP_FILES))
-HEADER_FILES       = $(wildcard src/*.h)
+FLAGS := -O3 -w -std=c++11 -pthread -msse4.1 -maes -msse2 -mpclmul -fpermissive -fpic -DUSING_EIGEN
+endif
 
-# FLAGS := -static -g -O0 -w -std=c++11 -pthread -msse4.1 -maes -msse2 -mpclmul -fpermissive -fpic
-FLAGS := -O3 -w -std=c++11 -pthread -msse4.1 -maes -msse2 -mpclmul -fpermissive -fpic
-LIBS := -lcrypto -lssl
-OBJ_INCLUDES := -I 'lib_eigen/' -I 'util/Miracl/' -I 'util/'
-BMR_INCLUDES := $($(OBJ_INCLUDES), -L./)
+VPATH             := src/ util/
+ifdef USING_GPU
+VPATH             += gpumatmul/
+endif
+
+SRC_CPP_FILES     := $(wildcard src/*.cpp) $(wildcard util/*.cpp) $(wildcard gpumatmul/*.cpp)
+ifdef USING_GPU
+SRC_CPP_FILES     += $(wildcard gpumatmul/*.cpp)
+SRC_CU_FILES      := $(wildcard src/*.cu) $(wildcard gpumatmul/*.cu)
+endif
+
+OBJ_FILES         := $(addprefix $(BUILDDIR)/, $(notdir $(SRC_CPP_FILES:.cpp=.o)))
+ifdef USING_GPU
+OBJ_FILES         += $(addprefix $(BUILDDIR)/, $(notdir $(SRC_CU_FILES:.cu=.o)))
+endif
+
+HEADER_FILES      := $(wildcard src/*.h)
+ifdef USING_GPU
+HEADER_FILES      += $(wildcard gpumatmul/*.h) $(wildcard gpumatmul/*.cuh)
+endif
+
+LIBS := -lcrypto -lssl -lcudart -lcuda
+OBJ_INCLUDES := -I 'lib_eigen/' -I 'util/Miracl/' -I 'util/' -I 'gpumatmul/'
+OBJ_INCLUDES += -I '$(CONDA_BASE)/include' -I '/usr/local/cuda-10.2/include'
+BMR_INCLUDES := $(OBJ_INCLUDES), -L./ -L$(CONDA_BASE)/lib -L/usr/local/cuda-10.2/lib64
 #########################################################################################
 RUN_TYPE := localhost # RUN_TYPE {localhost, LAN or WAN} 
-NETWORK := MiniONN # NETWORK {SecureML, Sarda, MiniONN, LeNet, AlexNet, and VGG16}
-DATASET	:= MNIST # Dataset {MNIST, CIFAR10, and ImageNet}
+NETWORK := AlexNet # NETWORK {SecureML, Sarda, MiniONN, LeNet, AlexNet, and VGG16}
+DATASET	:= ImageNet # Dataset {MNIST, CIFAR10, and ImageNet}
 SECURITY:= Semi-honest # Security {Semi-honest or Malicious} 
 #########################################################################################
 
+all: $(BUILDDIR) BMRPassive.out
 
-all: BMRPassive.out
+$(BUILDDIR):
+	mkdir -p $@
+	echo $(SRC_CPP_FILES)
+	echo $(SRC_CU_FILES)
+	echo $(OBJ_FILES)
 
 BMRPassive.out: $(OBJ_FILES)
-	g++ $(FLAGS) -o $@ $(OBJ_FILES) $(BMR_INCLUDES) $(LIBS)
-%.o: %.cpp $(HEADER_FILES)
+	$(CXX) $(FLAGS) -o $@ $(OBJ_FILES) $(BMR_INCLUDES) $(LIBS)
+
+$(BUILDDIR)/%.o: %.cpp $(HEADER_FILES)
 	$(CXX) $(FLAGS) -c $< -o $@ $(OBJ_INCLUDES)
+
+$(BUILDDIR)/%.o: %.cu $(HEADER_FILES)
+	$(CXX) $(FLAGS) -c $< -o $@ $(OBJ_INCLUDES)
+
 clean:
 	rm -rf BMRPassive.out
-	rm -rf src/*.o util/*.o
-
+	rm -rf $(BUILDDIR)
 
 ################################# Remote runs ##########################################
 terminal: BMRPassive.out
