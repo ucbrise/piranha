@@ -58,15 +58,15 @@ int main(int argc, char** argv)
 	// Run forward/backward for single layers
 	//  1. what {F, D, U}
 	// 	2. l {0,1,....NUM_LAYERS-1}
-	//size_t l = 14;
+	//size_t l = 13;
 	//string what = "F";
 	//runOnly(net, l, what, network);
 
-	// network += " train";
-	// train(net, config);
+	network += " train";
+	train(net, config);
 
-	network += " test";
-	test(net);
+	//network += " test";
+	//test(net);
 
 	end_m(network);
 	cout << "----------------------------------------------" << endl;  	

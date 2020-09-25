@@ -407,7 +407,7 @@ void matrixMultRSS(const RSSVectorMyType &a, const RSSVectorMyType &b, vector<my
             }
         }
     }
- 
+
     for (size_t i = 0; i < common_dim; ++i)
     {
         for (size_t j = 0; j < columns; ++j)
@@ -416,8 +416,8 @@ void matrixMultRSS(const RSSVectorMyType &a, const RSSVectorMyType &b, vector<my
                 b_first[i*columns + j] = b[j*common_dim + i].first;
                 b_second[i*columns + j] = b[j*common_dim + i].second;
             } else {
-                a_first[i*columns + j] = b[i*columns + j].first;
-                a_second[i*columns + j] = b[i*columns + j].second;
+                b_first[i*columns + j] = b[i*columns + j].first;
+                b_second[i*columns + j] = b[i*columns + j].second;
             }
         }
     }
@@ -435,7 +435,7 @@ void matrixMultRSS(const RSSVectorMyType &a, const RSSVectorMyType &b, vector<my
     cudaDeviceSynchronize();
 
     // 2 - first x second
-    d_A.set(&a_first[0], rows*common_dim);
+    //d_A.set(&a_first[0], rows*common_dim);
     d_B.set(&b_second[0], common_dim*columns);
 
     matrixMultiplication<myType>(d_A.getData(), d_B.getData(), d_C.getData(), rows, common_dim, columns);

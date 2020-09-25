@@ -88,3 +88,13 @@ command: BMRPassive.out
 	./BMRPassive.out 0 files/IP_$(RUN_TYPE) files/keyA files/keyAB files/keyAC $(NETWORK) $(DATASET) $(SECURITY) 
 	@echo "Execution completed"
 #########################################################################################
+
+zero: BMRPassive.out
+	./BMRPassive.out 0 files/IP_$(RUN_TYPE) files/keyA files/keyAB files/keyAC
+
+one: BMRPassive.out
+	./BMRPassive.out 1 files/IP_$(RUN_TYPE) files/keyB files/keyBC files/keyAB
+
+two: BMRPassive.out
+	./BMRPassive.out 2 files/IP_$(RUN_TYPE) files/keyC files/keyAC files/keyBC
+
