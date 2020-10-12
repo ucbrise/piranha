@@ -7,7 +7,9 @@
 #include "NeuralNetConfig.h"
 #include "NeuralNetwork.h"
 #include "unitTests.h"
-
+#include "Profiler.h"
+#include "MaxpoolLayer.h"
+#include "ReLULayer.h"
 
 int partyNum;
 AESObject* aes_indep;
@@ -15,6 +17,7 @@ AESObject* aes_next;
 AESObject* aes_prev;
 Precompute PrecomputeObject;
 
+extern Profiler matmul_profiler;
 
 int main(int argc, char** argv)
 {
@@ -31,7 +34,7 @@ int main(int argc, char** argv)
 	{network = argv[6]; dataset = argv[7]; security = argv[8];}
 	else
 	{
-		network = "AlexNet";
+		network = "VGG16";
 		dataset = "ImageNet";
 		security = "Semi-honest";
 	}
@@ -75,6 +78,23 @@ int main(int argc, char** argv)
 		 << "Running " << security << " " << network << " on " << dataset << " dataset" << endl;
 	cout << "----------------------------------------------" << endl << endl;  
 
+    double total_measured_runtime = 0.0;
+    for (int l = 0; l < net->layers.size(); l++) {
+        net->layers[l]->printLayer();
+        net->layers[l]->layer_profiler.dump_all();
+        total_measured_runtime += net->layers[l]->layer_profiler.get_elapsed_all();
+    }
+
+    cout << "-- Total Matrix Multiplication --" << endl; 
+    matmul_profiler.dump_all();
+
+    cout << "-- Total ReLU --" << endl; 
+    ReLULayer::relu_profiler.dump_all();
+
+    cout << "-- Total Maxpool --" << endl; 
+    MaxpoolLayer::maxpool_profiler.dump_all();
+
+    cout << "-- Total runtime accounted for: " << total_measured_runtime/1000.0 << " s --" << endl;
 	//printNetwork(net);
 
 /****************************** CLEAN-UP ******************************/ 

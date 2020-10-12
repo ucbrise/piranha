@@ -64,6 +64,7 @@ void CNNLayer::forward(const RSSVectorMyType& inputActivation)
 	size_t ow 	= (((iw-f+2*P)/S)+1);
 	size_t oh	= (((ih-f+2*P)/S)+1);
 
+    this->layer_profiler.start();
 	//Reshape activations
 	RSSVectorMyType temp1((iw+2*P)*(ih+2*P)*Din*B, make_pair(0,0));
 	// if (FUNCTION_TIME)
@@ -77,15 +78,18 @@ void CNNLayer::forward(const RSSVectorMyType& inputActivation)
 		cout << "convToMult: " << funcTime(convToMult, temp1, temp2, (iw+2*P), (ih+2*P), f, Din, S, B) << endl;
 	else
 		convToMult(temp1, temp2, (iw+2*P), (ih+2*P), f, Din, S, B);
+    this->layer_profiler.accumulate("cnn-forward-reshape");
 
 	//Perform the multiplication, transpose the actications.
+    this->layer_profiler.start();
 	RSSVectorMyType temp3(Dout * (ow*oh*B));
 	if (FUNCTION_TIME)
 		cout << "funcMatMul: " << funcTime(funcMatMul, weights, temp2, temp3, Dout, (f*f*Din), (ow*oh*B), 0, 1, FLOAT_PRECISION) << endl;
 	else
 		funcMatMul(weights, temp2, temp3, Dout, (f*f*Din), (ow*oh*B), 0, 1, FLOAT_PRECISION);
+    this->layer_profiler.accumulate("cnn-forward-matmul");
 
-
+    this->layer_profiler.start();
 	//Add biases and meta-transpose
 	size_t tempSize = ow*oh;
 	for (size_t i = 0; i < B; ++i)
@@ -93,6 +97,7 @@ void CNNLayer::forward(const RSSVectorMyType& inputActivation)
 			for (size_t k = 0; k < tempSize; ++k)
 				activations[i*Dout*tempSize + j*tempSize + k] 
 					= temp3[j*B*tempSize + i*tempSize + k] + biases[j];
+    this->layer_profiler.accumulate("cnn-forward-biasadd");
 }
 
 
@@ -111,6 +116,7 @@ void CNNLayer::computeDelta(RSSVectorMyType& prevDelta)
 	size_t ow 	= (((iw-f+2*P)/S)+1);
 	size_t oh	= (((ih-f+2*P)/S)+1);
 
+    this->layer_profiler.start();
 	RSSVectorMyType temp1((f*f*Dout) * (iw*ih*B), make_pair(0,0));
 	{
 		size_t x, y;
@@ -142,7 +148,9 @@ void CNNLayer::computeDelta(RSSVectorMyType& prevDelta)
 									}
 								}
 	}
+    this->layer_profiler.accumulate("cnn-delta-temp1");
 
+    this->layer_profiler.start();
 	RSSVectorMyType temp2((Din) * (f*f*Dout), make_pair(0,0));
 	{
 		size_t sizeQ 		= f;
@@ -162,15 +170,19 @@ void CNNLayer::computeDelta(RSSVectorMyType& prevDelta)
 						weights[d*sizeD + r*sizeR + q*sizeQ + p];
 					}
 	}
+    this->layer_profiler.accumulate("cnn-delta-temp2");
 
 
+    this->layer_profiler.start();
 	RSSVectorMyType temp3((Din) * (iw*ih*B), make_pair(0,0));
 
 	if (FUNCTION_TIME)
 		cout << "funcMatMul: " << funcTime(funcMatMul, temp2, temp1, temp3, Din, (f*f*Dout), (iw*ih*B), 0, 0, FLOAT_PRECISION) << endl;
 	else
 		funcMatMul(temp2, temp1, temp3, Din, (f*f*Dout), (iw*ih*B), 0, 0, FLOAT_PRECISION);
+    this->layer_profiler.accumulate("cnn-delta-matmul");
 
+    this->layer_profiler.start();
 	{
 		size_t sizeDeltaBeta 	= iw;
 		size_t sizeDeltaB 		= sizeDeltaBeta*ih;
@@ -189,6 +201,7 @@ void CNNLayer::computeDelta(RSSVectorMyType& prevDelta)
 						temp3[r*sizeDeltaR + b*sizeDeltaB + beta*sizeDeltaBeta + alpha];
 					}
 	}
+    this->layer_profiler.accumulate("cnn-delta-temp3");
 }
 
 void CNNLayer::updateEquations(const RSSVectorMyType& prevActivations)
@@ -206,6 +219,7 @@ void CNNLayer::updateEquations(const RSSVectorMyType& prevActivations)
 	size_t ow 	= (((iw-f+2*P)/S)+1);
 	size_t oh	= (((ih-f+2*P)/S)+1);
 
+    this->layer_profiler.start();
 	/********************** Bias update **********************/
 	//Bias update
 	RSSVectorMyType temp1(Dout, make_pair(0,0));
@@ -221,8 +235,9 @@ void CNNLayer::updateEquations(const RSSVectorMyType& prevActivations)
 	}
 	funcTruncate(temp1, LOG_MINI_BATCH + LOG_LEARNING_RATE, Dout);
 	subtractVectors<RSSMyType>(biases, temp1, biases, Dout);
+    this->layer_profiler.accumulate("cnn-update-bias");
 
-
+    this->layer_profiler.start();
 	/********************** Weights update **********************/
 	//Reshape activations
 	RSSVectorMyType temp3((f*f*Din) * (ow*oh*B));
@@ -267,14 +282,17 @@ void CNNLayer::updateEquations(const RSSVectorMyType& prevActivations)
 					for (int x = 0; x < ow; ++x)
 						temp2[counter++] = deltas[b*sizeB + d*sizeD + y*sizeY + x]; 
 	}
+    this->layer_profiler.accumulate("cnn-update-reshape");
 
 	//Compute product, truncate and subtract
+    this->layer_profiler.start();
 	RSSVectorMyType temp4((Dout) * (f*f*Din));
 	if (FUNCTION_TIME)
 		cout << "funcMatMul: " << funcTime(funcMatMul, temp2, temp3, temp4, (Dout), (ow*oh*B), (f*f*Din), 0, 1, FLOAT_PRECISION + LOG_MINI_BATCH + LOG_LEARNING_RATE) << endl;
 	else
 		funcMatMul(temp2, temp3, temp4, (Dout), (ow*oh*B), (f*f*Din), 0, 1, 
 					FLOAT_PRECISION + LOG_MINI_BATCH + LOG_LEARNING_RATE);
+    this->layer_profiler.accumulate("cnn-update-matmul");
 	
 	subtractVectors<RSSMyType>(weights, temp4, weights, f*f*Din*Dout);
 }

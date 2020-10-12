@@ -5,7 +5,7 @@ USING_GPU := ENABLED
 
 ifdef USING_GPU
 CXX=nvcc
-FLAGS := -Xcompiler="-O3,-w,-std=c++11,-pthread,-msse4.1,-maes,-msse2,-mpclmul,-fpermissive,-fpic,-DUSING_GPU"
+FLAGS := -Xcompiler="-O3,-w,-std=c++11,-pthread,-msse4.1,-maes,-msse2,-mpclmul,-fpermissive,-fpic,-DUSING_GPU" -Xcudafe "--diag_suppress=declared_but_not_referenced"
 else
 CXX=g++
 FLAGS := -O3 -w -std=c++11 -pthread -msse4.1 -maes -msse2 -mpclmul -fpermissive -fpic -DUSING_EIGEN

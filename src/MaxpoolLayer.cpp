@@ -3,6 +3,7 @@
 #include "Functionalities.h"
 using namespace std;
 
+Profiler MaxpoolLayer::maxpool_profiler;
 
 MaxpoolLayer::MaxpoolLayer(MaxpoolConfig* conf, int _layerNum)
 :Layer(_layerNum),
@@ -43,6 +44,9 @@ void MaxpoolLayer::forward(const RSSVectorMyType& inputActivation)
 	size_t ow 	= (((iw-f)/S)+1);
 	size_t oh	= (((ih-f)/S)+1);
 
+    this->layer_profiler.start();
+    maxpool_profiler.start();
+
 	RSSVectorMyType temp1(ow*oh*Din*B*f*f);
 	{
 		size_t sizeBeta = iw;
@@ -61,13 +65,19 @@ void MaxpoolLayer::forward(const RSSVectorMyType& inputActivation)
 										(beta + q)*sizeBeta + (alpha + p)];
 							}
 	}
+    this->layer_profiler.accumulate("maxpool-forward-temp1");
+    maxpool_profiler.accumulate("maxpool-forward-temp1");
 
+    this->layer_profiler.start();
+    maxpool_profiler.start();
 	//Pooling operation
 	if (FUNCTION_TIME)
 		cout << "funcMaxpool: " << funcTime(funcMaxpool, temp1, activations, maxPrime, ow*oh*Din*B, f*f) << endl;
 	else
 		funcMaxpool(temp1, activations, maxPrime, ow*oh*Din*B, f*f);
 	
+    this->layer_profiler.accumulate("maxpool-forward-pooling");
+    maxpool_profiler.accumulate("maxpool-forward-pooling");
 }
 
 
@@ -83,6 +93,9 @@ void MaxpoolLayer::computeDelta(RSSVectorMyType& prevDelta)
 	size_t S 	= conf.stride;
 	size_t ow 	= (((iw-f)/S)+1);
 	size_t oh	= (((ih-f)/S)+1);
+
+    this->layer_profiler.start();
+    maxpool_profiler.start();
 
 	RSSVectorSmallType temp1(iw*ih*Din*B);	//Contains maxPrime reordered
 	RSSVectorMyType temp2(iw*ih*Din*B);		//Contains Delta reordered
@@ -114,11 +127,19 @@ void MaxpoolLayer::computeDelta(RSSVectorMyType& prevDelta)
 						counter2++;
 					}
 	}
+    this->layer_profiler.accumulate("maxpool-delta-reorder");
+    maxpool_profiler.accumulate("maxpool-delta-reorder");
 
+    this->layer_profiler.start();
+    maxpool_profiler.start();
+	if (FUNCTION_TIME)
 	if (FUNCTION_TIME)
 		cout << "funcSelectShares: " << funcTime(funcSelectShares, temp2, temp1, prevDelta, iw*ih*Din*B) << endl;
 	else
 		funcSelectShares(temp2, temp1, prevDelta, iw*ih*Din*B);
+
+    this->layer_profiler.accumulate("maxpool-delta-selectshares");
+    maxpool_profiler.accumulate("maxpool-delta-selectshares");
 }
 
 void MaxpoolLayer::updateEquations(const RSSVectorMyType& prevActivations)

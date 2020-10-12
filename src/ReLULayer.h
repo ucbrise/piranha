@@ -31,4 +31,6 @@ public:
 	//Getters
 	RSSVectorMyType* getActivation() {return &activations;};
 	RSSVectorMyType* getDelta() {return &deltas;};
+
+    static Profiler relu_profiler;
 };

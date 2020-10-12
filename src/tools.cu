@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <mutex> 
 #include <bitset>
+#include "Profiler.h"
 
 #ifdef USING_GPU 
 #include <cuda_runtime.h>
@@ -384,6 +385,7 @@ void print_linear(myType var, string type)
 	}
 }
 
+Profiler matmul_profiler;
 void matrixMultRSS(const RSSVectorMyType &a, const RSSVectorMyType &b, vector<myType> &temp3, 
 					size_t rows, size_t common_dim, size_t columns,
 				 	size_t transpose_a, size_t transpose_b)
@@ -391,9 +393,31 @@ void matrixMultRSS(const RSSVectorMyType &a, const RSSVectorMyType &b, vector<my
 #ifdef USING_GPU 
 /********************************* With GPU Matmul *********************************/	
 
-    vector<myType> a_first(rows*common_dim), a_second(rows*common_dim);
-    vector<myType> b_first(common_dim*columns), b_second(common_dim*columns);
+    matmul_profiler.start();
+    std::vector<myType> host_a_first(rows*common_dim), host_a_second(rows*common_dim);
+    for (int i = 0; i < rows*common_dim; i++) {
+        host_a_first[i] = a[i].first;
+        host_a_second[i] = a[i].second;
+    }
 
+    std::vector<myType> host_b_first(common_dim*columns), host_b_second(common_dim*columns);
+    for (int i = 0; i < common_dim*columns; i++) {
+        host_b_first[i] = b[i].first;
+        host_b_second[i] = b[i].second;
+    }
+    matmul_profiler.accumulate("matmul-copy");
+
+    matmul_profiler.start();
+    dev_array<myType> device_a_first(rows*common_dim), device_a_second(rows*common_dim);
+    device_a_first.set(&host_a_first[0], rows*common_dim);
+    device_a_second.set(&host_a_second[0], rows*common_dim);
+
+    dev_array<myType> device_b_first(common_dim*columns), device_b_second(common_dim*columns);
+    device_b_first.set(&host_b_first[0], common_dim*columns);
+    device_b_second.set(&host_b_second[0], common_dim*columns);
+    matmul_profiler.accumulate("gpu-comm");
+    
+    /*
     for (size_t i = 0; i < rows; ++i)
     {
         for (size_t j = 0; j < common_dim; ++j)
@@ -421,35 +445,27 @@ void matrixMultRSS(const RSSVectorMyType &a, const RSSVectorMyType &b, vector<my
             }
         }
     }
+    */
 
-    dev_array<myType> d_A(rows*common_dim);
-    dev_array<myType> d_B(common_dim*columns);
-    dev_array<myType> d_C(rows*columns);
+    dev_array<myType> device_c(rows*columns);
 
-    // Do the three matmuls
-    // 1 - first x first
-    d_A.set(&a_first[0], rows*common_dim);
-    d_B.set(&b_first[0], common_dim*columns);
+    matmul_profiler.start();
+    matrixMultiplication<myType>(device_a_first.getData(), device_b_first.getData(), device_c.getData(),
+        transpose_a, transpose_b, rows, common_dim, columns);
+    matrixMultiplication<myType>(device_a_first.getData(), device_b_second.getData(), device_c.getData(),
+        transpose_a, transpose_b, rows, common_dim, columns);
+    matrixMultiplication<myType>(device_a_second.getData(), device_b_first.getData(), device_c.getData(),
+        transpose_a, transpose_b, rows, common_dim, columns);
 
-    matrixMultiplication<myType>(d_A.getData(), d_B.getData(), d_C.getData(), rows, common_dim, columns);
     cudaDeviceSynchronize();
+    matmul_profiler.accumulate("gpu-mult");
 
-    // 2 - first x second
-    //d_A.set(&a_first[0], rows*common_dim);
-    d_B.set(&b_second[0], common_dim*columns);
+    matmul_profiler.start();
 
-    matrixMultiplication<myType>(d_A.getData(), d_B.getData(), d_C.getData(), rows, common_dim, columns);
+    device_c.get(&temp3[0], rows*columns);
+
     cudaDeviceSynchronize();
-
-    // 3 - second x first
-    d_A.set(&a_second[0], rows*common_dim);
-    d_B.set(&b_first[0], common_dim*columns);
-
-    matrixMultiplication<myType>(d_A.getData(), d_B.getData(), d_C.getData(), rows, common_dim, columns);
-    cudaDeviceSynchronize();
-
-    d_C.get(&temp3[0], rows*columns);
-    cudaDeviceSynchronize();
+    matmul_profiler.accumulate("gpu-comm");
 
 /********************************* With GPU Matmul*********************************/	
 #elif defined USING_EIGEN

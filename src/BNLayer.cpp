@@ -40,6 +40,7 @@ void BNLayer::forward(const RSSVectorMyType& inputActivation)
 	RSSVectorMyType epsilon(B), mu(B, make_pair(0,0)), b(B);
 	RSSVectorMyType divisor(B, make_pair(0,0));
 
+    this->layer_profiler.start();
 	//Compute mean
 	for (int i = 0; i < B; ++i)
 		for (int j = 0; j < m; ++j)
@@ -86,6 +87,7 @@ void BNLayer::forward(const RSSVectorMyType& inputActivation)
 	for (int i = 0; i < B; ++i)
 		for (int j = 0; j < m; ++j)
 			activations[i*m+j] = activations[i*m+j] + beta[i];
+    this->layer_profiler.accumulate("bn-forward");
 }
 
 
@@ -97,6 +99,7 @@ void BNLayer::computeDelta(RSSVectorMyType& prevDelta)
 	size_t B = conf.numBatches;
 	size_t m = conf.inputSize;
 
+    this->layer_profiler.start();
 	//Derivative with xhat
 	RSSVectorMyType g_repeat(B*m), dxhat(B*m);
 	for (int i = 0; i < B; ++i)
@@ -143,6 +146,7 @@ void BNLayer::computeDelta(RSSVectorMyType& prevDelta)
 		temp4[i] = ((myType)m) * sigma[i];
 
 	funcBatchNorm(temp1, temp4, prevDelta, m, B);
+    this->layer_profiler.accumulate("bn-delta");
 }
 
 void BNLayer::updateEquations(const RSSVectorMyType& prevActivations)
@@ -152,6 +156,7 @@ void BNLayer::updateEquations(const RSSVectorMyType& prevActivations)
 	size_t B = conf.numBatches;
 	size_t m = conf.inputSize;
 
+    this->layer_profiler.start();
 	//Update beta
 	RSSVectorMyType temp1(B, make_pair(0,0));
 	for (int i = 0; i < B; ++i)
@@ -169,4 +174,5 @@ void BNLayer::updateEquations(const RSSVectorMyType& prevActivations)
 			temp3[i] = temp3[i] + temp2[i*m + j];
 
 	subtractVectors<RSSMyType>(gamma, temp3, gamma, B);
+    this->layer_profiler.accumulate("bn-update");
 }

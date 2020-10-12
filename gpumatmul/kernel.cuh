@@ -1,14 +1,8 @@
 #ifndef KERNEL_CUH_
 #define KERNEL_CUH_
 
-//template<typename T>
-//void matrixMultiplication(T *A, T *B, T *C, int rows, int shared, int col);
-
-//void matrixMultiplication<uint32_t>(uint32_t *A, uint32_t *B, uint32_t *C, int rows, int shared, int col);
-//void matrixMultiplication<uint64_t>(uint64_t *A, uint64_t *B, uint64_t *C, int rows, int shared, int col);
-
 template<typename T>
-__global__ void matrixMultiplicationKernel(T *A, T *B, T *C, int rows, int shared, int cols) {
+__global__ void matrixMultiplicationKernel(T *A, T *B, T *C, bool transpose_a, bool transpose_b, int rows, int shared, int cols) {
 
     int ROW = blockIdx.y*blockDim.y+threadIdx.y;
     int COL = blockIdx.x*blockDim.x+threadIdx.x;
@@ -16,13 +10,17 @@ __global__ void matrixMultiplicationKernel(T *A, T *B, T *C, int rows, int share
     if (ROW < rows && COL < cols) {
         // each thread accumulates one element of the block sub-matrix
         for (int k = 0; k < shared; k++) {
-            C[ROW * cols + COL] += A[ROW * shared + k] * B[k * cols + COL];
+            // C[ROW, COL] = A[ROW, k] * B[k, COL], account for transpose
+            int a_idx = transpose_a ? k * shared + ROW : ROW * shared + k;
+            int b_idx = transpose_b ? COL * cols + k : k * cols + COL;
+
+            C[ROW * cols + COL] += A[a_idx] * B[b_idx];
         }
     }
 }
 
 template<typename T>
-void matrixMultiplication(T *A, T *B, T *C, int rows, int shared, int cols){
+void matrixMultiplication(T *A, T *B, T *C, bool transpose_a, bool transpose_b, int rows, int shared, int cols){
 
     // declare the number of blocks per grid and the number of threads per block
     // use 1 to 512 threads per block
@@ -36,7 +34,7 @@ void matrixMultiplication(T *A, T *B, T *C, int rows, int shared, int cols){
         blocksPerGrid.y = ceil(double(rows)/double(threadsPerBlock.y));
     }
 
-    matrixMultiplicationKernel<T><<<blocksPerGrid,threadsPerBlock>>>(A, B, C, rows, shared, cols);
+    matrixMultiplicationKernel<T><<<blocksPerGrid,threadsPerBlock>>>(A, B, C, transpose_a, transpose_b, rows, shared, cols);
 }
 
 #endif // KERNEL_CUH_

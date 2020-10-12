@@ -61,6 +61,7 @@ void FCLayer::forward(const RSSVectorMyType &inputActivation)
 	size_t common_dim = conf.inputDim;
 	size_t size = rows*columns;
 
+    this->layer_profiler.start();
 	if (FUNCTION_TIME)
 		cout << "funcMatMul: " << funcTime(funcMatMul, inputActivation, weights, activations, rows, common_dim, columns, 0, 0, FLOAT_PRECISION) << endl;
 	else
@@ -69,6 +70,8 @@ void FCLayer::forward(const RSSVectorMyType &inputActivation)
 	for(size_t r = 0; r < rows; ++r)
 		for(size_t c = 0; c < columns; ++c)
 			activations[r*columns + c] = activations[r*columns + c] + biases[c];
+
+    this->layer_profiler.accumulate("fc-forward");
 }
 
 
@@ -81,10 +84,13 @@ void FCLayer::computeDelta(RSSVectorMyType& prevDelta)
 	size_t columns = conf.inputDim;
 	size_t common_dim = conf.outputDim;
 	
+    this->layer_profiler.start();
 	if (FUNCTION_TIME)
 		cout << "funcMatMul: " << funcTime(funcMatMul, deltas, weights, prevDelta, rows, common_dim, columns, 0, 1, FLOAT_PRECISION) << endl;
 	else
 		funcMatMul(deltas, weights, prevDelta, rows, common_dim, columns, 0, 1, FLOAT_PRECISION);
+
+    this->layer_profiler.accumulate("fc-delta");
 }
 
 
@@ -97,6 +103,8 @@ void FCLayer::updateEquations(const RSSVectorMyType& prevActivations)
 	size_t common_dim = conf.inputDim;
 	size_t size = rows*columns;	
 	RSSVectorMyType temp(columns, std::make_pair(0,0));
+
+    this->layer_profiler.start();
 
 	//Update Biases
 	for (size_t i = 0; i < rows; ++i)
@@ -120,4 +128,6 @@ void FCLayer::updateEquations(const RSSVectorMyType& prevActivations)
 					FLOAT_PRECISION + LOG_LEARNING_RATE + LOG_MINI_BATCH);
 	
 	subtractVectors<RSSMyType>(weights, deltaWeight, weights, size);		
+
+    this->layer_profiler.accumulate("fc-update");
 }
