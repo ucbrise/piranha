@@ -1,41 +1,21 @@
 CONDA_BASE=/data/jlwatson/anaconda3
 BUILDDIR=build
 
-USING_GPU := ENABLED
-
-ifdef USING_GPU
 CXX=nvcc
 FLAGS := -Xcompiler="-O3,-w,-std=c++11,-pthread,-msse4.1,-maes,-msse2,-mpclmul,-fpermissive,-fpic,-DUSING_GPU" -Xcudafe "--diag_suppress=declared_but_not_referenced"
-else
-CXX=g++
-FLAGS := -O3 -w -std=c++11 -pthread -msse4.1 -maes -msse2 -mpclmul -fpermissive -fpic -DUSING_EIGEN
-endif
 
 VPATH             := src/ util/
-ifdef USING_GPU
-VPATH             += gpumatmul/
-endif
-
-SRC_CPP_FILES     := $(wildcard src/*.cpp) $(wildcard util/*.cpp) $(wildcard gpumatmul/*.cpp)
-ifdef USING_GPU
-SRC_CPP_FILES     += $(wildcard gpumatmul/*.cpp)
-SRC_CU_FILES      := $(wildcard src/*.cu) $(wildcard gpumatmul/*.cu)
-endif
-
+SRC_CPP_FILES     := $(wildcard src/*.cpp) $(wildcard util/*.cpp)
+SRC_CU_FILES      := $(wildcard src/*.cu)
 OBJ_FILES         := $(addprefix $(BUILDDIR)/, $(notdir $(SRC_CPP_FILES:.cpp=.o)))
-ifdef USING_GPU
 OBJ_FILES         += $(addprefix $(BUILDDIR)/, $(notdir $(SRC_CU_FILES:.cu=.o)))
-endif
-
-HEADER_FILES      := $(wildcard src/*.h)
-ifdef USING_GPU
-HEADER_FILES      += $(wildcard gpumatmul/*.h) $(wildcard gpumatmul/*.cuh)
-endif
+HEADER_FILES      := $(wildcard src/*.h) $(wildcard src/*.cuh)
 
 LIBS := -lcrypto -lssl -lcudart -lcuda
 OBJ_INCLUDES := -I 'lib_eigen/' -I 'util/Miracl/' -I 'util/' -I 'gpumatmul/'
 OBJ_INCLUDES += -I '$(CONDA_BASE)/include' -I '/usr/local/cuda-10.2/include'
 BMR_INCLUDES := $(OBJ_INCLUDES), -L./ -L$(CONDA_BASE)/lib -L/usr/local/cuda-10.2/lib64
+
 #########################################################################################
 RUN_TYPE := localhost # RUN_TYPE {localhost, LAN or WAN} 
 NETWORK := AlexNet # NETWORK {SecureML, Sarda, MiniONN, LeNet, AlexNet, and VGG16}

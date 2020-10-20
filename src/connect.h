@@ -4,6 +4,7 @@
 #define CONNECT_H
 
 #include "basicSockets.h"
+#include <algorithm>
 #include <sstream>
 #include <vector>
 #include "../util/TedKrovetzAesNiWrapperC.h"
@@ -147,6 +148,7 @@ void receiveSixVectors(vector<T> &vec1, vector<T> &vec2, vector<T> &vec3,
 template<typename T>
 void sendVector(const vector<T> &vec, size_t player, size_t size)
 {
+/*
 #if (LOG_DEBUG_NETWORK)
 	cout << "Sending " << size*sizeof(T) << " Bytes to player " << player << " via ";
 	if (sizeof(T) == 16)
@@ -158,14 +160,16 @@ void sendVector(const vector<T> &vec, size_t player, size_t size)
 	else if (sizeof(T) == 1)
 		cout << "smallType" << endl;
 #endif
-
-	if(!communicationSenders[player]->sendMsg(vec.data(), size * sizeof(T), 0))
+*/
+	if(!communicationSenders[player]->sendMsg(vec.data(), size * sizeof(T), 0)) {
 		cout << "Send vector error" << endl;
+    }
 }
 
 template<typename T>
 void receiveVector(vector<T> &vec, size_t player, size_t size)
 {
+/*
 #if (LOG_DEBUG_NETWORK)
 	cout << "Receiving " << size*sizeof(T) << " Bytes from player " << player << " via ";
 	if (sizeof(T) == 16)
@@ -177,9 +181,12 @@ void receiveVector(vector<T> &vec, size_t player, size_t size)
 	else if (sizeof(T) == 1)
 		cout << "smallType" << endl;
 #endif
-
-	if(!communicationReceivers[player]->receiveMsg(vec.data(), size * sizeof(T), 0))
+*/
+    std::vector<U> rxVector(size);
+	if(!communicationReceivers[player]->receiveMsg(rxVector.data(), size * sizeof(U), 0)) {
 		cout << "Receive myType vector error" << endl;
+    }
+    std::copy(rxVector.begin(), rxVector.end(), vec.begin());
 }
 
 template<typename T>

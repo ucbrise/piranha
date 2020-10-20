@@ -1,13 +1,47 @@
+/*
+ * Functionalities.cpp
+ */
 
 #pragma once
+
 #include "Functionalities.h"
 #include "Precompute.h"
+#include "RSSData.h"
+#include <stdexcept>
 #include <thread>
 
-
 using namespace std;
+
 extern Precompute PrecomputeObject;
 extern string SECURITY_TYPE;
+
+template<typename T>
+void NEW_funcTruncate(RSSData<T> &a, size_t power) {
+
+    size_t size = a.size();
+    DeviceBuffer<T> r(size);g
+    a -= (1 << power);
+    r += 1;
+    
+    DeviceBuffer<T> reconstructed(size);g
+    NEW_funcReconstruct(a, reconstructed);
+    reconstructed /= (1 << power);
+
+    switch (partyNum) {
+        case PARTY_A:
+            a[0] = reconstructed + r;
+            a[1] = r;
+            break;
+        case PARTY_B:
+            a[0] = r;
+            a[1] = r;
+            break;
+        case PARTY_C:
+            a[0] = r;
+            a[1] = reconstructed + r;
+            break;
+    }
+}
 
 /******************************** Functionalities 2PC ********************************/
 // Share Truncation, truncate shares of a by power (in place) (power is logarithmic)
@@ -51,6 +85,7 @@ void funcTruncate(RSSVectorMyType &a, size_t power, size_t size)
 	}	
 }
 
+/*
 void funcTruncatePublic(RSSVectorMyType &a, size_t divisor, size_t size)
 {
 	log_print("funcTruncate");
@@ -90,6 +125,7 @@ void funcTruncatePublic(RSSVectorMyType &a, size_t divisor, size_t size)
 		}
 	}	
 }
+*/
 
 
 //Fixed-point data has to be processed outside this function.
@@ -153,7 +189,6 @@ void funcGetShares(RSSVectorSmallType &a, const vector<smallType> &data)
 		}
 	}
 }
-
 
 void funcReconstructBit(const RSSVectorSmallType &a, vector<smallType> &b, size_t size, string str, bool print)
 {
@@ -227,7 +262,6 @@ void funcReconstructBit(const RSSVectorSmallType &a, vector<smallType> &b, size_
 		}
 	}
 }
-
 
 void funcReconstruct(const RSSVectorSmallType &a, vector<smallType> &b, size_t size, string str, bool print)
 {
@@ -305,6 +339,48 @@ void funcReconstruct(const RSSVectorSmallType &a, vector<smallType> &b, size_t s
 	}
 }
 
+template<typename T>
+void NEW_funcReconstruct(RSSData<T> &a, DeviceBuffer<T> &reconstructed) {
+
+    if (SECURITY_TYPE.compare("Semi-honest") == 0) {
+        // 1 - send shareA to next party
+        a[0].send<T>(nextParty(partyNum));
+
+        // 2 - receive shareA from previous party into DeviceBuffer
+        DeviceBuffer<T> rxShare(a.size());
+        rxShare.receive<T>(prevParty(partyNum));
+
+        a[0].join();
+        rxShare.join();
+
+        // 3 - result is our shareB + received shareA
+        reconstructed = a[1] + rxShare;
+
+    } else if (SECURITY_TYPE.compare("Malicious") == 0) {
+        // 1 - send shareA to next party and shareB to prev party (8 bits)
+        a[0].send<T>(nextParty(partyNum));
+        a[1].send(prevParty(partyNum));
+        // TODO remove template on send/receive
+
+        // 3 - receive buffers from next and prev parties (8 bits)
+        DeviceBuffer<T> rxPrevShare(a.size()), rxNextShare(a.size());
+        rxPrevShare.receive<uint8_t>(prevParty(partyNum));
+        rxNextShare.receive<uint8_t>(nextParty(partyNum));
+
+        a[0].join();
+        a[1].join();
+        rxPrevShare.join();
+        rxNextShare.join();
+
+        // 4 - check received buffers for consistency
+        if (rxPrevShare != rxNextShare) {
+            throw std::runtime_error("Malicious behavior detected");
+        }
+
+        // 5 - result is our shareB + received buffer from prev
+        reconstructed = a[1] + rxPrevShare;
+    }
+}
 
 void funcReconstruct(const RSSVectorMyType &a, vector<myType> &b, size_t size, string str, bool print)
 {
@@ -1233,7 +1309,12 @@ void funcPrivateCompare(const RSSVectorSmallType &share_m, const vector<myType> 
 	funcCrunchMultiply(c, betaPrime, size);	
 }
 
+template<typename T, typename U>
+void NEW_funcWrap(const RSSData<T> &a, RSSData<U> &theta) {
+    size_t sizeLong = a.size() * BIT_SIZE;
 
+    // pick up at shareConvertObjects
+}
 
 //Wrap functionality.
 void funcWrap(const RSSVectorMyType &a, RSSVectorSmallType &theta, size_t size)
@@ -1385,6 +1466,11 @@ void funcSelectBitShares(const RSSVectorSmallType &a0, const RSSVectorSmallType 
 		answer[i] = answer[i] ^ a0[i];
 }
 
+template<typename T, typename U>
+void NEW_funcRELUPrime(const RSSData<T> &a, RSSData<U> &b, size_t size) {
+    RSSData<T> twoA = a / 2;
+    // pick up at funcWrap
+}
 
 // b holds bits of ReLU' of a
 void funcRELUPrime(const RSSVectorMyType &a, RSSVectorSmallType &b, size_t size)
@@ -1405,6 +1491,11 @@ void funcRELUPrime(const RSSVectorMyType &a, RSSVectorSmallType &b, size_t size)
 		b[i].first = theta[i].first ^ (getMSB(a[i].first));
 		b[i].second = theta[i].second ^ (getMSB(a[i].second));
 	}
+}
+
+template<typename T, U>
+void NEW_funcRELU(const RSSData<T> &a, RSSData<U> &temp, RSSData<T> &b, size_t size) {
+    // pick up at funcRELUPrime
 }
 
 //Input is a, outputs are temp = ReLU'(a) and b = RELU(a).

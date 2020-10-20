@@ -7,7 +7,7 @@ Precompute::~Precompute(){}
 void Precompute::initialize(){}
 
 // Currently, r = 3 and rPrime = 3 * 2^d
-void Precompute::getDividedShares(RSSVectorMyType &r, RSSVectorMyType &rPrime, int d, size_t size)
+void Precompute::getDividedShares(RSSVectorMyType &r, RSSVectorMyType &rPrime, int d, size_t  size)
 {
 	assert(r.size() == size && "r.size is incorrect");
 	assert(rPrime.size() == size && "rPrime.size is incorrect");
