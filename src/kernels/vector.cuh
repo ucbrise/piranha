@@ -7,8 +7,10 @@
 
 #pragma once
 
+namespace kernel {
+
 template<typename T>
-__global__ void vectorAddKernel(T *A, T *B, int size);
+__global__ void vectorAdd(T *A, T *B, int size) {
 
     int idx = blockIdx.x*blockDim.x+threadIdx.x;
     if (idx < n) {
@@ -17,7 +19,7 @@ __global__ void vectorAddKernel(T *A, T *B, int size);
 }
 
 template<typename T>
-__global__ void vectorSubtractKernel(T *A, T *B, int size);
+__global__ void vectorSubtract(T *A, T *B, int size) {
 
     int idx = blockIdx.x*blockDim.x+threadIdx.x;
     if (idx < n) {
@@ -27,12 +29,14 @@ __global__ void vectorSubtractKernel(T *A, T *B, int size);
 
 // TODO: not actually parallel
 template<typename T>
-__global__ void vectorEqualsKernel(T *A, T *B, int size, int *eq);
+__global__ void vectorEquals(T *A, T *B, int size, int *eq) {
 
     int idx = blockIdx.x*blockDim.x+threadIdx.x;
     if (idx < n) {
         atomicAnd(eq, (A[idx] == B[idx]));
     }
+}
+
 }
 
 template<typename T>
@@ -46,7 +50,7 @@ void vectorAdd(T *A, T *B, int size) {
         blocksPerGrid.x = ceil(double(n)/double(threadsPerBlock.x));
     }
 
-    vectorAddKernel<T><<<blocksPerGrid,threadsPerBlock>>>(A, B, n);
+    kernel::vectorAdd<T><<<blocksPerGrid,threadsPerBlock>>>(A, B, n);
 }
 
 template<typename T>
@@ -60,7 +64,7 @@ void vectorSubtract(T *A, T *B, int size) {
         blocksPerGrid.x = ceil(double(n)/double(threadsPerBlock.x));
     }
 
-    vectorSubtractKernel<T><<<blocksPerGrid,threadsPerBlock>>>(A, B, n);
+    kernel::vectorSubtract<T><<<blocksPerGrid,threadsPerBlock>>>(A, B, n);
 }
 
 template<typename T>
@@ -75,7 +79,7 @@ bool vectorEquals(T *A, T *B, int size) {
     }
 
     int eq = 1;
-    vectorEqualsKernel<T><<<blocksPerGrid,threadsPerBlock>>>(A, B, n, &eq);
+    kernel::vectorEquals<T><<<blocksPerGrid,threadsPerBlock>>>(A, B, n, &eq);
     cudaDeviceSynchronize();
 
     return eq;

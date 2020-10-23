@@ -182,11 +182,9 @@ void receiveVector(vector<T> &vec, size_t player, size_t size)
 		cout << "smallType" << endl;
 #endif
 */
-    std::vector<U> rxVector(size);
-	if(!communicationReceivers[player]->receiveMsg(rxVector.data(), size * sizeof(U), 0)) {
-		cout << "Receive myType vector error" << endl;
+	if(!communicationReceivers[player]->receiveMsg(vec.data(), size * sizeof(T), 0)) {
+		cout << "Receive vector error" << endl;
     }
-    std::copy(rxVector.begin(), rxVector.end(), vec.begin());
 }
 
 template<typename T>

@@ -7,8 +7,10 @@
 
 #pragma once
 
+namespace kernel {
+
 template<typename T>
-__global__ void scalarAddKernel(T *A, T scalar, int size) {
+__global__ void scalarAdd(T *A, T scalar, int size) {
 
     int idx = blockIdx.x*blockDim.x+threadIdx.x;
     if (idx < n) {
@@ -17,7 +19,7 @@ __global__ void scalarAddKernel(T *A, T scalar, int size) {
 }
 
 template<typename T>
-__global__ void scalarSubtractKernel(T *A, T scalar, int size) {
+__global__ void scalarSubtract(T *A, T scalar, int size) {
 
     int idx = blockIdx.x*blockDim.x+threadIdx.x;
     if (idx < n) {
@@ -26,12 +28,14 @@ __global__ void scalarSubtractKernel(T *A, T scalar, int size) {
 }
 
 template<typename T>
-__global__ void scalarDivideKernel(T *A, T scalar, int size) {
+__global__ void scalarDivide(T *A, T scalar, int size) {
 
     int idx = blockIdx.x*blockDim.x+threadIdx.x;
     if (idx < n) {
         A[idx] = (T) (((double) A[idx]) / ((double) scalar));
     }
+}
+
 }
 
 template<typename T>
@@ -45,7 +49,7 @@ void scalarAdd(T *A, T scalar, int size) {
         blocksPerGrid.x = ceil(double(n)/double(threadsPerBlock.x));
     }
 
-    scalarAddKernel<T><<<blocksPerGrid,threadsPerBlock>>>(A, scalar, n);
+    kernel::scalarAdd<T><<<blocksPerGrid,threadsPerBlock>>>(A, scalar, n);
 }
 
 template<typename T>
@@ -59,7 +63,7 @@ void scalarSubtract(T *A, T scalar, int size) {
         blocksPerGrid.x = ceil(double(n)/double(threadsPerBlock.x));
     }
 
-    scalarSubtractKernel<T><<<blocksPerGrid,threadsPerBlock>>>(A, scalar, n);
+    kernel::scalarSubtract<T><<<blocksPerGrid,threadsPerBlock>>>(A, scalar, n);
 }
 
 template<typename T>
@@ -73,6 +77,6 @@ void scalarDivide(T *A, T scalar, int size) {
         blocksPerGrid.x = ceil(double(n)/double(threadsPerBlock.x));
     }
 
-    scalarDivideKernel<T><<<blocksPerGrid,threadsPerBlock>>>(A, scalar, n);
+    kernel::scalarDivide<T><<<blocksPerGrid,threadsPerBlock>>>(A, scalar, n);
 }
 

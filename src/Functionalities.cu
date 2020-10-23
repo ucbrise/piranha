@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <exception>
 #include "Functionalities.h"
 #include "Precompute.h"
 #include "RSSData.h"
@@ -12,18 +13,19 @@
 
 using namespace std;
 
-extern Precompute PrecomputeObject;
+extern Precompute<T> PrecomputeObject;
 extern string SECURITY_TYPE;
 
 template<typename T>
 void NEW_funcTruncate(RSSData<T> &a, size_t power) {
 
     size_t size = a.size();
-    DeviceBuffer<T> r(size);g
-    a -= (1 << power);
-    r += 1;
+
+    DeviceBuffer<T> r(size), rPrime(size);
+    PrecomputeObject.getDividedShares(r, rPrime, (1 << power), size); 
+    a -= rPrime;
     
-    DeviceBuffer<T> reconstructed(size);g
+    DeviceBuffer<T> reconstructed(size);
     NEW_funcReconstruct(a, reconstructed);
     reconstructed /= (1 << power);
 
@@ -85,270 +87,17 @@ void funcTruncate(RSSVectorMyType &a, size_t power, size_t size)
 	}	
 }
 
-/*
-void funcTruncatePublic(RSSVectorMyType &a, size_t divisor, size_t size)
-{
-	log_print("funcTruncate");
-
-	RSSVectorMyType r(size), rPrime(size);
-	vector<myType> reconst(size);
-	PrecomputeObject.getDividedShares(r, rPrime, divisor, size);
-	for (int i = 0; i < size; ++i)
-		a[i] = a[i] - rPrime[i];
-	
-	funcReconstruct(a, reconst, size, "Truncate reconst", false);
-	dividePlain(reconst, divisor);
-	if (partyNum == PARTY_A)
-	{
-		for (int i = 0; i < size; ++i)
-		{
-			a[i].first = r[i].first + reconst[i];
-			a[i].second = r[i].second;
-		}
-	}
-
-	if (partyNum == PARTY_B)
-	{
-		for (int i = 0; i < size; ++i)
-		{
-			a[i].first = r[i].first;
-			a[i].second = r[i].second;
-		}
-	}
-
-	if (partyNum == PARTY_C)
-	{
-		for (int i = 0; i < size; ++i)
-		{
-			a[i].first = r[i].first;
-			a[i].second = r[i].second + reconst[i];
-		}
-	}	
-}
-*/
-
-
-//Fixed-point data has to be processed outside this function.
-void funcGetShares(RSSVectorMyType &a, const vector<myType> &data)
-{
-	size_t size = a.size();
-
-	if (partyNum == PARTY_A)
-	{
-		for (int i = 0; i < size; ++i)
-		{
-			a[i].first = data[i];
-			a[i].second = 0;
-		}
-	}
-	else if (partyNum == PARTY_B)
-	{
-		for (int i = 0; i < size; ++i)
-		{
-			a[i].first = 0;
-			a[i].second = 0;
-		}
-	}
-	else if (partyNum == PARTY_C)
-	{
-		for (int i = 0; i < size; ++i)
-		{
-			a[i].first = 0;
-			a[i].second = data[i];
-		}
-	}
-}
-
-
-void funcGetShares(RSSVectorSmallType &a, const vector<smallType> &data)
-{
-	size_t size = a.size();
-	
-	if (partyNum == PARTY_A)
-	{
-		for (int i = 0; i < size; ++i)
-		{
-			a[i].first = data[i];
-			a[i].second = 0;
-		}
-	}
-	else if (partyNum == PARTY_B)
-	{
-		for (int i = 0; i < size; ++i)
-		{
-			a[i].first = 0;
-			a[i].second = 0;
-		}
-	}
-	else if (partyNum == PARTY_C)
-	{
-		for (int i = 0; i < size; ++i)
-		{
-			a[i].first = 0;
-			a[i].second = data[i];
-		}
-	}
-}
-
-void funcReconstructBit(const RSSVectorSmallType &a, vector<smallType> &b, size_t size, string str, bool print)
-{
-	log_print("Reconst: RSSSmallType (bits), smallType (bit)");
-
-	if (SECURITY_TYPE.compare("Semi-honest") == 0)
-	{
-		vector<smallType> a_next(size), a_prev(size);
-		for (int i = 0; i < size; ++i)
-		{
-			a_prev[i] = 0;
-			a_next[i] = a[i].first;
-			b[i] = a[i].first;
-			b[i] = b[i] ^ a[i].second;
-		}
-
-		thread *threads = new thread[2];
-		threads[0] = thread(sendVector<smallType>, ref(a_next), nextParty(partyNum), size);
-		threads[1] = thread(receiveVector<smallType>, ref(a_prev), prevParty(partyNum), size);
-		for (int i = 0; i < 2; i++)
-			threads[i].join();
-		delete[] threads;
-
-		for (int i = 0; i < size; ++i)
-			b[i] = b[i] ^ a_prev[i];
-
-		if (print)
-		{
-			std::cout << str << ": \t\t";
-			for (int i = 0; i < size; ++i)
-				cout << (int)(b[i]) << " "; 
-			std::cout << std::endl;
-		}
-	}
-
-	if (SECURITY_TYPE.compare("Malicious") == 0)
-	{
-		vector<smallType> a_next_send(size), a_prev_send(size), a_next_recv(size), a_prev_recv(size);
-		for (int i = 0; i < size; ++i)
-		{
-			a_prev_send[i] = a[i].second;
-			a_next_send[i] = a[i].first;
-			b[i] = a[i].first;
-			b[i] = b[i] ^ a[i].second;
-		}
-
-		thread *threads = new thread[4];
-		threads[0] = thread(sendVector<smallType>, ref(a_next_send), nextParty(partyNum), size);
-		threads[1] = thread(sendVector<smallType>, ref(a_prev_send), prevParty(partyNum), size);
-		threads[2] = thread(receiveVector<smallType>, ref(a_next_recv), nextParty(partyNum), size);
-		threads[3] = thread(receiveVector<smallType>, ref(a_prev_recv), prevParty(partyNum), size);
-		for (int i = 0; i < 4; i++)
-			threads[i].join();
-		delete[] threads;
-
-		for (int i = 0; i < size; ++i)
-		{
-			if (a_next_recv[i] != a_prev_recv[i])
-			{
-				// error("Malicious behaviour detected");
-			}
-			b[i] = b[i] ^ a_prev_recv[i];
-		}
-
-		if (print)
-		{
-			std::cout << str << ": \t\t";
-			for (int i = 0; i < size; ++i)
-				cout << (int)(b[i]) << " "; 
-			std::cout << std::endl;
-		}
-	}
-}
-
-void funcReconstruct(const RSSVectorSmallType &a, vector<smallType> &b, size_t size, string str, bool print)
-{
-	log_print("Reconst: RSSSmallType, smallType");
-
-	if (SECURITY_TYPE.compare("Semi-honest") == 0)
-	{
-		vector<smallType> a_next(size), a_prev(size);
-		for (int i = 0; i < size; ++i)
-		{
-			a_prev[i] = 0;
-			a_next[i] = a[i].first;
-			b[i] = a[i].first;
-			b[i] = additionModPrime[b[i]][a[i].second];
-		}
-
-		thread *threads = new thread[2];
-
-		threads[0] = thread(sendVector<smallType>, ref(a_next), nextParty(partyNum), size);
-		threads[1] = thread(receiveVector<smallType>, ref(a_prev), prevParty(partyNum), size);
-
-		for (int i = 0; i < 2; i++)
-			threads[i].join();
-
-		delete[] threads;
-
-		for (int i = 0; i < size; ++i)
-			b[i] = additionModPrime[b[i]][a_prev[i]];
-
-		if (print)
-		{
-			std::cout << str << ": \t\t";
-			for (int i = 0; i < size; ++i)
-				cout << (int)(b[i]) << " "; 
-			std::cout << std::endl;
-		}
-	}
-
-	if (SECURITY_TYPE.compare("Malicious") == 0)
-	{
-		vector<smallType> a_next_send(size), a_prev_send(size), a_next_recv(size), a_prev_recv(size);
-		for (int i = 0; i < size; ++i)
-		{
-			a_prev_send[i] = a[i].second;
-			a_next_send[i] = a[i].first;
-			b[i] = a[i].first;
-			// b[i] = additionModPrime[b[i]][a[i].second];
-		}
-
-		thread *threads = new thread[4];
-		threads[0] = thread(sendVector<smallType>, ref(a_next_send), nextParty(partyNum), size);
-		threads[1] = thread(sendVector<smallType>, ref(a_prev_send), prevParty(partyNum), size);
-		threads[2] = thread(receiveVector<smallType>, ref(a_next_recv), nextParty(partyNum), size);
-		threads[3] = thread(receiveVector<smallType>, ref(a_prev_recv), prevParty(partyNum), size);
-		for (int i = 0; i < 4; i++)
-			threads[i].join();
-		delete[] threads;
-
-		for (int i = 0; i < size; ++i)
-		{
-			if (a_next_recv[i] != a_prev_recv[i])
-			{
-				// error("Malicious behaviour detected");
-			}
-			// b[i] = additionModPrime[b[i]][a_prev_recv[i]];
-		}
-
-		if (print)
-		{
-			std::cout << str << ": \t\t";
-			for (int i = 0; i < size; ++i)
-				cout << (int)(b[i]) << " "; 
-			std::cout << std::endl;
-		}
-	}
-}
 
 template<typename T>
 void NEW_funcReconstruct(RSSData<T> &a, DeviceBuffer<T> &reconstructed) {
 
     if (SECURITY_TYPE.compare("Semi-honest") == 0) {
         // 1 - send shareA to next party
-        a[0].send<T>(nextParty(partyNum));
+        a[0].send(nextParty(partyNum));
 
         // 2 - receive shareA from previous party into DeviceBuffer
         DeviceBuffer<T> rxShare(a.size());
-        rxShare.receive<T>(prevParty(partyNum));
+        rxShare.receive(prevParty(partyNum));
 
         a[0].join();
         rxShare.join();
@@ -357,28 +106,9 @@ void NEW_funcReconstruct(RSSData<T> &a, DeviceBuffer<T> &reconstructed) {
         reconstructed = a[1] + rxShare;
 
     } else if (SECURITY_TYPE.compare("Malicious") == 0) {
-        // 1 - send shareA to next party and shareB to prev party (8 bits)
-        a[0].send<T>(nextParty(partyNum));
-        a[1].send(prevParty(partyNum));
-        // TODO remove template on send/receive
-
-        // 3 - receive buffers from next and prev parties (8 bits)
-        DeviceBuffer<T> rxPrevShare(a.size()), rxNextShare(a.size());
-        rxPrevShare.receive<uint8_t>(prevParty(partyNum));
-        rxNextShare.receive<uint8_t>(nextParty(partyNum));
-
-        a[0].join();
-        a[1].join();
-        rxPrevShare.join();
-        rxNextShare.join();
-
-        // 4 - check received buffers for consistency
-        if (rxPrevShare != rxNextShare) {
-            throw std::runtime_error("Malicious behavior detected");
-        }
-
-        // 5 - result is our shareB + received buffer from prev
-        reconstructed = a[1] + rxPrevShare;
+        throw std::exception(
+            "[reconstruct] malicious functionality not re-implemented"
+        ); 
     }
 }
 
@@ -561,191 +291,6 @@ void funcCheckMaliciousDotProd(const RSSVectorMyType &a, const RSSVectorMyType &
 }
 
 
-void funcCheckMaliciousDotProd(const RSSVectorSmallType &a, const RSSVectorSmallType &b, const RSSVectorSmallType &c, 
-							const vector<smallType> &temp, size_t size)
-{
-	RSSVectorSmallType x(size), y(size), z(size);
-	PrecomputeObject.getTriplets(x, y, z, size);
-
-	subtractVectors<RSSSmallType>(x, a, x, size);
-	subtractVectors<RSSSmallType>(y, b, y, size);
-
-	size_t combined_size = 2*size;
-	RSSVectorSmallType combined(combined_size); 
-	vector<smallType> rhoSigma(combined_size), rho(size), sigma(size), temp_send(size);
-	for (int i = 0; i < size; ++i)
-		combined[i] = x[i];
-
-	for (int i = size; i < combined_size; ++i)
-		combined[i] = y[i-size];
-
-	funcReconstruct(combined, rhoSigma, combined_size, "rhoSigma", false);
-
-	for (int i = 0; i < size; ++i)
-		rho[i] = rhoSigma[i];
-
-	for (int i = size; i < combined_size; ++i)
-		sigma[i-size] = rhoSigma[i];
-
-
-	vector<smallType> temp_recv(size);
-	//Doing x times sigma, rho times y, and rho times sigma
-	for (int i = 0; i < size; ++i)
-	{
-		temp_send[i] = x[i].first + sigma[i];
-		temp_send[i] = rho[i] + y[i].first;
-		temp_send[i] = rho[i] + sigma[i];
-	}
-
-
-	thread *threads = new thread[2];
-	threads[0] = thread(sendVector<smallType>, ref(temp_send), nextParty(partyNum), size);
-	threads[1] = thread(receiveVector<smallType>, ref(temp_recv), prevParty(partyNum), size);
-	for (int i = 0; i < 2; i++)
-		threads[i].join();
-	delete[] threads;
-
-	for (int i = 0; i < size; ++i)
-		if (temp[i] == temp_recv[i])
-		{
-			//Do the abort thing	
-		}
-}
-
-
-void funcCheckMaliciousDotProdBits(const RSSVectorSmallType &a, const RSSVectorSmallType &b, const RSSVectorSmallType &c, 
-							const vector<smallType> &temp, size_t size)
-{
-	RSSVectorSmallType x(size), y(size), z(size);
-	PrecomputeObject.getTriplets(x, y, z, size);
-
-	subtractVectors<RSSSmallType>(x, a, x, size);
-	subtractVectors<RSSSmallType>(y, b, y, size);
-
-	size_t combined_size = 2*size;
-	RSSVectorSmallType combined(combined_size); 
-	vector<smallType> rhoSigma(combined_size), rho(size), sigma(size), temp_send(size);
-	for (int i = 0; i < size; ++i)
-		combined[i] = x[i];
-
-	for (int i = size; i < combined_size; ++i)
-		combined[i] = y[i-size];
-
-	funcReconstruct(combined, rhoSigma, combined_size, "rhoSigma", false);
-
-	for (int i = 0; i < size; ++i)
-		rho[i] = rhoSigma[i];
-
-	for (int i = size; i < combined_size; ++i)
-		sigma[i-size] = rhoSigma[i];
-
-
-	vector<smallType> temp_recv(size);
-	//Doing x times sigma, rho times y, and rho times sigma
-	for (int i = 0; i < size; ++i)
-	{
-		temp_send[i] = x[i].first + sigma[i];
-		temp_send[i] = rho[i] + y[i].first;
-		temp_send[i] = rho[i] + sigma[i];
-	}
-
-
-	thread *threads = new thread[2];
-	threads[0] = thread(sendVector<smallType>, ref(temp_send), nextParty(partyNum), size);
-	threads[1] = thread(receiveVector<smallType>, ref(temp_recv), prevParty(partyNum), size);
-	for (int i = 0; i < 2; i++)
-		threads[i].join();
-	delete[] threads;
-
-	for (int i = 0; i < size; ++i)
-		if (temp[i] == temp_recv[i])
-		{
-			//Do the abort thing	
-		}
-}
-
-
-
-//Asymmetric protocol for semi-honest setting.
-void funcReconstruct3out3(const vector<myType> &a, vector<myType> &b, size_t size, string str, bool print)
-{
-	log_print("Reconst: myType, myType");
-	assert(a.size() == size && "a.size mismatch for reconstruct function");
-
-	vector<myType> temp_A(size,0), temp_B(size, 0);
-
-	if (partyNum == PARTY_A or partyNum == PARTY_B)
-		sendVector<myType>(a, PARTY_C, size);
-
-	if (partyNum == PARTY_C)
-	{
-		receiveVector<myType>(temp_A, PARTY_A, size);
-		receiveVector<myType>(temp_B, PARTY_B, size);
-		addVectors<myType>(temp_A, a, temp_A, size);
-		addVectors<myType>(temp_B, temp_A, b, size);
-		sendVector<myType>(b, PARTY_A, size);
-		sendVector<myType>(b, PARTY_B, size);
-	}
-
-	if (partyNum == PARTY_A or partyNum == PARTY_B)
-		receiveVector<myType>(b, PARTY_C, size);
-
-	if (print)
-	{
-		std::cout << str << ": \t\t";
-		for (int i = 0; i < size; ++i)
-			print_linear(b[i], "SIGNED");
-		std::cout << std::endl;
-	}
-
-
-	if (SECURITY_TYPE.compare("Semi-honest") == 0)
-	{}
-
-	if (SECURITY_TYPE.compare("Malicious") == 0)
-	{}
-}
-
-//Symmetric variant of the reconstruct protocol.
-// void funcReconstruct(const vector<myType> &a, vector<myType> &b, size_t size, string str, bool print)
-// {
-// 	assert(a.size() == size && "a.size mismatch for reconstruct function");
-
-// 	vector<myType> a_next(size), a_prev(size);
-// 	for (int i = 0; i < size; ++i)
-// 	{
-// 		a_prev[i] = 0;
-// 		a_next[i] = 0;
-// 	}
-
-// 	thread *threads = new thread[4];
-
-// 	threads[0] = thread(sendVector<myType>, ref(a), nextParty(partyNum), size);
-// 	threads[1] = thread(sendVector<myType>, ref(a), prevParty(partyNum), size);
-// 	threads[2] = thread(receiveVector<myType>, ref(a_next), nextParty(partyNum), size);
-// 	threads[3] = thread(receiveVector<myType>, ref(a_prev), prevParty(partyNum), size);
-
-// 	for (int i = 0; i < 4; i++)
-// 		threads[i].join();
-
-// 	delete[] threads;
-
-// 	for (int i = 0; i < size; ++i)
-// 		b[i] = a[i] + a_prev[i] + a_next[i];
-
-// #if (LOG_DEBUG)
-// 	if (print)
-// 	{
-// 		std::cout << str << ": ";
-// 		for (int i = 0; i < size; ++i)
-// 			print_linear(b[i], "SIGNED");
-// 		std::cout << std::endl;
-// 	}
-// #endif
-// }
-
-
-
 /******************************** Functionalities MPC ********************************/
 // Matrix Multiplication of a*b = c with transpose flags for a,b.
 // Output is a share between PARTY_A and PARTY_B.
@@ -890,80 +435,6 @@ void funcDotProduct(const RSSVectorMyType &a, const RSSVectorMyType &b,
 }
 
 
-// Term by term multiplication of mod 67 vectors 
-void funcDotProduct(const RSSVectorSmallType &a, const RSSVectorSmallType &b, 
-							 RSSVectorSmallType &c, size_t size) 
-{
-	log_print("funcDotProduct");
-	assert(a.size() == size && "Matrix a incorrect for Mat-Mul");
-	assert(b.size() == size && "Matrix b incorrect for Mat-Mul");
-	assert(c.size() == size && "Matrix c incorrect for Mat-Mul");
-
-
-	vector<smallType> temp3(size, 0), recv(size, 0);
-	for (int i = 0; i < size; ++i)
-	{
-		temp3[i] = multiplicationModPrime[a[i].first][b[i].first];
-		temp3[i] = additionModPrime[temp3[i]][multiplicationModPrime[a[i].first][b[i].second]];
-		temp3[i] = additionModPrime[temp3[i]][multiplicationModPrime[a[i].second][b[i].first]];
-	}
-
-	//Add random shares of 0 locally
-	thread *threads = new thread[2];
-
-	threads[0] = thread(sendVector<smallType>, ref(temp3), prevParty(partyNum), size);
-	threads[1] = thread(receiveVector<smallType>, ref(recv), nextParty(partyNum), size);
-
-	for (int i = 0; i < 2; i++)
-		threads[i].join();
-
-	delete[] threads; 
-
-	for (int i = 0; i < size; ++i)
-	{
-		c[i].first = temp3[i];
-		c[i].second = recv[i];
-	}
-
-	if (SECURITY_TYPE.compare("Malicious") == 0)
-		funcCheckMaliciousDotProd(a, b, c, temp3, size);
-}
-
-
-// Term by term multiplication boolean shares
-void funcDotProductBits(const RSSVectorSmallType &a, const RSSVectorSmallType &b, 
-							 RSSVectorSmallType &c, size_t size) 
-{
-	log_print("funcDotProductBits");
-	assert(a.size() == size && "Matrix a incorrect for Mat-Mul");
-	assert(b.size() == size && "Matrix b incorrect for Mat-Mul");
-	assert(c.size() == size && "Matrix c incorrect for Mat-Mul");
-
-	vector<smallType> temp3(size, 0), recv(size, 0);
-	for (int i = 0; i < size; ++i)
-	{
-		temp3[i] = (a[i].first and b[i].first) ^ 
-				   (a[i].first and b[i].second) ^ 
-				   (a[i].second and b[i].first);
-	}
-
-	//Add random shares of 0 locally
-	thread *threads = new thread[2];
-	threads[0] = thread(sendVector<smallType>, ref(temp3), prevParty(partyNum), size);
-	threads[1] = thread(receiveVector<smallType>, ref(recv), nextParty(partyNum), size);
-	for (int i = 0; i < 2; i++)
-		threads[i].join();
-	delete[] threads; 
-
-	for (int i = 0; i < size; ++i)
-	{
-		c[i].first = temp3[i];
-		c[i].second = recv[i];
-	}
-
-	if (SECURITY_TYPE.compare("Malicious") == 0)
-		funcCheckMaliciousDotProdBits(a, b, c, temp3, size);
-}
 
 
 //Multiply index 2i, 2i+1 of the first vector into the second one. The second vector is half the size.
@@ -1311,9 +782,10 @@ void funcPrivateCompare(const RSSVectorSmallType &share_m, const vector<myType> 
 
 template<typename T, typename U>
 void NEW_funcWrap(const RSSData<T> &a, RSSData<U> &theta) {
-    size_t sizeLong = a.size() * BIT_SIZE;
-
+    //size_t sizeLong = a.size() * BIT_SIZE;
     // pick up at shareConvertObjects
+
+    // TODO: pass
 }
 
 //Wrap functionality.
@@ -1468,8 +940,10 @@ void funcSelectBitShares(const RSSVectorSmallType &a0, const RSSVectorSmallType 
 
 template<typename T, typename U>
 void NEW_funcRELUPrime(const RSSData<T> &a, RSSData<U> &b, size_t size) {
-    RSSData<T> twoA = a / 2;
+    //RSSData<T> twoA = a / 2;
     // pick up at funcWrap
+
+    // TODO: pass
 }
 
 // b holds bits of ReLU' of a
@@ -1496,6 +970,8 @@ void funcRELUPrime(const RSSVectorMyType &a, RSSVectorSmallType &b, size_t size)
 template<typename T, U>
 void NEW_funcRELU(const RSSData<T> &a, RSSData<U> &temp, RSSData<T> &b, size_t size) {
     // pick up at funcRELUPrime
+
+    // TODO: pass
 }
 
 //Input is a, outputs are temp = ReLU'(a) and b = RELU(a).
@@ -2124,3 +1600,547 @@ void testMaxpool(size_t ih, size_t iw, size_t Din, size_t f, size_t S, size_t B,
 		funcMaxpool(temp1, b, c, ow*oh*Din*B, f*f);
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+void funcTruncatePublic(RSSVectorMyType &a, size_t divisor, size_t size)
+{
+	log_print("funcTruncate");
+
+	RSSVectorMyType r(size), rPrime(size);
+	vector<myType> reconst(size);
+	PrecomputeObject.getDividedShares(r, rPrime, divisor, size);
+	for (int i = 0; i < size; ++i)
+		a[i] = a[i] - rPrime[i];
+	
+	funcReconstruct(a, reconst, size, "Truncate reconst", false);
+	dividePlain(reconst, divisor);
+	if (partyNum == PARTY_A)
+	{
+		for (int i = 0; i < size; ++i)
+		{
+			a[i].first = r[i].first + reconst[i];
+			a[i].second = r[i].second;
+		}
+	}
+
+	if (partyNum == PARTY_B)
+	{
+		for (int i = 0; i < size; ++i)
+		{
+			a[i].first = r[i].first;
+			a[i].second = r[i].second;
+		}
+	}
+
+	if (partyNum == PARTY_C)
+	{
+		for (int i = 0; i < size; ++i)
+		{
+			a[i].first = r[i].first;
+			a[i].second = r[i].second + reconst[i];
+		}
+	}	
+}
+*/
+
+/*
+//Fixed-point data has to be processed outside this function.
+void funcGetShares(RSSVectorMyType &a, const vector<myType> &data)
+{
+	size_t size = a.size();
+
+	if (partyNum == PARTY_A)
+	{
+		for (int i = 0; i < size; ++i)
+		{
+			a[i].first = data[i];
+			a[i].second = 0;
+		}
+	}
+	else if (partyNum == PARTY_B)
+	{
+		for (int i = 0; i < size; ++i)
+		{
+			a[i].first = 0;
+			a[i].second = 0;
+		}
+	}
+	else if (partyNum == PARTY_C)
+	{
+		for (int i = 0; i < size; ++i)
+		{
+			a[i].first = 0;
+			a[i].second = data[i];
+		}
+	}
+}
+
+
+void funcGetShares(RSSVectorSmallType &a, const vector<smallType> &data)
+{
+	size_t size = a.size();
+	
+	if (partyNum == PARTY_A)
+	{
+		for (int i = 0; i < size; ++i)
+		{
+			a[i].first = data[i];
+			a[i].second = 0;
+		}
+	}
+	else if (partyNum == PARTY_B)
+	{
+		for (int i = 0; i < size; ++i)
+		{
+			a[i].first = 0;
+			a[i].second = 0;
+		}
+	}
+	else if (partyNum == PARTY_C)
+	{
+		for (int i = 0; i < size; ++i)
+		{
+			a[i].first = 0;
+			a[i].second = data[i];
+		}
+	}
+}
+
+void funcReconstructBit(const RSSVectorSmallType &a, vector<smallType> &b, size_t size, string str, bool print)
+{
+	log_print("Reconst: RSSSmallType (bits), smallType (bit)");
+
+	if (SECURITY_TYPE.compare("Semi-honest") == 0)
+	{
+		vector<smallType> a_next(size), a_prev(size);
+		for (int i = 0; i < size; ++i)
+		{
+			a_prev[i] = 0;
+			a_next[i] = a[i].first;
+			b[i] = a[i].first;
+			b[i] = b[i] ^ a[i].second;
+		}
+
+		thread *threads = new thread[2];
+		threads[0] = thread(sendVector<smallType>, ref(a_next), nextParty(partyNum), size);
+		threads[1] = thread(receiveVector<smallType>, ref(a_prev), prevParty(partyNum), size);
+		for (int i = 0; i < 2; i++)
+			threads[i].join();
+		delete[] threads;
+
+		for (int i = 0; i < size; ++i)
+			b[i] = b[i] ^ a_prev[i];
+
+		if (print)
+		{
+			std::cout << str << ": \t\t";
+			for (int i = 0; i < size; ++i)
+				cout << (int)(b[i]) << " "; 
+			std::cout << std::endl;
+		}
+	}
+
+	if (SECURITY_TYPE.compare("Malicious") == 0)
+	{
+		vector<smallType> a_next_send(size), a_prev_send(size), a_next_recv(size), a_prev_recv(size);
+		for (int i = 0; i < size; ++i)
+		{
+			a_prev_send[i] = a[i].second;
+			a_next_send[i] = a[i].first;
+			b[i] = a[i].first;
+			b[i] = b[i] ^ a[i].second;
+		}
+
+		thread *threads = new thread[4];
+		threads[0] = thread(sendVector<smallType>, ref(a_next_send), nextParty(partyNum), size);
+		threads[1] = thread(sendVector<smallType>, ref(a_prev_send), prevParty(partyNum), size);
+		threads[2] = thread(receiveVector<smallType>, ref(a_next_recv), nextParty(partyNum), size);
+		threads[3] = thread(receiveVector<smallType>, ref(a_prev_recv), prevParty(partyNum), size);
+		for (int i = 0; i < 4; i++)
+			threads[i].join();
+		delete[] threads;
+
+		for (int i = 0; i < size; ++i)
+		{
+			if (a_next_recv[i] != a_prev_recv[i])
+			{
+				// error("Malicious behaviour detected");
+			}
+			b[i] = b[i] ^ a_prev_recv[i];
+		}
+
+		if (print)
+		{
+			std::cout << str << ": \t\t";
+			for (int i = 0; i < size; ++i)
+				cout << (int)(b[i]) << " "; 
+			std::cout << std::endl;
+		}
+	}
+}
+*/
+
+/*
+void funcReconstruct(const RSSVectorSmallType &a, vector<smallType> &b, size_t size, string str, bool print)
+{
+	log_print("Reconst: RSSSmallType, smallType");
+
+	if (SECURITY_TYPE.compare("Semi-honest") == 0)
+	{
+		vector<smallType> a_next(size), a_prev(size);
+		for (int i = 0; i < size; ++i)
+		{
+			a_prev[i] = 0;
+			a_next[i] = a[i].first;
+			b[i] = a[i].first;
+			b[i] = additionModPrime[b[i]][a[i].second];
+		}
+
+		thread *threads = new thread[2];
+
+		threads[0] = thread(sendVector<smallType>, ref(a_next), nextParty(partyNum), size);
+		threads[1] = thread(receiveVector<smallType>, ref(a_prev), prevParty(partyNum), size);
+
+		for (int i = 0; i < 2; i++)
+			threads[i].join();
+
+		delete[] threads;
+
+		for (int i = 0; i < size; ++i)
+			b[i] = additionModPrime[b[i]][a_prev[i]];
+
+		if (print)
+		{
+			std::cout << str << ": \t\t";
+			for (int i = 0; i < size; ++i)
+				cout << (int)(b[i]) << " "; 
+			std::cout << std::endl;
+		}
+	}
+
+	if (SECURITY_TYPE.compare("Malicious") == 0)
+	{
+		vector<smallType> a_next_send(size), a_prev_send(size), a_next_recv(size), a_prev_recv(size);
+		for (int i = 0; i < size; ++i)
+		{
+			a_prev_send[i] = a[i].second;
+			a_next_send[i] = a[i].first;
+			b[i] = a[i].first;
+			// b[i] = additionModPrime[b[i]][a[i].second];
+		}
+
+		thread *threads = new thread[4];
+		threads[0] = thread(sendVector<smallType>, ref(a_next_send), nextParty(partyNum), size);
+		threads[1] = thread(sendVector<smallType>, ref(a_prev_send), prevParty(partyNum), size);
+		threads[2] = thread(receiveVector<smallType>, ref(a_next_recv), nextParty(partyNum), size);
+		threads[3] = thread(receiveVector<smallType>, ref(a_prev_recv), prevParty(partyNum), size);
+		for (int i = 0; i < 4; i++)
+			threads[i].join();
+		delete[] threads;
+
+		for (int i = 0; i < size; ++i)
+		{
+			if (a_next_recv[i] != a_prev_recv[i])
+			{
+				// error("Malicious behaviour detected");
+			}
+			// b[i] = additionModPrime[b[i]][a_prev_recv[i]];
+		}
+
+		if (print)
+		{
+			std::cout << str << ": \t\t";
+			for (int i = 0; i < size; ++i)
+				cout << (int)(b[i]) << " "; 
+			std::cout << std::endl;
+		}
+	}
+}
+*/
+
+//Asymmetric protocol for semi-honest setting.
+/*
+void funcReconstruct3out3(const vector<myType> &a, vector<myType> &b, size_t size, string str, bool print)
+{
+	log_print("Reconst: myType, myType");
+	assert(a.size() == size && "a.size mismatch for reconstruct function");
+
+	vector<myType> temp_A(size,0), temp_B(size, 0);
+
+	if (partyNum == PARTY_A or partyNum == PARTY_B)
+		sendVector<myType>(a, PARTY_C, size);
+
+	if (partyNum == PARTY_C)
+	{
+		receiveVector<myType>(temp_A, PARTY_A, size);
+		receiveVector<myType>(temp_B, PARTY_B, size);
+		addVectors<myType>(temp_A, a, temp_A, size);
+		addVectors<myType>(temp_B, temp_A, b, size);
+		sendVector<myType>(b, PARTY_A, size);
+		sendVector<myType>(b, PARTY_B, size);
+	}
+
+	if (partyNum == PARTY_A or partyNum == PARTY_B)
+		receiveVector<myType>(b, PARTY_C, size);
+
+	if (print)
+	{
+		std::cout << str << ": \t\t";
+		for (int i = 0; i < size; ++i)
+			print_linear(b[i], "SIGNED");
+		std::cout << std::endl;
+	}
+
+
+	if (SECURITY_TYPE.compare("Semi-honest") == 0)
+	{}
+
+	if (SECURITY_TYPE.compare("Malicious") == 0)
+	{}
+}
+
+//Symmetric variant of the reconstruct protocol.
+// void funcReconstruct(const vector<myType> &a, vector<myType> &b, size_t size, string str, bool print)
+// {
+// 	assert(a.size() == size && "a.size mismatch for reconstruct function");
+
+// 	vector<myType> a_next(size), a_prev(size);
+// 	for (int i = 0; i < size; ++i)
+// 	{
+// 		a_prev[i] = 0;
+// 		a_next[i] = 0;
+// 	}
+
+// 	thread *threads = new thread[4];
+
+// 	threads[0] = thread(sendVector<myType>, ref(a), nextParty(partyNum), size);
+// 	threads[1] = thread(sendVector<myType>, ref(a), prevParty(partyNum), size);
+// 	threads[2] = thread(receiveVector<myType>, ref(a_next), nextParty(partyNum), size);
+// 	threads[3] = thread(receiveVector<myType>, ref(a_prev), prevParty(partyNum), size);
+
+// 	for (int i = 0; i < 4; i++)
+// 		threads[i].join();
+
+// 	delete[] threads;
+
+// 	for (int i = 0; i < size; ++i)
+// 		b[i] = a[i] + a_prev[i] + a_next[i];
+
+// #if (LOG_DEBUG)
+// 	if (print)
+// 	{
+// 		std::cout << str << ": ";
+// 		for (int i = 0; i < size; ++i)
+// 			print_linear(b[i], "SIGNED");
+// 		std::cout << std::endl;
+// 	}
+// #endif
+// }
+*/
+
+/*
+void funcCheckMaliciousDotProd(const RSSVectorSmallType &a, const RSSVectorSmallType &b, const RSSVectorSmallType &c, 
+							const vector<smallType> &temp, size_t size)
+{
+	RSSVectorSmallType x(size), y(size), z(size);
+	PrecomputeObject.getTriplets(x, y, z, size);
+
+	subtractVectors<RSSSmallType>(x, a, x, size);
+	subtractVectors<RSSSmallType>(y, b, y, size);
+
+	size_t combined_size = 2*size;
+	RSSVectorSmallType combined(combined_size); 
+	vector<smallType> rhoSigma(combined_size), rho(size), sigma(size), temp_send(size);
+	for (int i = 0; i < size; ++i)
+		combined[i] = x[i];
+
+	for (int i = size; i < combined_size; ++i)
+		combined[i] = y[i-size];
+
+	funcReconstruct(combined, rhoSigma, combined_size, "rhoSigma", false);
+
+	for (int i = 0; i < size; ++i)
+		rho[i] = rhoSigma[i];
+
+	for (int i = size; i < combined_size; ++i)
+		sigma[i-size] = rhoSigma[i];
+
+
+	vector<smallType> temp_recv(size);
+	//Doing x times sigma, rho times y, and rho times sigma
+	for (int i = 0; i < size; ++i)
+	{
+		temp_send[i] = x[i].first + sigma[i];
+		temp_send[i] = rho[i] + y[i].first;
+		temp_send[i] = rho[i] + sigma[i];
+	}
+
+
+	thread *threads = new thread[2];
+	threads[0] = thread(sendVector<smallType>, ref(temp_send), nextParty(partyNum), size);
+	threads[1] = thread(receiveVector<smallType>, ref(temp_recv), prevParty(partyNum), size);
+	for (int i = 0; i < 2; i++)
+		threads[i].join();
+	delete[] threads;
+
+	for (int i = 0; i < size; ++i)
+		if (temp[i] == temp_recv[i])
+		{
+			//Do the abort thing	
+		}
+}
+*/
+
+/*
+void funcCheckMaliciousDotProdBits(const RSSVectorSmallType &a, const RSSVectorSmallType &b, const RSSVectorSmallType &c, 
+							const vector<smallType> &temp, size_t size)
+{
+	RSSVectorSmallType x(size), y(size), z(size);
+	PrecomputeObject.getTriplets(x, y, z, size);
+
+	subtractVectors<RSSSmallType>(x, a, x, size);
+	subtractVectors<RSSSmallType>(y, b, y, size);
+
+	size_t combined_size = 2*size;
+	RSSVectorSmallType combined(combined_size); 
+	vector<smallType> rhoSigma(combined_size), rho(size), sigma(size), temp_send(size);
+	for (int i = 0; i < size; ++i)
+		combined[i] = x[i];
+
+	for (int i = size; i < combined_size; ++i)
+		combined[i] = y[i-size];
+
+	funcReconstruct(combined, rhoSigma, combined_size, "rhoSigma", false);
+
+	for (int i = 0; i < size; ++i)
+		rho[i] = rhoSigma[i];
+
+	for (int i = size; i < combined_size; ++i)
+		sigma[i-size] = rhoSigma[i];
+
+
+	vector<smallType> temp_recv(size);
+	//Doing x times sigma, rho times y, and rho times sigma
+	for (int i = 0; i < size; ++i)
+	{
+		temp_send[i] = x[i].first + sigma[i];
+		temp_send[i] = rho[i] + y[i].first;
+		temp_send[i] = rho[i] + sigma[i];
+	}
+
+
+	thread *threads = new thread[2];
+	threads[0] = thread(sendVector<smallType>, ref(temp_send), nextParty(partyNum), size);
+	threads[1] = thread(receiveVector<smallType>, ref(temp_recv), prevParty(partyNum), size);
+	for (int i = 0; i < 2; i++)
+		threads[i].join();
+	delete[] threads;
+
+	for (int i = 0; i < size; ++i)
+		if (temp[i] == temp_recv[i])
+		{
+			//Do the abort thing	
+		}
+}
+*/
+
+/*
+// Term by term multiplication of mod 67 vectors 
+void funcDotProduct(const RSSVectorSmallType &a, const RSSVectorSmallType &b, 
+							 RSSVectorSmallType &c, size_t size) 
+{
+	log_print("funcDotProduct");
+	assert(a.size() == size && "Matrix a incorrect for Mat-Mul");
+	assert(b.size() == size && "Matrix b incorrect for Mat-Mul");
+	assert(c.size() == size && "Matrix c incorrect for Mat-Mul");
+
+
+	vector<smallType> temp3(size, 0), recv(size, 0);
+	for (int i = 0; i < size; ++i)
+	{
+		temp3[i] = multiplicationModPrime[a[i].first][b[i].first];
+		temp3[i] = additionModPrime[temp3[i]][multiplicationModPrime[a[i].first][b[i].second]];
+		temp3[i] = additionModPrime[temp3[i]][multiplicationModPrime[a[i].second][b[i].first]];
+	}
+
+	//Add random shares of 0 locally
+	thread *threads = new thread[2];
+
+	threads[0] = thread(sendVector<smallType>, ref(temp3), prevParty(partyNum), size);
+	threads[1] = thread(receiveVector<smallType>, ref(recv), nextParty(partyNum), size);
+
+	for (int i = 0; i < 2; i++)
+		threads[i].join();
+
+	delete[] threads; 
+
+	for (int i = 0; i < size; ++i)
+	{
+		c[i].first = temp3[i];
+		c[i].second = recv[i];
+	}
+
+	if (SECURITY_TYPE.compare("Malicious") == 0)
+		funcCheckMaliciousDotProd(a, b, c, temp3, size);
+}
+*/
+
+/*
+// Term by term multiplication boolean shares
+void funcDotProductBits(const RSSVectorSmallType &a, const RSSVectorSmallType &b, 
+							 RSSVectorSmallType &c, size_t size) 
+{
+	log_print("funcDotProductBits");
+	assert(a.size() == size && "Matrix a incorrect for Mat-Mul");
+	assert(b.size() == size && "Matrix b incorrect for Mat-Mul");
+	assert(c.size() == size && "Matrix c incorrect for Mat-Mul");
+
+	vector<smallType> temp3(size, 0), recv(size, 0);
+	for (int i = 0; i < size; ++i)
+	{
+		temp3[i] = (a[i].first and b[i].first) ^ 
+				   (a[i].first and b[i].second) ^ 
+				   (a[i].second and b[i].first);
+	}
+
+	//Add random shares of 0 locally
+	thread *threads = new thread[2];
+	threads[0] = thread(sendVector<smallType>, ref(temp3), prevParty(partyNum), size);
+	threads[1] = thread(receiveVector<smallType>, ref(recv), nextParty(partyNum), size);
+	for (int i = 0; i < 2; i++)
+		threads[i].join();
+	delete[] threads; 
+
+	for (int i = 0; i < size; ++i)
+	{
+		c[i].first = temp3[i];
+		c[i].second = recv[i];
+	}
+
+	if (SECURITY_TYPE.compare("Malicious") == 0)
+		funcCheckMaliciousDotProdBits(a, b, c, temp3, size);
+}
+*/

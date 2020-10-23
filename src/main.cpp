@@ -15,7 +15,7 @@ int partyNum;
 AESObject* aes_indep;
 AESObject* aes_next;
 AESObject* aes_prev;
-Precompute PrecomputeObject;
+Precompute<T> PrecomputeObject;
 
 extern Profiler matmul_profiler;
 

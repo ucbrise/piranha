@@ -21,6 +21,20 @@ void Precompute::getDividedShares(RSSVectorMyType &r, RSSVectorMyType &rPrime, i
 	}
 }
 
+// Currently, r = 3 and rPrime = 3 * 2^d
+template<typename T>
+void Precompute::getDividedShares(DeviceBuffer<T> &r, DeviceBuffer<T> &rPrime, int d, size_t size)
+{
+	assert(r.size() == size && "r.size is incorrect");
+	assert(rPrime.size() == size && "rPrime.size is incorrect");
+
+    r.zero();
+    rPrime.zero();
+
+    r += 1;
+    rPrime += d;
+}
+
 void Precompute::getRandomBitShares(RSSVectorSmallType &a, size_t size)
 {
 	assert(a.size() == size && "size mismatch for getRandomBitShares");

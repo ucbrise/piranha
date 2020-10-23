@@ -6,12 +6,13 @@
 #include "kernel/scalar.cuh"
 
 template<typename T>
-DeviceBuffer<T>::DeviceBuffer(size_t n) : hostBuffer(0) {
+DeviceBuffer<T>::DeviceBuffer(size_t n) : hostBuffer(0), transmitting(false) {
     allocate(n);
 }
 
 template<typename T>
-DeviceBuffer<T>::DeviceBuffer(const DeviceBuffer<T> &b) : hostBuffer(0) {
+DeviceBuffer<T>::DeviceBuffer(const DeviceBuffer<T> &b) : hostBuffer(0), 
+                                                          transmitting(false) {
     allocate(b.size());
 
     cudaError_t err = cudaMemcpy(this->start, b.start, this->size(),
@@ -72,10 +73,8 @@ size_t DeviceBuffer<T>::size() const {
 template<typename T>
 void DeviceBuffer<T>::send(size_t party) {
 
-    if (transmitThread.joinable()) {
-        throw std::runtime_error("Device buffer tx failed: already transmitting");
-    } else if (receiveThread.joinable()) {
-        throw std::runtime_error("Device buffer tx failed: already receiving");
+    if (rtxThread.joinable()) {
+        throw std::runtime_error("Device buffer tx failed: already transmitting or receiving");
     }
 
     // copy to host
@@ -83,37 +82,33 @@ void DeviceBuffer<T>::send(size_t party) {
     get(hostBuffer.data(), size());
 
     // transmit
-    transmitThread = std::thread(sendVector<T>, ref(hostBuffer), party, size());
+    transmitting = true;
+    rtxThread = std::thread(sendVector<T>, ref(hostBuffer), party, size());
 }
 
 template<typename T>
-template<typename U>
 void DeviceBuffer<T>::receive(size_t party) {
 
-    if (receiveThread.joinable()) {
-        throw std::runtime_error("Device buffer rx failed: already receiving");
-    } else if (transmitThread.joinable()) {
-        throw std::runtime_error("Device buffer rx failed: already transmitting");
+    if (rtxThread.joinable()) {
+        throw std::runtime_error("Device buffer rx failed: already transmitting or receiving");
     }
 
     hostBuffer.resize(size());
-    receiveThread = std::thread(receiveVector<T, U>, ref(hostBuffer), party, size());
+
+    transmitting = false;
+    rtxThread = std::thread(receiveVector<T>, ref(hostBuffer), party, size());
 }
 
 template<typename T>
 void DeviceBuffer<T>::join() {
-    if (receiveThread.joinable()) {
-        // join thread and copy to device
-        receiveThread.join();
-        set(hostBuffer.data(), size());
 
-        // clear host buffer
-        std::vector<T>().swap(hostBuffer);
-    } else if (transmitThread.joinable()) {
-        // join thread and clear host buffer
-        transmitThread.join();
-        std::vector<T>().swap(hostBuffer);
+    if (!rtxThread.joinable()) return;
+    
+    rtxThread.join();
+    if (!transmitting) {
+        set(hostBuffer.data(), size());  // send to GPU
     }
+    std::vector<T>().swap(hostBuffer); // clear buffer
 }
 
 template<typename T> 

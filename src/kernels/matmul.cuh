@@ -1,8 +1,10 @@
-#ifndef KERNEL_CUH_
-#define KERNEL_CUH_
+
+#pragma once
+
+namespace kernel {
 
 template<typename T>
-__global__ void matrixMultiplicationKernel(T *A, T *B, T *C, bool transpose_a, bool transpose_b, int rows, int shared, int cols) {
+__global__ void matrixMultiplication(T *A, T *B, T *C, bool transpose_a, bool transpose_b, int rows, int shared, int cols) {
 
     int ROW = blockIdx.y*blockDim.y+threadIdx.y;
     int COL = blockIdx.x*blockDim.x+threadIdx.x;
@@ -17,6 +19,8 @@ __global__ void matrixMultiplicationKernel(T *A, T *B, T *C, bool transpose_a, b
             C[ROW * cols + COL] += A[a_idx] * B[b_idx];
         }
     }
+}
+
 }
 
 template<typename T>
@@ -34,7 +38,6 @@ void matrixMultiplication(T *A, T *B, T *C, bool transpose_a, bool transpose_b, 
         blocksPerGrid.y = ceil(double(rows)/double(threadsPerBlock.y));
     }
 
-    matrixMultiplicationKernel<T><<<blocksPerGrid,threadsPerBlock>>>(A, B, C, transpose_a, transpose_b, rows, shared, cols);
+    kernel::matrixMultiplication<T><<<blocksPerGrid,threadsPerBlock>>>(A, B, C, transpose_a, transpose_b, rows, shared, cols);
 }
 
-#endif // KERNEL_CUH_

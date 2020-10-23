@@ -4,8 +4,9 @@
 
 #pragma once
 #include "globals.h"
+#include "RSSData.h"
 
-
+template<typename T>
 class Precompute
 {
 private:
@@ -16,6 +17,7 @@ public:
 	~Precompute();
 
 	void getDividedShares(RSSVectorMyType &r, RSSVectorMyType &rPrime, int d, size_t size);
+	void getDividedShares(DeviceBuffer<T> &r, DeviceBuffer<T> &rPrime, int d, size_t size);
 	void getRandomBitShares(RSSVectorSmallType &a, size_t size);
 	void getSelectorBitShares(RSSVectorSmallType &c, RSSVectorMyType &m_c, size_t size);
 	void getShareConvertObjects(RSSVectorMyType &r, RSSVectorSmallType &shares_r, RSSVectorSmallType &alpha, size_t size);

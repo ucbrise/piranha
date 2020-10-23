@@ -21,8 +21,9 @@ class RSSData
         ~RSSData();
 
         size_t size();
+        void zero();
+
         DeviceBuffer<T>& operator [](size_t i);
-        RSSData<T> operator -(const T scalar) const;
 
     private:
 

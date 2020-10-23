@@ -33,9 +33,7 @@ class DeviceBuffer
         void resize(size_t n);
         size_t size();
 
-        template<typename U>
         void send(size_t party);
-        template<typename U>
         void receive(size_t party);
         void join();
 
@@ -64,8 +62,8 @@ class DeviceBuffer
         T* start;
         T* end;
 
-        std::thread transmitThread;
-        std::thread receiveThread;
+        bool transmitting;
+        std::thread rtxThread;
         std::vector<T> hostBuffer;
 };
 
