@@ -37,8 +37,9 @@ __global__ void vectorEquals(T *A, T *B, int size, int *eq) {
     }
 }
 
-}
+} // namespace kernel
 
+// TODO: device namespace
 template<typename T>
 void vectorAdd(T *A, T *B, int size) {
 

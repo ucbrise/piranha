@@ -12,7 +12,7 @@ OBJ_FILES         += $(addprefix $(BUILDDIR)/, $(notdir $(SRC_CU_FILES:.cu=.o)))
 HEADER_FILES      := $(wildcard src/*.h) $(wildcard src/*.cuh)
 
 LIBS := -lcrypto -lssl -lcudart -lcuda
-OBJ_INCLUDES := -I 'lib_eigen/' -I 'util/Miracl/' -I 'util/' -I 'gpumatmul/'
+OBJ_INCLUDES := -I 'util/Miracl/' -I 'util/'
 OBJ_INCLUDES += -I '$(CONDA_BASE)/include' -I '/usr/local/cuda-10.2/include'
 BMR_INCLUDES := $(OBJ_INCLUDES), -L./ -L$(CONDA_BASE)/lib -L/usr/local/cuda-10.2/lib64
 

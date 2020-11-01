@@ -8,9 +8,9 @@
 #pragma once
 
 #include <cstddef>
-#include "DeviceBuffer.h"
+
 #include "globals.h"
-#include <vector>
+#include "SecretShare.h"
 
 template <typename T>
 class RSSData 
@@ -23,12 +23,12 @@ class RSSData
         size_t size();
         void zero();
 
-        DeviceBuffer<T>& operator [](size_t i);
+        SecretShare<T>& operator [](size_t i);
 
     private:
 
-        RSSData(const DeviceBuffer<T> &a, const DeviceBuffer<T> &b);
+        RSSData(const SecretShare<T> &a, const SecretShare<T> &b);
 
-        DeviceBuffer<T> shareA;
-        DeviceBuffer<T> shareB;
+        SecretShare<T> shareA;
+        SecretShare<T> shareB;
 };

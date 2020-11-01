@@ -7,6 +7,7 @@
 #include <exception>
 #include "Functionalities.h"
 #include "Precompute.h"
+#include "Profiler.h"
 #include "RSSData.h"
 #include <stdexcept>
 #include <thread>
@@ -17,86 +18,14 @@ extern Precompute<T> PrecomputeObject;
 extern string SECURITY_TYPE;
 
 template<typename T>
-void NEW_funcTruncate(RSSData<T> &a, size_t power) {
-
-    size_t size = a.size();
-
-    DeviceBuffer<T> r(size), rPrime(size);
-    PrecomputeObject.getDividedShares(r, rPrime, (1 << power), size); 
-    a -= rPrime;
-    
-    DeviceBuffer<T> reconstructed(size);
-    NEW_funcReconstruct(a, reconstructed);
-    reconstructed /= (1 << power);
-
-    switch (partyNum) {
-        case PARTY_A:
-            a[0] = reconstructed + r;
-            a[1] = r;
-            break;
-        case PARTY_B:
-            a[0] = r;
-            a[1] = r;
-            break;
-        case PARTY_C:
-            a[0] = r;
-            a[1] = reconstructed + r;
-            break;
-    }
-}
-
-/******************************** Functionalities 2PC ********************************/
-// Share Truncation, truncate shares of a by power (in place) (power is logarithmic)
-void funcTruncate(RSSVectorMyType &a, size_t power, size_t size)
-{
-	log_print("funcTruncate");
-
-	RSSVectorMyType r(size), rPrime(size);
-	vector<myType> reconst(size);
-	PrecomputeObject.getDividedShares(r, rPrime, (1<<power), size);
-	for (int i = 0; i < size; ++i)
-		a[i] = a[i] - rPrime[i];
-	
-	funcReconstruct(a, reconst, size, "Truncate reconst", false);
-	dividePlain(reconst, (1 << power));
-	if (partyNum == PARTY_A)
-	{
-		for (int i = 0; i < size; ++i)
-		{
-			a[i].first = r[i].first + reconst[i];
-			a[i].second = r[i].second;
-		}
-	}
-
-	if (partyNum == PARTY_B)
-	{
-		for (int i = 0; i < size; ++i)
-		{
-			a[i].first = r[i].first;
-			a[i].second = r[i].second;
-		}
-	}
-
-	if (partyNum == PARTY_C)
-	{
-		for (int i = 0; i < size; ++i)
-		{
-			a[i].first = r[i].first;
-			a[i].second = r[i].second + reconst[i];
-		}
-	}	
-}
-
-
-template<typename T>
-void NEW_funcReconstruct(RSSData<T> &a, DeviceBuffer<T> &reconstructed) {
+void NEW_funcReconstruct(RSSData<T> &a, SecretShare<T> &reconstructed) {
 
     if (SECURITY_TYPE.compare("Semi-honest") == 0) {
         // 1 - send shareA to next party
-        a[0].send(nextParty(partyNum));
+        a[0].transmit(nextParty(partyNum));
 
         // 2 - receive shareA from previous party into DeviceBuffer
-        DeviceBuffer<T> rxShare(a.size());
+        SecretShare<T> rxShare(a.size());
         rxShare.receive(prevParty(partyNum));
 
         a[0].join();
@@ -112,332 +41,140 @@ void NEW_funcReconstruct(RSSData<T> &a, DeviceBuffer<T> &reconstructed) {
     }
 }
 
-void funcReconstruct(const RSSVectorMyType &a, vector<myType> &b, size_t size, string str, bool print)
-{
-	log_print("Reconst: RSSMyType, myType");
-	assert(a.size() == size && "a.size mismatch for reconstruct function");
+template<typename T>
+void NEW_funcReconstruct3out3(const SecretShare<T> &a,
+        SecretShare<T> &reconstructed) {
 
-	if (SECURITY_TYPE.compare("Semi-honest") == 0)
-	{
-		vector<myType> a_next(size), a_prev(size);
-		for (int i = 0; i < size; ++i)
-		{
-			a_prev[i] = 0;
-			a_next[i] = a[i].first;
-			b[i] = a[i].first;
-			b[i] = b[i] + a[i].second;
-		}
+    if (SECURITY_TYPE.compare("Malicious") == 0) {
+        throw std::exception(
+            "[reconstruct 3-out-3] malicious functionality not re-implemented"
+        ); 
+    }
+    
+    switch(partyNum) {
+        case PARTY_A:
+        case PARTY_B:
+            a.transmit(PARTY_C);
+            a.join();
 
-		thread *threads = new thread[2];
+            reconstructed.receive(PARTY_C);
+            reconstructed.join();
 
-		threads[0] = thread(sendVector<myType>, ref(a_next), nextParty(partyNum), size);
-		threads[1] = thread(receiveVector<myType>, ref(a_prev), prevParty(partyNum), size);
+            break;
 
-		for (int i = 0; i < 2; i++)
-			threads[i].join();
+        case PARTY_C:
 
-		delete[] threads;
+            SecretShare<T> fromA(a.size()), fromB(a.size());
 
-		for (int i = 0; i < size; ++i)
-			b[i] = b[i] + a_prev[i];
+            fromA.receive(PARTY_A);
+            fromB.receive(PARTY_B);
+            fromA.join();
+            fromB.join();
 
-		if (print)
-		{
-			std::cout << str << ": \t\t";
-			for (int i = 0; i < size; ++i)
-				print_linear(b[i], "SIGNED");
-			std::cout << std::endl;
-		}
-	}
+            fromA += a;
+            reconstructed = fromB + fromA;
 
-	if (SECURITY_TYPE.compare("Malicious") == 0)
-	{
-		vector<smallType> a_next_send(size), a_prev_send(size), a_next_recv(size), a_prev_recv(size);
-		for (int i = 0; i < size; ++i)
-		{
-			a_prev_send[i] = a[i].second;
-			a_next_send[i] = a[i].first;
-			b[i] = a[i].first;
-			b[i] = b[i] + a[i].second;
-		}
+            // TODO parallelize this
+            reconstructed.transmit(PARTY_A);
+            reconstructed.join();
+            reconstructed.transmit(PARTY_B);
+            reconstructed.join();
 
-		thread *threads = new thread[4];
-		threads[0] = thread(sendVector<smallType>, ref(a_next_send), nextParty(partyNum), size);
-		threads[1] = thread(sendVector<smallType>, ref(a_prev_send), prevParty(partyNum), size);
-		threads[2] = thread(receiveVector<smallType>, ref(a_next_recv), nextParty(partyNum), size);
-		threads[3] = thread(receiveVector<smallType>, ref(a_prev_recv), prevParty(partyNum), size);
-		for (int i = 0; i < 4; i++)
-			threads[i].join();
-		delete[] threads;
-
-		for (int i = 0; i < size; ++i)
-		{
-			if (a_next_recv[i] != a_prev_recv[i])
-			{
-				// error("Malicious behaviour detected");
-			}
-			b[i] = b[i] + a_prev_recv[i];
-		}
-
-		if (print)
-		{
-			std::cout << str << ": \t\t";
-			for (int i = 0; i < size; ++i)
-				print_linear(b[i], "SIGNED");
-			std::cout << std::endl;
-		}
-	}
+            break;
+    } 
 }
 
-void funcCheckMaliciousMatMul(const RSSVectorMyType &a, const RSSVectorMyType &b, const RSSVectorMyType &c, 
-							const vector<myType> &temp, size_t rows, size_t common_dim, size_t columns,
-							size_t transpose_a, size_t transpose_b)
-{
-	RSSVectorMyType x(a.size()), y(b.size()), z(c.size());
-	PrecomputeObject.getTriplets(x, y, z, rows, common_dim, columns);
+template<typename T>
+void NEW_funcTruncate(RSSData<T> &a, size_t power) {
 
-	subtractVectors<RSSMyType>(x, a, x, rows*common_dim);
-	subtractVectors<RSSMyType>(y, b, y, common_dim*columns);
+    size_t size = a.size();
 
-	size_t combined_size = rows*common_dim + common_dim*columns, base_size = rows*common_dim;
-	RSSVectorMyType combined(combined_size); 
-	vector<myType> rhoSigma(combined_size), rho(rows*common_dim), sigma(common_dim*columns), temp_send(rows*columns);
-	for (int i = 0; i < rows*common_dim; ++i)
-		combined[i] = x[i];
+    RSSData<T> r(size), rPrime(size);
+    PrecomputeObject.getDividedShares(r, rPrime, (1 << power), size); 
+    a -= rPrime[0];
+    
+    SecretShare<T> reconstructed(size);
+    NEW_funcReconstruct(a, reconstructed);
+    reconstructed /= (1 << power);
 
-	for (int i = rows*common_dim; i < combined_size; ++i)
-		combined[i] = y[i-base_size];
-
-	funcReconstruct(combined, rhoSigma, combined_size, "rhoSigma", false);
-
-	for (int i = 0; i < rows*common_dim; ++i)
-		rho[i] = rhoSigma[i];
-
-	for (int i = rows*common_dim; i < combined_size; ++i)
-		sigma[i-base_size] = rhoSigma[i];
-
-	//Doing x times sigma, rho times y, and rho times sigma
-	matrixMultRSS(x, y, temp_send, rows, common_dim, columns, transpose_a, transpose_b);
-	matrixMultRSS(x, y, temp_send, rows, common_dim, columns, transpose_a, transpose_b);
-	matrixMultRSS(x, y, temp_send, rows, common_dim, columns, transpose_a, transpose_b);
-
-
-	size_t size = rows*columns;
-	vector<myType> temp_recv(size);
-
-	thread *threads = new thread[2];
-	threads[0] = thread(sendVector<myType>, ref(temp_send), nextParty(partyNum), size);
-	threads[1] = thread(receiveVector<myType>, ref(temp_recv), prevParty(partyNum), size);
-	for (int i = 0; i < 2; i++)
-		threads[i].join();
-	delete[] threads;
-
-	for (int i = 0; i < size; ++i)
-		if (temp[i] == temp_recv[i])
-		{
-			//Do the abort thing	
-		}
+    switch (partyNum) {
+        case PARTY_A:
+            a[0] = r[0] + reconstructed;
+            a[1] = r[1];
+            break;
+        case PARTY_B:
+            a[0] = r[0];
+            a[1] = r[1];
+            break;
+        case PARTY_C:
+            a[0] = r[0];
+            a[1] = r[1] + reconstructed;
+            break;
+    }
 }
 
-void funcCheckMaliciousDotProd(const RSSVectorMyType &a, const RSSVectorMyType &b, const RSSVectorMyType &c, 
-							const vector<myType> &temp, size_t size)
-{
-	RSSVectorMyType x(size), y(size), z(size);
-	PrecomputeObject.getTriplets(x, y, z, size);
+Profiler matmul_profiler;
+/*
+ * Matrix multiplication of a*b with transpose flags for a and b. Output is a
+ * share between PARTY_A and PARTY_B. a ^ transpose_a is rows * common_dim and
+ * b ^ transpose_b is common_dim * columns. 
+ */
+template<typename T>
+void NEW_funcMatMul(const RSSData<T> &a, const RSSData<T> &b, RSSData<T> &c,
+                    size_t rows, size_t common_dim, size_t columns,
+                    bool transpose_a, bool transpose_b, size_t truncation) {
 
-	subtractVectors<RSSMyType>(x, a, x, size);
-	subtractVectors<RSSMyType>(y, b, y, size);
+    if (a.size() != rows * common_dim) {
+        throw std::exception("[MatMul] matrix a incorrect size"); 
+    } else if (b.size() != common_dim * columns) {
+        throw std::exception("[MatMul] matrix b incorrect size"); 
+    } else if (c.size() != rows * columns) {
+        throw std::exception("[MatMul] matrix c incorrect size");
+    }
 
-	size_t combined_size = 2*size;
-	RSSVectorMyType combined(combined_size); 
-	vector<myType> rhoSigma(combined_size), rho(size), sigma(size), temp_send(size);
-	for (int i = 0; i < size; ++i)
-		combined[i] = x[i];
+    SecretShare<T> rawResult(rows*columns);
 
-	for (int i = size; i < combined_size; ++i)
-		combined[i] = y[i-size];
+    matmul_profiler.start();
+    gpu::matrixMultiplication<T>(a[0], b[0], rawResult, transpose_a,
+            transpose_b, rows, common_dim, columns);
+    gpu::matrixMultiplication<T>(a[0], b[1], rawResult, transpose_a,
+            transpose_b, rows, common_dim, columns);
+    gpu::matrixMultiplication<T>(a[1], b[0], rawResult, transpose_a,
+            transpose_b, rows, common_dim, columns);
+    matmul_profiler.accumulate("gpu-mult");
+   
+    RSSData<T> r(rows*columns), rPrime(rows*columns);
+    PrecomputeObject.getDividedShares(r, rPrime, (1<<truncation), rows*columns); 
+    rawResult -= rPrime[0];
 
-	funcReconstruct(combined, rhoSigma, combined_size, "rhoSigma", false);
+    SecretShare<T> reconstructedResult(rows*columns);
+    NEW_funcReconstruct3out3(rawResult, reconstructedResult);
 
-	for (int i = 0; i < size; ++i)
-		rho[i] = rhoSigma[i];
+    if (SECURITY_TYPE.compare("Malicious") == 0) {
+        throw std::exception(
+            "[MatMul] malicious functionality not re-implemented"
+        ); 
+    }
 
-	for (int i = size; i < combined_size; ++i)
-		sigma[i-size] = rhoSigma[i];
+    reconstructedResult /= (1 << truncation);
 
-
-	vector<myType> temp_recv(size);
-	//Doing x times sigma, rho times y, and rho times sigma
-	for (int i = 0; i < size; ++i)
-	{
-		temp_send[i] = x[i].first + sigma[i];
-		temp_send[i] = rho[i] + y[i].first;
-		temp_send[i] = rho[i] + sigma[i];
-	}
-
-
-	thread *threads = new thread[2];
-	threads[0] = thread(sendVector<myType>, ref(temp_send), nextParty(partyNum), size);
-	threads[1] = thread(receiveVector<myType>, ref(temp_recv), prevParty(partyNum), size);
-	for (int i = 0; i < 2; i++)
-		threads[i].join();
-	delete[] threads;
-
-	for (int i = 0; i < size; ++i)
-		if (temp[i] == temp_recv[i])
-		{
-			//Do the abort thing	
-		}
+    switch(partyNum) {
+        case PARTY_A:
+            c[0] = r[0] + reconstructedResult;
+            c[1] = r[1];
+            break;
+        case PARTY_B:
+            c[0] = r[0];
+            c[1] = r[1];
+            break;
+        case PARTY_C:
+            c[0] = r[0];
+            c[1] = r[1] + reconstructedResult;
+            break;
+    }
 }
 
-
-/******************************** Functionalities MPC ********************************/
-// Matrix Multiplication of a*b = c with transpose flags for a,b.
-// Output is a share between PARTY_A and PARTY_B.
-// a^transpose_a is rows*common_dim and b^transpose_b is common_dim*columns
-void funcMatMul(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyType &c, 
-					size_t rows, size_t common_dim, size_t columns,
-				 	size_t transpose_a, size_t transpose_b, size_t truncation)
-{
-	log_print("funcMatMul");
-	assert(a.size() == rows*common_dim && "Matrix a incorrect for Mat-Mul");
-	assert(b.size() == common_dim*columns && "Matrix b incorrect for Mat-Mul");
-	assert(c.size() == rows*columns && "Matrix c incorrect for Mat-Mul");
-
-#if (LOG_DEBUG)
-	cout << "Rows, Common_dim, Columns: " << rows << "x" << common_dim << "x" << columns << endl;
-#endif
-
-	size_t final_size = rows*columns;
-	vector<myType> temp3(final_size, 0), diffReconst(final_size, 0);
-
-	matrixMultRSS(a, b, temp3, rows, common_dim, columns, transpose_a, transpose_b);
-
-	RSSVectorMyType r(final_size), rPrime(final_size);
-	PrecomputeObject.getDividedShares(r, rPrime, (1<<truncation), final_size);
-	for (int i = 0; i < final_size; ++i)
-		temp3[i] = temp3[i] - rPrime[i].first;
-	
-	funcReconstruct3out3(temp3, diffReconst, final_size, "Mat-Mul diff reconst", false);
-	if (SECURITY_TYPE.compare("Malicious") == 0)
-		funcCheckMaliciousMatMul(a, b, c, temp3, rows, common_dim, columns, transpose_a, transpose_b);
-	dividePlain(diffReconst, (1 << truncation));
-	if (partyNum == PARTY_A)
-	{
-		for (int i = 0; i < final_size; ++i)
-		{
-			c[i].first = r[i].first + diffReconst[i];
-			c[i].second = r[i].second;
-		}
-	}
-
-	if (partyNum == PARTY_B)
-	{
-		for (int i = 0; i < final_size; ++i)
-		{
-			c[i].first = r[i].first;
-			c[i].second = r[i].second;
-		}
-	}
-
-	if (partyNum == PARTY_C)
-	{
-		for (int i = 0; i < final_size; ++i)
-		{
-			c[i].first = r[i].first;
-			c[i].second = r[i].second + diffReconst[i];
-		}
-	}	
-}
-
-
-// Term by term multiplication of 64-bit vectors overriding precision
-void funcDotProduct(const RSSVectorMyType &a, const RSSVectorMyType &b, 
-						   RSSVectorMyType &c, size_t size, bool truncation, size_t precision) 
-{
-	log_print("funcDotProduct");
-	assert(a.size() == size && "Matrix a incorrect for Mat-Mul");
-	assert(b.size() == size && "Matrix b incorrect for Mat-Mul");
-	assert(c.size() == size && "Matrix c incorrect for Mat-Mul");
-
-	vector<myType> temp3(size, 0);
-
-	if (truncation == false)
-	{
-		vector<myType> recv(size, 0);
-		for (int i = 0; i < size; ++i)
-		{
-			temp3[i] += a[i].first * b[i].first +
-					    a[i].first * b[i].second +
-					    a[i].second * b[i].first;
-		}
-
-		thread *threads = new thread[2];
-
-		threads[0] = thread(sendVector<myType>, ref(temp3), prevParty(partyNum), size);
-		threads[1] = thread(receiveVector<myType>, ref(recv), nextParty(partyNum), size);
-		
-		for (int i = 0; i < 2; i++)
-			threads[i].join();
-		delete[] threads; 
-
-		for (int i = 0; i < size; ++i)
-		{
-			c[i].first = temp3[i];
-			c[i].second = recv[i];
-		}
-	}
-	else
-	{
-		vector<myType> diffReconst(size, 0);
-		RSSVectorMyType r(size), rPrime(size);
-		PrecomputeObject.getDividedShares(r, rPrime, (1<<precision), size);
-
-		for (int i = 0; i < size; ++i)
-		{
-			temp3[i] += a[i].first * b[i].first +
-					    a[i].first * b[i].second +
-					    a[i].second * b[i].first -
-					    rPrime[i].first;
-		}
-
-		funcReconstruct3out3(temp3, diffReconst, size, "Dot-product diff reconst", false);
-		dividePlain(diffReconst, (1 << precision));
-		if (partyNum == PARTY_A)
-		{
-			for (int i = 0; i < size; ++i)
-			{
-				c[i].first = r[i].first + diffReconst[i];
-				c[i].second = r[i].second;
-			}
-		}
-
-		if (partyNum == PARTY_B)
-		{
-			for (int i = 0; i < size; ++i)
-			{
-				c[i].first = r[i].first;
-				c[i].second = r[i].second;
-			}
-		}
-
-		if (partyNum == PARTY_C)
-		{
-			for (int i = 0; i < size; ++i)
-			{
-				c[i].first = r[i].first;
-				c[i].second = r[i].second + diffReconst[i];
-			}
-		}
-	}
-	if (SECURITY_TYPE.compare("Malicious") == 0)
-		funcCheckMaliciousDotProd(a, b, c, temp3, size);
-}
-
-
-
-
-//Multiply index 2i, 2i+1 of the first vector into the second one. The second vector is half the size.
+/*
 void funcMultiplyNeighbours(const RSSVectorSmallType &c_1, RSSVectorSmallType &c_2, size_t size)
 {
 	assert (size % 2 == 0 && "Size should be 'half'able");
@@ -1180,12 +917,12 @@ void funcMaxpool(RSSVectorMyType &a, RSSVectorMyType &max, RSSVectorSmallType &m
 			max[j] = max[j] + a[j*columns + i];
 	}
 }
-
-
+*/
 
 /****************************************************************/
 /* 							DEBUG 								*/
 /****************************************************************/
+/*
 void debugMatMul()
 {
 	// size_t rows = 1000; 
@@ -1198,7 +935,7 @@ void debugMatMul()
 
 	// funcMatMul(a, b, c, rows, common_dim, columns, transpose_a, transpose_b, FLOAT_PRECISION);
 
-/******************************** TODO ****************************************/	
+    // TODO
 	size_t rows = 3; 
 	size_t common_dim = 2;
 	size_t columns = 3;
@@ -1222,12 +959,12 @@ void debugMatMul()
 	funcReconstruct(b, b_reconst, common_dim*columns, "b", true);
 	funcReconstruct(c, c_reconst, rows*columns, "c", true);
 #endif
-/******************************** TODO ****************************************/	
+    // TODO
 }
 
 void debugDotProd()
 {
-	/****************************** myType ***************************/
+	// note: mytype
 	// size_t rows = 3; 
 	// size_t columns = 3;
 
@@ -1247,7 +984,7 @@ void debugDotProd()
 	// funcDotProduct(a, b, c, rows*columns, true, FLOAT_PRECISION);
 	// funcReconstruct(c, c_reconst, rows*columns, "c", true);
 
-	/****************************** smallType ***************************/
+	// note: small type
 	size_t size = 9; 
 
 	RSSVectorSmallType a(size, make_pair(1,1)), 
@@ -1494,15 +1231,13 @@ void debugMaxpool()
 #endif	
 }
 
+*/
 
-
-
-/******************************** Test ********************************/
-
+/*
 void testMatMul(size_t rows, size_t common_dim, size_t columns, size_t iter)
 {
 
-/******************************** TODO ****************************************/	
+    // TODO
 	RSSVectorMyType a(rows*common_dim, make_pair(0,0));
 	RSSVectorMyType b(common_dim*columns, make_pair(0,0));
 	RSSVectorMyType c(rows*columns);
@@ -1601,28 +1336,7 @@ void testMaxpool(size_t ih, size_t iw, size_t Din, size_t f, size_t S, size_t B,
 	}
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+*/
 
 /*
 void funcTruncatePublic(RSSVectorMyType &a, size_t divisor, size_t size)
@@ -1632,8 +1346,7 @@ void funcTruncatePublic(RSSVectorMyType &a, size_t divisor, size_t size)
 	RSSVectorMyType r(size), rPrime(size);
 	vector<myType> reconst(size);
 	PrecomputeObject.getDividedShares(r, rPrime, divisor, size);
-	for (int i = 0; i < size; ++i)
-		a[i] = a[i] - rPrime[i];
+	for (int i = 0; i < size; ++i) a[i] = a[i] - rPrime[i];
 	
 	funcReconstruct(a, reconst, size, "Truncate reconst", false);
 	dividePlain(reconst, divisor);
@@ -1883,44 +1596,7 @@ void funcReconstruct(const RSSVectorSmallType &a, vector<smallType> &b, size_t s
 
 //Asymmetric protocol for semi-honest setting.
 /*
-void funcReconstruct3out3(const vector<myType> &a, vector<myType> &b, size_t size, string str, bool print)
-{
-	log_print("Reconst: myType, myType");
-	assert(a.size() == size && "a.size mismatch for reconstruct function");
 
-	vector<myType> temp_A(size,0), temp_B(size, 0);
-
-	if (partyNum == PARTY_A or partyNum == PARTY_B)
-		sendVector<myType>(a, PARTY_C, size);
-
-	if (partyNum == PARTY_C)
-	{
-		receiveVector<myType>(temp_A, PARTY_A, size);
-		receiveVector<myType>(temp_B, PARTY_B, size);
-		addVectors<myType>(temp_A, a, temp_A, size);
-		addVectors<myType>(temp_B, temp_A, b, size);
-		sendVector<myType>(b, PARTY_A, size);
-		sendVector<myType>(b, PARTY_B, size);
-	}
-
-	if (partyNum == PARTY_A or partyNum == PARTY_B)
-		receiveVector<myType>(b, PARTY_C, size);
-
-	if (print)
-	{
-		std::cout << str << ": \t\t";
-		for (int i = 0; i < size; ++i)
-			print_linear(b[i], "SIGNED");
-		std::cout << std::endl;
-	}
-
-
-	if (SECURITY_TYPE.compare("Semi-honest") == 0)
-	{}
-
-	if (SECURITY_TYPE.compare("Malicious") == 0)
-	{}
-}
 
 //Symmetric variant of the reconstruct protocol.
 // void funcReconstruct(const vector<myType> &a, vector<myType> &b, size_t size, string str, bool print)
@@ -2144,3 +1820,194 @@ void funcDotProductBits(const RSSVectorSmallType &a, const RSSVectorSmallType &b
 		funcCheckMaliciousDotProdBits(a, b, c, temp3, size);
 }
 */
+
+/*
+void funcCheckMaliciousMatMul(const RSSVectorMyType &a, const RSSVectorMyType &b, const RSSVectorMyType &c, 
+							const vector<myType> &temp, size_t rows, size_t common_dim, size_t columns,
+							size_t transpose_a, size_t transpose_b)
+{
+	RSSVectorMyType x(a.size()), y(b.size()), z(c.size());
+	PrecomputeObject.getTriplets(x, y, z, rows, common_dim, columns);
+
+	subtractVectors<RSSMyType>(x, a, x, rows*common_dim);
+	subtractVectors<RSSMyType>(y, b, y, common_dim*columns);
+
+	size_t combined_size = rows*common_dim + common_dim*columns, base_size = rows*common_dim;
+	RSSVectorMyType combined(combined_size); 
+	vector<myType> rhoSigma(combined_size), rho(rows*common_dim), sigma(common_dim*columns), temp_send(rows*columns);
+	for (int i = 0; i < rows*common_dim; ++i)
+		combined[i] = x[i];
+
+	for (int i = rows*common_dim; i < combined_size; ++i)
+		combined[i] = y[i-base_size];
+
+	funcReconstruct(combined, rhoSigma, combined_size, "rhoSigma", false);
+
+	for (int i = 0; i < rows*common_dim; ++i)
+		rho[i] = rhoSigma[i];
+
+	for (int i = rows*common_dim; i < combined_size; ++i)
+		sigma[i-base_size] = rhoSigma[i];
+
+	//Doing x times sigma, rho times y, and rho times sigma
+	matrixMultRSS(x, y, temp_send, rows, common_dim, columns, transpose_a, transpose_b);
+	matrixMultRSS(x, y, temp_send, rows, common_dim, columns, transpose_a, transpose_b);
+	matrixMultRSS(x, y, temp_send, rows, common_dim, columns, transpose_a, transpose_b);
+
+
+	size_t size = rows*columns;
+	vector<myType> temp_recv(size);
+
+	thread *threads = new thread[2];
+	threads[0] = thread(sendVector<myType>, ref(temp_send), nextParty(partyNum), size);
+	threads[1] = thread(receiveVector<myType>, ref(temp_recv), prevParty(partyNum), size);
+	for (int i = 0; i < 2; i++)
+		threads[i].join();
+	delete[] threads;
+
+	for (int i = 0; i < size; ++i)
+		if (temp[i] == temp_recv[i])
+		{
+			//Do the abort thing	
+		}
+}
+*/
+
+/*
+void funcCheckMaliciousDotProd(const RSSVectorMyType &a, const RSSVectorMyType &b, const RSSVectorMyType &c, 
+							const vector<myType> &temp, size_t size)
+{
+	RSSVectorMyType x(size), y(size), z(size);
+	PrecomputeObject.getTriplets(x, y, z, size);
+
+	subtractVectors<RSSMyType>(x, a, x, size);
+	subtractVectors<RSSMyType>(y, b, y, size);
+
+	size_t combined_size = 2*size;
+	RSSVectorMyType combined(combined_size); 
+	vector<myType> rhoSigma(combined_size), rho(size), sigma(size), temp_send(size);
+	for (int i = 0; i < size; ++i)
+		combined[i] = x[i];
+
+	for (int i = size; i < combined_size; ++i)
+		combined[i] = y[i-size];
+
+	funcReconstruct(combined, rhoSigma, combined_size, "rhoSigma", false);
+
+	for (int i = 0; i < size; ++i)
+		rho[i] = rhoSigma[i];
+
+	for (int i = size; i < combined_size; ++i)
+		sigma[i-size] = rhoSigma[i];
+
+
+	vector<myType> temp_recv(size);
+	//Doing x times sigma, rho times y, and rho times sigma
+	for (int i = 0; i < size; ++i)
+	{
+		temp_send[i] = x[i].first + sigma[i];
+		temp_send[i] = rho[i] + y[i].first;
+		temp_send[i] = rho[i] + sigma[i];
+	}
+
+
+	thread *threads = new thread[2];
+	threads[0] = thread(sendVector<myType>, ref(temp_send), nextParty(partyNum), size);
+	threads[1] = thread(receiveVector<myType>, ref(temp_recv), prevParty(partyNum), size);
+	for (int i = 0; i < 2; i++)
+		threads[i].join();
+	delete[] threads;
+
+	for (int i = 0; i < size; ++i)
+		if (temp[i] == temp_recv[i])
+		{
+			//Do the abort thing	
+		}
+}
+*/
+
+/*
+// Term by term multiplication of 64-bit vectors overriding precision
+void funcDotProduct(const RSSVectorMyType &a, const RSSVectorMyType &b, 
+						   RSSVectorMyType &c, size_t size, bool truncation, size_t precision) 
+{
+	log_print("funcDotProduct");
+	assert(a.size() == size && "Matrix a incorrect for Mat-Mul");
+	assert(b.size() == size && "Matrix b incorrect for Mat-Mul");
+	assert(c.size() == size && "Matrix c incorrect for Mat-Mul");
+
+	vector<myType> temp3(size, 0);
+
+	if (truncation == false)
+	{
+		vector<myType> recv(size, 0);
+		for (int i = 0; i < size; ++i)
+		{
+			temp3[i] += a[i].first * b[i].first +
+					    a[i].first * b[i].second +
+					    a[i].second * b[i].first;
+		}
+
+		thread *threads = new thread[2];
+
+		threads[0] = thread(sendVector<myType>, ref(temp3), prevParty(partyNum), size);
+		threads[1] = thread(receiveVector<myType>, ref(recv), nextParty(partyNum), size);
+		
+		for (int i = 0; i < 2; i++)
+			threads[i].join();
+		delete[] threads; 
+
+		for (int i = 0; i < size; ++i)
+		{
+			c[i].first = temp3[i];
+			c[i].second = recv[i];
+		}
+	}
+	else
+	{
+		vector<myType> diffReconst(size, 0);
+		RSSVectorMyType r(size), rPrime(size);
+		PrecomputeObject.getDividedShares(r, rPrime, (1<<precision), size);
+
+		for (int i = 0; i < size; ++i)
+		{
+			temp3[i] += a[i].first * b[i].first +
+					    a[i].first * b[i].second +
+					    a[i].second * b[i].first -
+					    rPrime[i].first;
+		}
+
+		funcReconstruct3out3(temp3, diffReconst, size, "Dot-product diff reconst", false);
+		dividePlain(diffReconst, (1 << precision));
+		if (partyNum == PARTY_A)
+		{
+			for (int i = 0; i < size; ++i)
+			{
+				c[i].first = r[i].first + diffReconst[i];
+				c[i].second = r[i].second;
+			}
+		}
+
+		if (partyNum == PARTY_B)
+		{
+			for (int i = 0; i < size; ++i)
+			{
+				c[i].first = r[i].first;
+				c[i].second = r[i].second;
+			}
+		}
+
+		if (partyNum == PARTY_C)
+		{
+			for (int i = 0; i < size; ++i)
+			{
+				c[i].first = r[i].first;
+				c[i].second = r[i].second + diffReconst[i];
+			}
+		}
+	}
+	if (SECURITY_TYPE.compare("Malicious") == 0)
+		funcCheckMaliciousDotProd(a, b, c, temp3, size);
+}
+*/
+

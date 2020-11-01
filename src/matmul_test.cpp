@@ -1,0 +1,35 @@
+/*
+ * GPU Matrix Multiplication functionality test
+ */
+
+#include <stdlib.h>
+#include <thrust/host_vector.h>
+
+#include "Functionalities.h"
+#include "globals.h"
+#include "RSSData.h"
+
+int main(int argc, char *argv[]) {
+
+    int partyNum = atoi(argv[1]);
+
+    RSSData<uint32_t> a(16), b(16);
+    a[0].fill(partyNum);
+    a[1].fill((partyNum + 1) % 3);
+    b[0].fill(partyNum);
+    b[1].fill(partyNum == 0 ? 2 : partyNum - 1);
+
+    RSSData<uint32_t> c(16); 
+    NEW_funcMatMul<uint32_t>(a, b, c, 4, 4, 4, false, false, FLOAT_PRECISION);
+
+    SecretShare<uint32_t> result(16);
+    NEW_funcReconstruct<uint32_t>(c, result);
+
+    if (partyNum == 0) {
+        thrust::host_vector<uint32_t> host_result = result.data();
+        std::cout << host_result << std::endl;
+    }
+
+    return 0;
+}
+

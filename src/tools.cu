@@ -1,28 +1,19 @@
 
-#include "tools.h"
-#include <stdint.h>
-#include <mutex> 
 #include <bitset>
-#include "Profiler.h"
-
-#ifdef USING_GPU 
 #include <cuda_runtime.h>
-#include "dev_array.h"
-#include "kernel.cuh"
-#endif
+#include <mutex> 
+#include <stdint.h>
 
-#ifdef USING_EIGEN
-#include "EigenMatMul.h"
-using namespace Eigen;
-#endif
+#include "kernels/matmul.cuh"
+#include "Profiler.h"
+#include "RSSData.h"
+#include "tools.h"
 
 using namespace std;
 
 smallType additionModPrime[PRIME_NUMBER][PRIME_NUMBER];
 smallType subtractModPrime[PRIME_NUMBER][PRIME_NUMBER];
 smallType multiplicationModPrime[PRIME_NUMBER][PRIME_NUMBER];
-
-
 
 /* Here are the global variables, precomputed once in order to save time*/
 //powers[x*deg+(i-1)]=x^i, i.e., POW(SETX(X),i). Notice the (i-1), due to POW(x,0) not saved (always 1...)
@@ -385,189 +376,27 @@ void print_linear(myType var, string type)
 	}
 }
 
+/*
 Profiler matmul_profiler;
-void matrixMultRSS(const RSSVectorMyType &a, const RSSVectorMyType &b, vector<myType> &temp3, 
-					size_t rows, size_t common_dim, size_t columns,
-				 	size_t transpose_a, size_t transpose_b)
+
+template<typename T>
+void matrixMultRSS(const RSSData<T> &a, const RSSData<T> &b,
+                   SecretShare<T> &result,
+				   size_t rows, size_t common_dim, size_t columns,
+				   bool transpose_a, bool transpose_b)
 {
-#ifdef USING_GPU 
-/********************************* With GPU Matmul *********************************/	
-
     matmul_profiler.start();
-    std::vector<myType> host_a_first(rows*common_dim), host_a_second(rows*common_dim);
-    for (int i = 0; i < rows*common_dim; i++) {
-        host_a_first[i] = a[i].first;
-        host_a_second[i] = a[i].second;
-    }
 
-    std::vector<myType> host_b_first(common_dim*columns), host_b_second(common_dim*columns);
-    for (int i = 0; i < common_dim*columns; i++) {
-        host_b_first[i] = b[i].first;
-        host_b_second[i] = b[i].second;
-    }
-    matmul_profiler.accumulate("matmul-copy");
+    gpu::matrixMultiplication<T>(a[0], b[0], result, transpose_a, transpose_b,
+            rows, common_dim, columns);
+    gpu::matrixMultiplication<T>(a[0], b[1], result, transpose_a, transpose_b,
+            rows, common_dim, columns);
+    gpu::matrixMultiplication<T>(a[1], b[0], result, transpose_a, transpose_b,
+            rows, common_dim, columns);
 
-    matmul_profiler.start();
-    dev_array<myType> device_a_first(rows*common_dim), device_a_second(rows*common_dim);
-    device_a_first.set(&host_a_first[0], rows*common_dim);
-    device_a_second.set(&host_a_second[0], rows*common_dim);
-
-    dev_array<myType> device_b_first(common_dim*columns), device_b_second(common_dim*columns);
-    device_b_first.set(&host_b_first[0], common_dim*columns);
-    device_b_second.set(&host_b_second[0], common_dim*columns);
-    matmul_profiler.accumulate("gpu-comm");
-    
-    /*
-    for (size_t i = 0; i < rows; ++i)
-    {
-        for (size_t j = 0; j < common_dim; ++j)
-        {
-            if (transpose_a) {
-                a_first[i*common_dim + j] = a[j*rows + i].first;
-                a_second[i*common_dim + j] = a[j*rows + i].second;
-            } else {
-                a_first[i*common_dim + j] = a[i*common_dim + j].first;
-                a_second[i*common_dim + j] = a[i*common_dim + j].second;
-            }
-        }
-    }
-
-    for (size_t i = 0; i < common_dim; ++i)
-    {
-        for (size_t j = 0; j < columns; ++j)
-        {
-            if (transpose_b) {
-                b_first[i*columns + j] = b[j*common_dim + i].first;
-                b_second[i*columns + j] = b[j*common_dim + i].second;
-            } else {
-                b_first[i*columns + j] = b[i*columns + j].first;
-                b_second[i*columns + j] = b[i*columns + j].second;
-            }
-        }
-    }
-    */
-
-    dev_array<myType> device_c(rows*columns);
-
-    matmul_profiler.start();
-    matrixMultiplication<myType>(device_a_first.getData(), device_b_first.getData(), device_c.getData(),
-        transpose_a, transpose_b, rows, common_dim, columns);
-    matrixMultiplication<myType>(device_a_first.getData(), device_b_second.getData(), device_c.getData(),
-        transpose_a, transpose_b, rows, common_dim, columns);
-    matrixMultiplication<myType>(device_a_second.getData(), device_b_first.getData(), device_c.getData(),
-        transpose_a, transpose_b, rows, common_dim, columns);
-
-    cudaDeviceSynchronize();
     matmul_profiler.accumulate("gpu-mult");
-
-    matmul_profiler.start();
-
-    device_c.get(&temp3[0], rows*columns);
-
-    cudaDeviceSynchronize();
-    matmul_profiler.accumulate("gpu-comm");
-
-/********************************* With GPU Matmul*********************************/	
-#elif defined USING_EIGEN
-/********************************* WITH EIGEN Mat-Mul *********************************/
-	eigenMatrix eigen_a(rows, common_dim), eigen_b(common_dim, columns), eigen_c(rows, columns);
-
-	for (size_t i = 0; i < rows; ++i)
-	{
-		for (size_t j = 0; j < common_dim; ++j)
-		{
-			if (transpose_a)
-			{
-				eigen_a.m_share[0](i, j) = a[j*rows + i].first;
-				eigen_a.m_share[1](i, j) = a[j*rows + i].second;
-			}
-			else
-			{
-				eigen_a.m_share[0](i, j) = a[i*common_dim + j].first;
-				eigen_a.m_share[1](i, j) = a[i*common_dim + j].second;
-			}
-		}
-	}
-
-	for (size_t i = 0; i < common_dim; ++i)
-	{
-		for (size_t j = 0; j < columns; ++j)
-		{
-			if (transpose_b)
-			{
-				eigen_b.m_share[0](i, j) = b[j*common_dim + i].first;	
-				eigen_b.m_share[1](i, j) = b[j*common_dim + i].second;	
-			}
-			else
-			{
-				eigen_b.m_share[0](i, j) = b[i*columns + j].first;	
-				eigen_b.m_share[1](i, j) = b[i*columns + j].second;	
-			}
-		}
-	}
-
-	eigen_c = eigen_a * eigen_b;
-
-	for (size_t i = 0; i < rows; ++i)
-		for (size_t j = 0; j < columns; ++j)
-				temp3[i*columns + j] = eigen_c.m_share[0](i,j);
-/********************************* WITH EIGEN Mat-Mul *********************************/
-#else
-/********************************* Triple For Loop *********************************/
-	RSSVectorMyType triple_a(rows*common_dim), triple_b(common_dim*columns);
-
-    for (size_t i = 0; i < rows; ++i)
-    {
-        for (size_t j = 0; j < common_dim; ++j)
-        {
-            if (transpose_a)
-                triple_a[i*common_dim + j] = a[j*rows + i];
-            else
-                triple_a[i*common_dim + j] = a[i*common_dim + j];
-        }
-    }
- 
-    for (size_t i = 0; i < common_dim; ++i)
-    {
-        for (size_t j = 0; j < columns; ++j)
-        {
-            if (transpose_b)
-                triple_b[i*columns + j] = b[j*common_dim + i];  
-            else
-                triple_b[i*columns + j] = b[i*columns + j]; 
-        }
-    }
-
-    for (int k = 0; k < common_dim; k++) {
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++) {
-                temp3[i*columns + j] += triple_a[i*common_dim + k].first * triple_b[k*columns + j].first +
-                                        triple_a[i*common_dim + k].first * triple_b[k*columns + j].second +
-                                        triple_a[i*common_dim + k].second * triple_b[k*columns + j].first;
-            }
-        }
-    }
- 
-    /*
-    for (int i = 0; i < rows; ++i)
-    {
-        for (int j = 0; j < columns; ++j)
-        {
-            temp[i*columns + j] = 0;
-            for (int k = 0; k < common_dim; ++k)
-            {
-                temp3[i*columns + j] += triple_a[i*common_dim + k].first * triple_b[k*columns + j].first +
-                                        triple_a[i*common_dim + k].first * triple_b[k*columns + j].second +
-                                        triple_a[i*common_dim + k].second * triple_b[k*columns + j].first;
-            }
-        }
-    }
-    */
-/********************************* Triple For Loop *********************************/	
-#endif
 }
-
-
+*/
 
 myType dividePlain(myType a, int b)
 {

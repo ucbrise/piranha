@@ -66,6 +66,15 @@ void scalarSubtract(T *A, T scalar, int size) {
     kernel::scalarSubtract<T><<<blocksPerGrid,threadsPerBlock>>>(A, scalar, n);
 }
 
+// TODO
+/*
+template<typename T, typename Op>
+void scalarOp(..., Op o) 
+
+    op<T><...>(args);
+    //kernel::scalarDivide<T><<<blocksPerGrid,threadsPerBlock>>>(A, scalar, n);
+*/
+
 template<typename T>
 void scalarDivide(T *A, T scalar, int size) {
 

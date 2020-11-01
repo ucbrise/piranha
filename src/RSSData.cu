@@ -10,7 +10,7 @@ RSSData<T>::RSSData(size_t n) : shareA(n), shareB(n) {
 }
 
 template<typename T>
-RSSData<T>::RSSData(const DeviceBuffer<T> &a, const DeviceBuffer<T> &b) :
+RSSData<T>::RSSData(const SecretShare<T> &a, const SecretShare<T> &b) :
     shareA(a), shareB(b) {
     // nothing 
 }
@@ -25,22 +25,14 @@ RSSData<T>::size() {
     return shareA.size();
 }
 
-// TODO: maybe a specific kernel would be clearer
 template<typename T>
 RSSData<T>::zero() {
-    shareA -= shareA;
-    shareB -= shareB;   
+    shareA.fill(0);
+    shareB.fill(0);
 }
 
 template<typename T>
-DeviceBuffer<T>& RSSData<T>::operator [](size_t i) {
+SecretShare<T>& RSSData<T>::operator [](size_t i) {
     return i ? shareB : shareA;
 }
-
-/*
-template<typename T>
-RSSData<T> RSSData<T>::operator -(const T scalar) const {
-    return RSSData(shareA - scalar, shareB - scalar);
-}
-*/
 

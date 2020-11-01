@@ -25,8 +25,7 @@
 #define STRING_BUFFER_SIZE 256
 #define PARALLEL true
 #define NO_CORES 8
-
-
+#define MAX_THREADS_PER_BLOCK 512
 
 /********************* MPC globals *********************/
 #define NUM_OF_PARTIES 3

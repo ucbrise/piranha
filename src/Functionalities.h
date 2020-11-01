@@ -10,26 +10,35 @@ extern void start_communication();
 extern void end_time(string str);
 extern void end_communication(string str);
 
+template<typename T>
+void NEW_funcReconstruct(RSSData<T> &a, SecretShare<T> &reconstructed);
+
+template<typename T>
+void NEW_funcReconstruct3out3(SecretShare<T> &a, SecretShare<T> &reconstructed);
+
+template<typename T>
+void NEW_funcTruncate(RSSData<T> &a, size_t power);
+
+template<typename T>
+void NEW_funcMatMul(const RSSData<T> &a, const RSSData<T> &b, RSSData<T> &c,
+                    size_t rows, size_t common_dim, size_t columns,
+                    bool transpose_a, bool transpose_b, size_t truncation);
 
 
+
+
+
+/*
 void funcTruncate(RSSVectorMyType &a, size_t power, size_t size);
 void funcTruncatePublic(RSSVectorMyType &a, size_t divisor, size_t size);
 void funcGetShares(RSSVectorMyType &a, const vector<myType> &data);
-void funcGetShares(RSSVectorSmallType &a, const vector<smallType> &data);
-void funcReconstructBit(const RSSVectorSmallType &a, vector<smallType> &b, size_t size, string str, bool print);
 void funcReconstruct(const RSSVectorMyType &a, vector<myType> &b, size_t size, string str, bool print);
-void funcReconstruct(const RSSVectorSmallType &a, vector<smallType> &b, size_t size, string str, bool print);
 void funcReconstruct3out3(const vector<myType> &a, vector<myType> &b, size_t size, string str, bool print);
-// void funcCheckMaliciousMatMul(const RSSVectorMyType &a, const RSSVectorMyType &b, const RSSVectorMyType &c, 
-// 							const vector<myType> &temp, size_t rows, size_t common_dim, size_t columns,
-// 							size_t transpose_a, size_t transpose_b);
 void funcMatMul(const RSSVectorMyType &a, const RSSVectorMyType &b, RSSVectorMyType &c, 
 				size_t rows, size_t common_dim, size_t columns,
 			 	size_t transpose_a, size_t transpose_b, size_t truncation);
 void funcDotProduct(const RSSVectorMyType &a, const RSSVectorMyType &b, 
 					   RSSVectorMyType &c, size_t size, bool truncation, size_t precision);
-void funcDotProduct(const RSSVectorSmallType &a, const RSSVectorSmallType &b, 
-							 RSSVectorSmallType &c, size_t size);
 void funcPrivateCompare(const RSSVectorSmallType &share_m, const vector<myType> &r, 
 							  const RSSVectorSmallType &beta, vector<smallType> &betaPrime, 
 							  size_t size);
@@ -71,3 +80,10 @@ void testConvolution(size_t iw, size_t ih, size_t Din, size_t Dout,
 void testRelu(size_t r, size_t c, size_t iter);
 void testReluPrime(size_t r, size_t c, size_t iter);
 void testMaxpool(size_t ih, size_t iw, size_t Din, size_t f, size_t S, size_t B, size_t iter);
+
+//void funcCheckMaliciousMatMul(const RSSVectorMyType &a, const RSSVectorMyType &b, const RSSVectorMyType &c, 
+//						const vector<myType> &temp, size_t rows, size_t common_dim, size_t columns,
+// 						size_t transpose_a, size_t transpose_b);
+
+*/
+
