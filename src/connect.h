@@ -1,32 +1,27 @@
 
-
 #ifndef CONNECT_H
 #define CONNECT_H
 
-#include "basicSockets.h"
 #include <algorithm>
-#include <sstream>
-#include <vector>
-#include "../util/TedKrovetzAesNiWrapperC.h"
-#include <stdint.h>
-#include <iomanip>
 #include <fstream>
-// #include <thread>
-using namespace std;
+#include <iomanip>
+#include <sstream>
+#include <stdint.h>
+#include <vector>
+
+#include "basicSockets.h"
+#include "../util/TedKrovetzAesNiWrapperC.h"
 
 extern BmrNet ** communicationSenders;
 extern BmrNet ** communicationReceivers;
 
 extern int partyNum;
 
-
-
 //setting up communication
-void initCommunication(string addr, int port, int player, int mode);
+void initCommunication(std::string addr, int port, int player, int mode);
 void initializeCommunication(int* ports);
 void initializeCommunicationSerial(int* ports); //Use this for many parties
 void initializeCommunication(char* filename, int p);
-
 
 //synchronization functions
 void sendByte(int player, char* toSend, int length, int conn);
@@ -36,14 +31,14 @@ void synchronize(int length = 1);
 void start_communication();
 void pause_communication();
 void resume_communication();
-void end_communication(string str);
-
+void end_communication(std::string str);
 
 template<typename T>
-void sendVector(const vector<T> &vec, size_t player, size_t size);
+void sendVector(size_t player, const std::vector<T> &vec);
 template<typename T>
-void receiveVector(vector<T> &vec, size_t player, size_t size);
+void receiveVector(size_t player, std::vector<T> &vec);
 
+/*
 template<typename T>
 void sendTwoVectors(const vector<T> &vec1, const vector<T> &vec2, size_t player, size_t size1, size_t size2);
 template<typename T>
@@ -71,12 +66,7 @@ template<typename T>
 void receiveSixVectors(vector<T> &vec1, vector<T> &vec2, vector<T> &vec3, 
 						vector<T> &vec4, vector<T> &vec5, vector<T> &vec6,
 					 size_t player, size_t size1, size_t size2, size_t size3, size_t size4, size_t size5, size_t size6);
-
-
-
-
-
-
+*/
 
 // template<typename T>
 // void threadSend(const vector<T> &vec, size_t player, size_t size);
@@ -146,9 +136,8 @@ void receiveSixVectors(vector<T> &vec1, vector<T> &vec2, vector<T> &vec3,
 
 
 template<typename T>
-void sendVector(const vector<T> &vec, size_t player, size_t size)
-{
-/*
+void sendVector(size_t player, const std::vector<T> &vec) {
+    /*
 #if (LOG_DEBUG_NETWORK)
 	cout << "Sending " << size*sizeof(T) << " Bytes to player " << player << " via ";
 	if (sizeof(T) == 16)
@@ -160,16 +149,19 @@ void sendVector(const vector<T> &vec, size_t player, size_t size)
 	else if (sizeof(T) == 1)
 		cout << "smallType" << endl;
 #endif
-*/
-	if(!communicationSenders[player]->sendMsg(vec.data(), size * sizeof(T), 0)) {
-		cout << "Send vector error" << endl;
+    */
+
+	if(!communicationSenders[player]->sendMsg(vec.data(), vec.size() * sizeof(T), 0)) {
+        std::cout << "Send vector error" << std::endl;
     }
 }
 
+template void sendVector<uint32_t>(size_t player, const std::vector<uint32_t> &vec);
+template void sendVector<uint8_t>(size_t player, const std::vector<uint8_t> &vec);
+
 template<typename T>
-void receiveVector(vector<T> &vec, size_t player, size_t size)
-{
-/*
+void receiveVector(size_t player, std::vector<T> &vec) {
+    /*
 #if (LOG_DEBUG_NETWORK)
 	cout << "Receiving " << size*sizeof(T) << " Bytes from player " << player << " via ";
 	if (sizeof(T) == 16)
@@ -181,12 +173,17 @@ void receiveVector(vector<T> &vec, size_t player, size_t size)
 	else if (sizeof(T) == 1)
 		cout << "smallType" << endl;
 #endif
-*/
-	if(!communicationReceivers[player]->receiveMsg(vec.data(), size * sizeof(T), 0)) {
-		cout << "Receive vector error" << endl;
+    */
+
+	if(!communicationReceivers[player]->receiveMsg(vec.data(), vec.size() * sizeof(T), 0)) {
+        std::cout << "Receive vector error" << std::endl;
     }
 }
 
+template void receiveVector<uint32_t>(size_t player, std::vector<uint32_t> &vec);
+template void receiveVector<uint8_t>(size_t player, std::vector<uint8_t> &vec);
+
+/*
 template<typename T>
 void sendTwoVectors(const vector<T> &vec1, const vector<T> &vec2, size_t player, size_t size1, size_t size2)
 {
@@ -359,5 +356,7 @@ void receiveSixVectors(vector<T> &vec1, vector<T> &vec2, vector<T> &vec3,
 	for (size_t i = 0; i < size6; ++i)
 		vec6[i] = temp[i + offset];
 }
+*/
 
 #endif
+

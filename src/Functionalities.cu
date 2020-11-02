@@ -5,17 +5,19 @@
 #pragma once
 
 #include <exception>
-#include "Functionalities.h"
-#include "Precompute.h"
-#include "Profiler.h"
-#include "RSSData.h"
 #include <stdexcept>
 #include <thread>
 
-using namespace std;
+#include "Functionalities.h"
+#include "matmul.cuh"
+#include "Profiler.h"
 
-extern Precompute<T> PrecomputeObject;
-extern string SECURITY_TYPE;
+#include "Precompute.h"
+#include "RSSData.h"
+#include "SecretShare.h"
+
+extern Precompute PrecomputeObject;
+extern std::string SECURITY_TYPE;
 
 template<typename T>
 void NEW_funcReconstruct(RSSData<T> &a, SecretShare<T> &reconstructed) {
@@ -35,18 +37,20 @@ void NEW_funcReconstruct(RSSData<T> &a, SecretShare<T> &reconstructed) {
         reconstructed = a[1] + rxShare;
 
     } else if (SECURITY_TYPE.compare("Malicious") == 0) {
-        throw std::exception(
+        throw std::runtime_error(
             "[reconstruct] malicious functionality not re-implemented"
         ); 
     }
 }
 
+template void NEW_funcReconstruct<uint32_t>(RSSData<uint32_t> &a, SecretShare<uint32_t> &reconstructed);
+template void NEW_funcReconstruct<uint8_t>(RSSData<uint8_t> &a, SecretShare<uint8_t> &reconstructed);
+
 template<typename T>
-void NEW_funcReconstruct3out3(const SecretShare<T> &a,
-        SecretShare<T> &reconstructed) {
+void NEW_funcReconstruct3out3(SecretShare<T> &a, SecretShare<T> &reconstructed) {
 
     if (SECURITY_TYPE.compare("Malicious") == 0) {
-        throw std::exception(
+        throw std::runtime_error(
             "[reconstruct 3-out-3] malicious functionality not re-implemented"
         ); 
     }
@@ -84,6 +88,11 @@ void NEW_funcReconstruct3out3(const SecretShare<T> &a,
     } 
 }
 
+template void NEW_funcReconstruct3out3<uint32_t>(SecretShare<uint32_t> &a,
+        SecretShare<uint32_t> &reconstructed);
+template void NEW_funcReconstruct3out3<uint8_t>(SecretShare<uint8_t> &a,
+        SecretShare<uint8_t> &reconstructed);
+
 template<typename T>
 void NEW_funcTruncate(RSSData<T> &a, size_t power) {
 
@@ -91,7 +100,8 @@ void NEW_funcTruncate(RSSData<T> &a, size_t power) {
 
     RSSData<T> r(size), rPrime(size);
     PrecomputeObject.getDividedShares(r, rPrime, (1 << power), size); 
-    a -= rPrime[0];
+    a[0] -= rPrime[0];
+    a[1] -= rPrime[1];
     
     SecretShare<T> reconstructed(size);
     NEW_funcReconstruct(a, reconstructed);
@@ -113,6 +123,9 @@ void NEW_funcTruncate(RSSData<T> &a, size_t power) {
     }
 }
 
+template void NEW_funcTruncate<uint32_t>(RSSData<uint32_t> &a, size_t power);
+template void NEW_funcTruncate<uint8_t>(RSSData<uint8_t> &a, size_t power);
+
 Profiler matmul_profiler;
 /*
  * Matrix multiplication of a*b with transpose flags for a and b. Output is a
@@ -120,16 +133,16 @@ Profiler matmul_profiler;
  * b ^ transpose_b is common_dim * columns. 
  */
 template<typename T>
-void NEW_funcMatMul(const RSSData<T> &a, const RSSData<T> &b, RSSData<T> &c,
+void NEW_funcMatMul(RSSData<T> &a, RSSData<T> &b, RSSData<T> &c,
                     size_t rows, size_t common_dim, size_t columns,
                     bool transpose_a, bool transpose_b, size_t truncation) {
 
     if (a.size() != rows * common_dim) {
-        throw std::exception("[MatMul] matrix a incorrect size"); 
+        throw std::runtime_error("[MatMul] matrix a incorrect size"); 
     } else if (b.size() != common_dim * columns) {
-        throw std::exception("[MatMul] matrix b incorrect size"); 
+        throw std::runtime_error("[MatMul] matrix b incorrect size"); 
     } else if (c.size() != rows * columns) {
-        throw std::exception("[MatMul] matrix c incorrect size");
+        throw std::runtime_error("[MatMul] matrix c incorrect size");
     }
 
     SecretShare<T> rawResult(rows*columns);
@@ -151,7 +164,7 @@ void NEW_funcMatMul(const RSSData<T> &a, const RSSData<T> &b, RSSData<T> &c,
     NEW_funcReconstruct3out3(rawResult, reconstructedResult);
 
     if (SECURITY_TYPE.compare("Malicious") == 0) {
-        throw std::exception(
+        throw std::runtime_error(
             "[MatMul] malicious functionality not re-implemented"
         ); 
     }
@@ -173,6 +186,13 @@ void NEW_funcMatMul(const RSSData<T> &a, const RSSData<T> &b, RSSData<T> &c,
             break;
     }
 }
+
+template void NEW_funcMatMul<uint32_t>(RSSData<uint32_t> &a, RSSData<uint32_t> &b,
+        RSSData<uint32_t> &c, size_t rows, size_t common_dim, size_t columns,
+        bool transpose_a, bool transpose_b, size_t truncation);
+template void NEW_funcMatMul<uint8_t>(RSSData<uint8_t> &a, RSSData<uint8_t> &b,
+        RSSData<uint8_t> &c, size_t rows, size_t common_dim, size_t columns,
+        bool transpose_a, bool transpose_b, size_t truncation);
 
 /*
 void funcMultiplyNeighbours(const RSSVectorSmallType &c_1, RSSVectorSmallType &c_2, size_t size)

@@ -2,9 +2,17 @@
 #pragma once
 #include "Precompute.h"
 
-Precompute::Precompute(){initialize();}
-Precompute::~Precompute(){}
-void Precompute::initialize(){}
+Precompute::Precompute(){
+    initialize();
+}
+
+Precompute::~Precompute(){
+    // nothing
+}
+
+void Precompute::initialize(){
+    // nothing
+}
 
 // Currently, r = 3 and rPrime = 3 * 2^d
 template<typename T>
@@ -19,6 +27,11 @@ void Precompute::getDividedShares(RSSData<T> &r, RSSData<T> &rPrime,
     rPrime[0].fill(d);
     rPrime[1].fill(d);
 }
+
+template void Precompute::getDividedShares<uint32_t>(RSSData<uint32_t> &r,
+        RSSData<uint32_t> &rPrime, int d, size_t size);
+template void Precompute::getDividedShares<uint8_t>(RSSData<uint8_t> &r,
+        RSSData<uint8_t> &rPrime, int d, size_t size);
 
 /*
 void Precompute::getRandomBitShares(RSSVectorSmallType &a, size_t size)

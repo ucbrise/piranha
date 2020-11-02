@@ -34,10 +34,13 @@ void ReLULayer::forward(const RSSVectorMyType &inputActivation)
     this->layer_profiler.start();
     relu_profiler.start();
 
+    // TODO
+    /*
 	if (FUNCTION_TIME)
 		cout << "funcRELU: " << funcTime(funcRELU, inputActivation, reluPrime, activations, size) << endl;
 	else
 		funcRELU(inputActivation, reluPrime, activations, size);
+    */
 
     this->layer_profiler.accumulate("relu-forward");
     relu_profiler.accumulate("relu-forward");
@@ -55,10 +58,13 @@ void ReLULayer::computeDelta(RSSVectorMyType& prevDelta)
 
     this->layer_profiler.start();
     relu_profiler.start();
+    // TODO
+    /*
 	if (FUNCTION_TIME)
 		cout << "funcSelectShares: " << funcTime(funcSelectShares, deltas, reluPrime, prevDelta, size) << endl;
 	else
 		funcSelectShares(deltas, reluPrime, prevDelta, size);
+    */
     this->layer_profiler.accumulate("relu-delta");
     relu_profiler.accumulate("relu-delta");
 }

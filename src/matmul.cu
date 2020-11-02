@@ -1,14 +1,17 @@
 
-#pragma once
+#include <cuda_runtime.h>
+#include <iostream>
+#include <math.h>
+#include <stdlib.h>
 
-#include <thrust/device_vector.h>
+#include "matmul.cuh"
+#include "globals.h"
 
 namespace kernel {
 
 template<typename T>
-__global__ void matrixMultiplication(
-        thrust::device_vector<T> &a, thrust::device_vector<T> &b,
-        thrust::device_vector<T> &c, bool transpose_a, bool transpose_b,
+__global__ void matrixMultiplication(T *a, T *b, T *c,
+        bool transpose_a, bool transpose_b,
         int rows, int shared, int cols) {
 
     int ROW = blockIdx.y*blockDim.y+threadIdx.y;
@@ -26,13 +29,22 @@ __global__ void matrixMultiplication(
     }
 }
 
-}
+template __global__ void matrixMultiplication<uint32_t>(uint32_t *a,
+        uint32_t *b, uint32_t *c,
+        bool transpose_a, bool transpose_b,
+        int rows, int shared, int cols);
+template __global__ void matrixMultiplication<uint8_t>(uint8_t *a,
+        uint8_t *b, uint8_t *c,
+        bool transpose_a, bool transpose_b,
+        int rows, int shared, int cols);
+
+} // namespace kernel
 
 namespace gpu {
 
 template<typename T>
 void matrixMultiplication(
-        SecretShare<T> &a, SecretShare<t> &b, SecretShare<T> &c,
+        SecretShare<T> &a, SecretShare<T> &b, SecretShare<T> &c,
         bool transpose_a, bool transpose_b,
         size_t rows, size_t shared, size_t cols) {
         
@@ -47,9 +59,21 @@ void matrixMultiplication(
     }
 
     kernel::matrixMultiplication<T><<<blocksPerGrid,threadsPerBlock>>>(
-        a.data(), b.data(), c.data(),
+        thrust::raw_pointer_cast(a.getData().data()),
+        thrust::raw_pointer_cast(b.getData().data()),
+        thrust::raw_pointer_cast(c.getData().data()),
         transpose_a, transpose_b, rows, shared, cols
     );
 }
 
-}
+template void matrixMultiplication(SecretShare<uint32_t> &a,
+        SecretShare<uint32_t> &b, SecretShare<uint32_t> &c,
+        bool transpose_a, bool transpose_b,
+        size_t rows, size_t shared, size_t cols);
+template void matrixMultiplication(SecretShare<uint8_t> &a,
+        SecretShare<uint8_t> &b, SecretShare<uint8_t> &c,
+        bool transpose_a, bool transpose_b,
+        size_t rows, size_t shared, size_t cols);
+
+} // namespace gpu
+

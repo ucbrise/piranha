@@ -2,16 +2,22 @@
  * GPU Matrix Multiplication functionality test
  */
 
+#include <iostream>
 #include <stdlib.h>
+#include <thrust/copy.h>
 #include <thrust/host_vector.h>
 
 #include "Functionalities.h"
 #include "globals.h"
+#include "Precompute.h"
 #include "RSSData.h"
+
+int partyNum;
+Precompute PrecomputeObject;
 
 int main(int argc, char *argv[]) {
 
-    int partyNum = atoi(argv[1]);
+    partyNum = atoi(argv[1]);
 
     RSSData<uint32_t> a(16), b(16);
     a[0].fill(partyNum);
@@ -26,8 +32,8 @@ int main(int argc, char *argv[]) {
     NEW_funcReconstruct<uint32_t>(c, result);
 
     if (partyNum == 0) {
-        thrust::host_vector<uint32_t> host_result = result.data();
-        std::cout << host_result << std::endl;
+        thrust::host_vector<uint32_t> host_result = result.getData();
+        thrust::copy(host_result.begin(), host_result.end(), std::ostream_iterator<uint32_t>(std::cout, " "));
     }
 
     return 0;

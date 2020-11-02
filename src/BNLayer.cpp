@@ -45,7 +45,8 @@ void BNLayer::forward(const RSSVectorMyType& inputActivation)
 	for (int i = 0; i < B; ++i)
 		for (int j = 0; j < m; ++j)
 			mu[i] = mu[i] + inputActivation[i*m+j];
-	funcTruncatePublic(mu, m, B);	
+    // TODO
+	//funcTruncatePublic(mu, m, B);	
 
 	//Compute x - mean
 	RSSVectorMyType temp1(B*m);
@@ -55,27 +56,33 @@ void BNLayer::forward(const RSSVectorMyType& inputActivation)
 
 	//Compute (x-mean)^2
 	RSSVectorMyType temp2(B*m), temp3(B, make_pair(0,0));
-	funcDotProduct(temp1, temp1, temp2, B*m, true, FLOAT_PRECISION); 
+    // TODO
+	//funcDotProduct(temp1, temp1, temp2, B*m, true, FLOAT_PRECISION); 
 	for (int i = 0; i < B; ++i)
 		for (int j = 0; j < m; ++j)
 			temp3[i] = temp3[i] + temp2[i*m+j];
 
 	//Compute (variance + epsilon)
-	funcTruncatePublic(temp3, m, B);
-	funcGetShares(epsilon, eps);
+    // TODO
+	//funcTruncatePublic(temp3, m, B);
+	//funcGetShares(epsilon, eps);
 	addVectors<RSSMyType>(temp3, epsilon, temp3, B);
 		
 	//Square Root
-	funcGetShares(sigma, initG);
+    // TODO
+	//funcGetShares(sigma, initG);
 	for (int i = 0; i < SQRT_ROUNDS; ++i)
 	{
-		funcDivision(temp3, sigma, b, B);
+        // TODO
+		//funcDivision(temp3, sigma, b, B);
 		addVectors<RSSMyType>(sigma, b, sigma, B);
-		funcTruncatePublic(sigma, 2, B);
+        // TODO
+		//funcTruncatePublic(sigma, 2, B);
 	}
 
 	//Normalized x (xhat)
-	funcBatchNorm(temp1, sigma, xhat, m, B);
+    // TODO
+	//funcBatchNorm(temp1, sigma, xhat, m, B);
 
 	//Scaling
 	RSSVectorMyType g_repeat(B*m);
@@ -83,7 +90,8 @@ void BNLayer::forward(const RSSVectorMyType& inputActivation)
 		for (int j = 0; j < m; ++j)
 			g_repeat[i*m+j] = gamma[i];
 
-	funcDotProduct(g_repeat, xhat, activations, B*m, true, FLOAT_PRECISION);
+    // TODO
+	//funcDotProduct(g_repeat, xhat, activations, B*m, true, FLOAT_PRECISION);
 	for (int i = 0; i < B; ++i)
 		for (int j = 0; j < m; ++j)
 			activations[i*m+j] = activations[i*m+j] + beta[i];
@@ -106,7 +114,8 @@ void BNLayer::computeDelta(RSSVectorMyType& prevDelta)
 		for (int j = 0; j < m; ++j)
 			g_repeat[i*m+j] = gamma[i];
 
-	funcDotProduct(g_repeat, deltas, dxhat, B*m, true, FLOAT_PRECISION);
+    // TODO
+	//funcDotProduct(g_repeat, deltas, dxhat, B*m, true, FLOAT_PRECISION);
 
 	//First term
 	RSSVectorMyType temp1(B*m);
@@ -126,7 +135,8 @@ void BNLayer::computeDelta(RSSVectorMyType& prevDelta)
 
 	//Third term
 	RSSVectorMyType temp3(B*m, make_pair(0,0));
-	funcDotProduct(dxhat, xhat, temp3, B*m, true, FLOAT_PRECISION);
+    // TODO
+	//funcDotProduct(dxhat, xhat, temp3, B*m, true, FLOAT_PRECISION);
 	for (int i = 0; i < B; ++i)
 		for (int j = 1; j < m; ++j)
 			temp3[i*m] = temp3[i*m] + temp3[i*m+j];
@@ -135,7 +145,8 @@ void BNLayer::computeDelta(RSSVectorMyType& prevDelta)
 		for (int j = 0; j < m; ++j)
 			temp3[i*m + j] = temp3[i*m];
 
-	funcDotProduct(temp3, xhat, temp3, B*m, true, FLOAT_PRECISION);
+    // TODO
+	//funcDotProduct(temp3, xhat, temp3, B*m, true, FLOAT_PRECISION);
 
 	//Numerator
 	subtractVectors<RSSMyType>(temp1, temp2, temp1, B*m);
@@ -145,7 +156,8 @@ void BNLayer::computeDelta(RSSVectorMyType& prevDelta)
 	for (int i = 0; i < B; ++i)
 		temp4[i] = ((myType)m) * sigma[i];
 
-	funcBatchNorm(temp1, temp4, prevDelta, m, B);
+    // TODO
+	//funcBatchNorm(temp1, temp4, prevDelta, m, B);
     this->layer_profiler.accumulate("bn-delta");
 }
 
@@ -168,7 +180,8 @@ void BNLayer::updateEquations(const RSSVectorMyType& prevActivations)
 
 	//Update gamma
 	RSSVectorMyType temp2(B*m, make_pair(0,0)), temp3(B, make_pair(0,0));
-	funcDotProduct(xhat, deltas, temp2, B*m, true, FLOAT_PRECISION);
+    // TODO
+	//funcDotProduct(xhat, deltas, temp2, B*m, true, FLOAT_PRECISION);
 	for (int i = 0; i < B; ++i)
 		for (int j = 0; j < m; ++j)
 			temp3[i] = temp3[i] + temp2[i*m + j];

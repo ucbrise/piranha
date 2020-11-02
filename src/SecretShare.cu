@@ -3,7 +3,7 @@
  */
 
 #include "SecretShare.h"
-#include "kernel/scalar.cuh"
+#include "connect.h"
 
 template<typename T>
 SecretShare<T>::SecretShare(size_t n) : hostBuffer(0), 
@@ -40,7 +40,7 @@ void SecretShare<T>::fill(T val) {
 }
 
 template<typename T>
-thrust::device_vector<T> &data() {
+thrust::device_vector<T> &SecretShare<T>::getData() {
     return data;
 }
 
@@ -52,11 +52,12 @@ void SecretShare<T>::transmit(size_t party) {
     }
 
     // copy to host
-    hostBuffer = data;
+    hostBuffer.resize(size());
+    thrust::copy(data.begin(), data.end(), hostBuffer.begin());
 
     // transmit
     transmitting = true;
-    rtxThread = std::thread(sendVector<T>, party, hostBuffer.begin(), hostBuffer.end());
+    rtxThread = std::thread(sendVector<T>, party, std::ref(hostBuffer));
 }
 
 template<typename T>
@@ -69,7 +70,8 @@ void SecretShare<T>::receive(size_t party) {
     hostBuffer.resize(size());
 
     transmitting = false;
-    rtxThread = std::thread(receiveVector<T>, party, hostBuffer.begin(), hostBuffer.end());
+    //receiveVector<T>(party, hostBuffer);
+    rtxThread = std::thread(receiveVector<T>, party, std::ref(hostBuffer));
 }
 
 template<typename T>
@@ -79,22 +81,44 @@ void SecretShare<T>::join() {
     
     rtxThread.join();
     if (!transmitting) {
-        data = hostBuffer;
+        thrust::copy(hostBuffer.begin(), hostBuffer.end(), data.begin());
     }
-    thrust::host_vector<T>().swap(hostBuffer); // clear buffer
+    std::vector<T>().swap(hostBuffer); // clear buffer
 }
 
 /*
  * Operators
  */
 
-inline bool operator==(const SecretShare<T> &lhs, const SecretShare<T> &rhs) {
+template<typename T>
+SecretShare<T> &SecretShare<T>::operator =(const SecretShare<T> &other) {
+    if (this != &other) {
+        if (this->size() != other.size()) {
+            this->data.resize(other.size());
+        }
+        thrust::copy(other.data.begin(), other.data.end(), this->data.begin());
+
+        transmitting = false;
+        std::vector<T>().swap(this->hostBuffer);
+    }
+    return *this;
+}
+
+template<typename T>
+bool operator==(const SecretShare<T> &lhs, const SecretShare<T> &rhs) {
     return thrust::equal(lhs.data.begin(), lhs.data.end(), rhs.data.begin());
 }
 
-inline bool operator!=(const SecretShare<T> &lhs, const SecretShare<T> &rhs) {
+template bool operator==<uint32_t>(const SecretShare<uint32_t> &lhs, const SecretShare<uint32_t> &rhs);
+template bool operator==<uint8_t>(const SecretShare<uint8_t> &lhs, const SecretShare<uint8_t> &rhs);
+
+template<typename T>
+bool operator!=(const SecretShare<T> &lhs, const SecretShare<T> &rhs) {
     return !(lhs == rhs);
 }
+
+template bool operator!=<uint32_t>(const SecretShare<uint32_t> &lhs, const SecretShare<uint32_t> &rhs);
+template bool operator!=<uint8_t>(const SecretShare<uint8_t> &lhs, const SecretShare<uint8_t> &rhs);
 
 // Scalar
 
@@ -165,17 +189,26 @@ SecretShare<T> operator+(SecretShare<T> lhs, const T rhs) {
     return lhs;
 }
 
+template SecretShare<uint32_t> operator+<uint32_t>(SecretShare<uint32_t> lhs, const uint32_t rhs);
+template SecretShare<uint8_t> operator+<uint8_t>(SecretShare<uint8_t> lhs, const uint8_t rhs);
+
 template<typename T>
 SecretShare<T> operator-(SecretShare<T> lhs, const T rhs) {
     lhs -= rhs;
     return lhs;
 }
 
+template SecretShare<uint32_t> operator-<uint32_t>(SecretShare<uint32_t> lhs, const uint32_t rhs);
+template SecretShare<uint8_t> operator-<uint8_t>(SecretShare<uint8_t> lhs, const uint8_t rhs);
+
 template<typename T>
 SecretShare<T> operator/(SecretShare<T> lhs, const T rhs) {
     lhs /= rhs;
     return lhs;
 }
+
+template SecretShare<uint32_t> operator/<uint32_t>(SecretShare<uint32_t> lhs, const uint32_t rhs);
+template SecretShare<uint8_t> operator/<uint8_t>(SecretShare<uint8_t> lhs, const uint8_t rhs);
 
 template<typename T>
 SecretShare<T> &SecretShare<T>::operator+=(const SecretShare<T>& rhs) {
@@ -210,15 +243,27 @@ SecretShare<T> operator+(SecretShare<T> lhs, const SecretShare<T> &rhs) {
     return lhs;    
 }
 
+template SecretShare<uint32_t> operator+<uint32_t>(SecretShare<uint32_t> lhs, const SecretShare<uint32_t> &rhs);
+template SecretShare<uint8_t> operator+<uint8_t>(SecretShare<uint8_t> lhs, const SecretShare<uint8_t> &rhs);
+
 template<typename T>
 SecretShare<T> operator-(SecretShare<T> lhs, const SecretShare<T> &rhs) {
     lhs -= rhs;
     return lhs;
 }
 
+template SecretShare<uint32_t> operator-<uint32_t>(SecretShare<uint32_t> lhs, const SecretShare<uint32_t> &rhs);
+template SecretShare<uint8_t> operator-<uint8_t>(SecretShare<uint8_t> lhs, const SecretShare<uint8_t> &rhs);
+
 template<typename T>
 SecretShare<T> operator/(SecretShare<T> lhs, const SecretShare<T> &rhs) {
     lhs /= rhs;
     return lhs;
 }
+
+template SecretShare<uint32_t> operator/<uint32_t>(SecretShare<uint32_t> lhs, const SecretShare<uint32_t> &rhs);
+template SecretShare<uint8_t> operator/<uint8_t>(SecretShare<uint8_t> lhs, const SecretShare<uint8_t> &rhs);
+
+template class SecretShare<uint32_t>;
+template class SecretShare<uint8_t>;
 

@@ -2,8 +2,9 @@
 #include "Functionalities.h"
 
 
-void runTest(string str, string whichTest, string &network)
+void runTest(std::string str, std::string whichTest, std::string &network)
 {
+    /*
 	if (str.compare("Debug") == 0)
 	{
 		if (whichTest.compare("Mat-Mul") == 0)
@@ -146,4 +147,5 @@ void runTest(string str, string whichTest, string &network)
 	}
 	else
 		assert(false && "Only Debug or Test mode supported");
+    */
 }

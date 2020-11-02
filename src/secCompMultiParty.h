@@ -12,12 +12,13 @@
 #ifndef SECCOMPMULTIPARTY_H_
 #define SECCOMPMULTIPARTY_H_
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include <emmintrin.h>
 #include <iomanip>  //cout
 #include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "aes.h"
 #include "TedKrovetzAesNiWrapperC.h"
 #include "globals.h"

@@ -4,7 +4,6 @@
 #include "RSSData.h"
 #include "SecretShare.h"
 
-template<typename T>
 class Precompute
 {
     private:
@@ -14,6 +13,7 @@ class Precompute
         Precompute();
         ~Precompute();
 
+        template<typename T>
         void getDividedShares(RSSData<T> &r, RSSData<T> &rPrime,
                 int d, size_t size);
         //void getRandomBitShares(RSSVectorSmallType &a, size_t size);

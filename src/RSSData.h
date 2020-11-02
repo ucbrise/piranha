@@ -20,10 +20,10 @@ class RSSData
         RSSData(size_t n);
         ~RSSData();
 
-        size_t size();
+        size_t size() const;
         void zero();
 
-        SecretShare<T>& operator [](size_t i);
+        SecretShare<T>& operator [](int i);
 
     private:
 

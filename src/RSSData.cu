@@ -21,18 +21,21 @@ RSSData<T>::~RSSData() {
 }
 
 template<typename T>
-RSSData<T>::size() {
+size_t RSSData<T>::size() const {
     return shareA.size();
 }
 
 template<typename T>
-RSSData<T>::zero() {
+void RSSData<T>::zero() {
     shareA.fill(0);
     shareB.fill(0);
 }
 
 template<typename T>
-SecretShare<T>& RSSData<T>::operator [](size_t i) {
+SecretShare<T>& RSSData<T>::operator [](int i) {
     return i ? shareB : shareA;
 }
+
+template class RSSData<uint32_t>;
+template class RSSData<uint8_t>;
 

@@ -71,10 +71,13 @@ void MaxpoolLayer::forward(const RSSVectorMyType& inputActivation)
     this->layer_profiler.start();
     maxpool_profiler.start();
 	//Pooling operation
+    // TODO
+    /*
 	if (FUNCTION_TIME)
 		cout << "funcMaxpool: " << funcTime(funcMaxpool, temp1, activations, maxPrime, ow*oh*Din*B, f*f) << endl;
 	else
 		funcMaxpool(temp1, activations, maxPrime, ow*oh*Din*B, f*f);
+    */
 	
     this->layer_profiler.accumulate("maxpool-forward-pooling");
     maxpool_profiler.accumulate("maxpool-forward-pooling");
@@ -132,11 +135,13 @@ void MaxpoolLayer::computeDelta(RSSVectorMyType& prevDelta)
 
     this->layer_profiler.start();
     maxpool_profiler.start();
-	if (FUNCTION_TIME)
+    // TODO
+    /*
 	if (FUNCTION_TIME)
 		cout << "funcSelectShares: " << funcTime(funcSelectShares, temp2, temp1, prevDelta, iw*ih*Din*B) << endl;
 	else
 		funcSelectShares(temp2, temp1, prevDelta, iw*ih*Din*B);
+    */
 
     this->layer_profiler.accumulate("maxpool-delta-selectshares");
     maxpool_profiler.accumulate("maxpool-delta-selectshares");

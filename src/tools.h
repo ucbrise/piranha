@@ -133,41 +133,41 @@ __m128i square(__m128i x);
 
 __m128i inverse(__m128i x);
 
-string _sha256hash_(char *input, int length);
+std::string _sha256hash_(char *input, int length);
 
-string sha256hash(char *input, int length);
+std::string sha256hash(char *input, int length);
 
-void printError(string error);
+void printError(std::string error);
 
-string __m128i_toHex(__m128i var);
+std::string __m128i_toHex(__m128i var);
 
-string __m128i_toString(__m128i var);
+std::string __m128i_toString(__m128i var);
 
-__m128i stringTo__m128i(string str);
+__m128i stringTo__m128i(std::string str);
 
 unsigned int charValue(char c);
 
-string convertBooltoChars(bool *input, int length);
+std::string convertBooltoChars(bool *input, int length);
 
-string toHex(string s);
+std::string toHex(std::string s);
 
-string convertCharsToString(char *input, int size);
+std::string convertCharsToString(char *input, int size);
 
 void print(__m128i* arr, int size);
 
 void print128_num(__m128i var);
 
-void log_print(string str);
-void error(string str);
+void log_print(std::string str);
+void error(std::string str);
 
-void print_myType(myType var, string message, string type);
-void print_linear(myType var, string type);
-void matrixMultRSS(const RSSVectorMyType &a, const RSSVectorMyType &b, vector<myType> &temp3, 
+void print_myType(myType var, std::string message, std::string type);
+void print_linear(myType var, std::string type);
+void matrixMultRSS(const RSSVectorMyType &a, const RSSVectorMyType &b, std::vector<myType> &temp3, 
 					size_t rows, size_t common_dim, size_t columns,
 				 	size_t transpose_a, size_t transpose_b);
 
 myType dividePlain(myType a, int b);
-void dividePlain(vector<myType> &vec, int divisor);
+void dividePlain(std::vector<myType> &vec, int divisor);
 
 size_t nextParty(size_t party);
 size_t prevParty(size_t party);
@@ -236,10 +236,10 @@ inline smallType wrap3(myType a, myType b, myType c)
 		return wrapAround(temp, c);
 }
 
-void wrapAround(const vector<myType> &a, const vector<myType> &b, 
-				vector<smallType> &c, size_t size);
-void wrap3(const RSSVectorMyType &a, const vector<myType> &b, 
-				vector<smallType> &c, size_t size);
+void wrapAround(const std::vector<myType> &a, const std::vector<myType> &b, 
+				std::vector<smallType> &c, size_t size);
+void wrap3(const RSSVectorMyType &a, const std::vector<myType> &b, 
+				std::vector<smallType> &c, size_t size);
 
 void multiplyByScalar(const RSSVectorMyType &a, size_t scalar, RSSVectorMyType &b);
 // void transposeVector(const RSSVectorMyType &a, RSSVectorMyType &b, size_t rows, size_t columns);
@@ -286,21 +286,21 @@ std::pair<T,T> operator<<(const std::pair<T,T> & l, const int shift) {
 }   
 
 template<typename T>
-void addVectors(const vector<T> &a, const vector<T> &b, vector<T> &c, size_t size)
+void addVectors(const std::vector<T> &a, const std::vector<T> &b, std::vector<T> &c, size_t size)
 {
 	for (size_t i = 0; i < size; ++i)
 		c[i] = a[i] + b[i];
 }
 
 template<typename T>
-void subtractVectors(const vector<T> &a, const vector<T> &b, vector<T> &c, size_t size)
+void subtractVectors(const std::vector<T> &a, const std::vector<T> &b, std::vector<T> &c, size_t size)
 {
 	for (size_t i = 0; i < size; ++i)
 		c[i] = a[i] - b[i];
 }
 
 template<typename T>
-void copyVectors(const vector<T> &a, vector<T> &b, size_t size)
+void copyVectors(const std::vector<T> &a, std::vector<T> &b, size_t size)
 {
 	for (size_t i = 0; i < size; ++i)
 		b[i] = a[i];

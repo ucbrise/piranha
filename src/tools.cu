@@ -4,10 +4,10 @@
 #include <mutex> 
 #include <stdint.h>
 
-#include "kernels/matmul.cuh"
+#include "tools.h"
+#include "matmul.cuh"
 #include "Profiler.h"
 #include "RSSData.h"
-#include "tools.h"
 
 using namespace std;
 

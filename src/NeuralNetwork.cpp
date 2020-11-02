@@ -92,7 +92,8 @@ void NeuralNetwork::computeDelta()
 			for (size_t j = 0; j < columns; ++j)
 				rowSum[i*columns + j] = rowSum[i*columns];
 
-		funcDivision(*(layers[NUM_LAYERS-1]->getActivation()), rowSum, quotient, size);
+        // TODO
+		//funcDivision(*(layers[NUM_LAYERS-1]->getActivation()), rowSum, quotient, size);
 
 		for (size_t i = 0; i < rows; ++i)
 			for (size_t j = 0; j < columns; ++j)
@@ -148,7 +149,8 @@ void NeuralNetwork::predict(RSSVectorMyType &maxIndex)
 	RSSVectorMyType max(rows);
 	RSSVectorSmallType maxPrime(rows*columns);
 
-	funcMaxpool(*(layers[NUM_LAYERS-1]->getActivation()), max, maxPrime, rows, columns);
+    // TODO
+	//funcMaxpool(*(layers[NUM_LAYERS-1]->getActivation()), max, maxPrime, rows, columns);
 }
 
 void NeuralNetwork::getAccuracy(const RSSVectorMyType &maxIndex, vector<size_t> &counter)
@@ -161,7 +163,8 @@ void NeuralNetwork::getAccuracy(const RSSVectorMyType &maxIndex, vector<size_t> 
 	RSSVectorSmallType maxPrime(rows*columns);
 
 	//Needed maxIndex here
-	funcMaxpool(outputData, max, maxPrime, rows, columns);
+    // TODO
+	//funcMaxpool(outputData, max, maxPrime, rows, columns);
 
 	//Reconstruct things
 /******************************** TODO ****************************************/

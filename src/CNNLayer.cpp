@@ -83,10 +83,13 @@ void CNNLayer::forward(const RSSVectorMyType& inputActivation)
 	//Perform the multiplication, transpose the actications.
     this->layer_profiler.start();
 	RSSVectorMyType temp3(Dout * (ow*oh*B));
+    // TODO
+    /*
 	if (FUNCTION_TIME)
 		cout << "funcMatMul: " << funcTime(funcMatMul, weights, temp2, temp3, Dout, (f*f*Din), (ow*oh*B), 0, 1, FLOAT_PRECISION) << endl;
 	else
 		funcMatMul(weights, temp2, temp3, Dout, (f*f*Din), (ow*oh*B), 0, 1, FLOAT_PRECISION);
+    */
     this->layer_profiler.accumulate("cnn-forward-matmul");
 
     this->layer_profiler.start();
@@ -176,10 +179,13 @@ void CNNLayer::computeDelta(RSSVectorMyType& prevDelta)
     this->layer_profiler.start();
 	RSSVectorMyType temp3((Din) * (iw*ih*B), make_pair(0,0));
 
+    // TODO
+    /*
 	if (FUNCTION_TIME)
 		cout << "funcMatMul: " << funcTime(funcMatMul, temp2, temp1, temp3, Din, (f*f*Dout), (iw*ih*B), 0, 0, FLOAT_PRECISION) << endl;
 	else
 		funcMatMul(temp2, temp1, temp3, Din, (f*f*Dout), (iw*ih*B), 0, 0, FLOAT_PRECISION);
+    */
     this->layer_profiler.accumulate("cnn-delta-matmul");
 
     this->layer_profiler.start();
@@ -233,7 +239,8 @@ void CNNLayer::updateEquations(const RSSVectorMyType& prevActivations)
 					for (size_t x = 0; x < ow; ++x)
 						temp1[d] = temp1[d] + deltas[b*sizeB + d*sizeD + y*sizeY + x];
 	}
-	funcTruncate(temp1, LOG_MINI_BATCH + LOG_LEARNING_RATE, Dout);
+    // TODO
+	//funcTruncate(temp1, LOG_MINI_BATCH + LOG_LEARNING_RATE, Dout);
 	subtractVectors<RSSMyType>(biases, temp1, biases, Dout);
     this->layer_profiler.accumulate("cnn-update-bias");
 
@@ -287,11 +294,14 @@ void CNNLayer::updateEquations(const RSSVectorMyType& prevActivations)
 	//Compute product, truncate and subtract
     this->layer_profiler.start();
 	RSSVectorMyType temp4((Dout) * (f*f*Din));
+    // TODO
+    /*
 	if (FUNCTION_TIME)
 		cout << "funcMatMul: " << funcTime(funcMatMul, temp2, temp3, temp4, (Dout), (ow*oh*B), (f*f*Din), 0, 1, FLOAT_PRECISION + LOG_MINI_BATCH + LOG_LEARNING_RATE) << endl;
 	else
 		funcMatMul(temp2, temp3, temp4, (Dout), (ow*oh*B), (f*f*Din), 0, 1, 
 					FLOAT_PRECISION + LOG_MINI_BATCH + LOG_LEARNING_RATE);
+    */
     this->layer_profiler.accumulate("cnn-update-matmul");
 	
 	subtractVectors<RSSMyType>(weights, temp4, weights, f*f*Din*Dout);

@@ -753,14 +753,16 @@ void aggregateCommunication()
 	vec[3] = commObject.getRoundsRecv();
 
 	if (partyNum == PARTY_B or partyNum == PARTY_C)
-		sendVector<myType>(vec, PARTY_A, 4);
+		//sendVector<myType>(vec, PARTY_A, 4);
+        //TODO
 
 	if (partyNum == PARTY_A)
 	{
-		receiveVector<myType>(temp, PARTY_B, 4);
+        // TODO
+		//receiveVector<myType>(temp, PARTY_B, 4);
 		for (size_t i = 0; i < 4; ++i)
 			vec[i] = temp[i] + vec[i];
-		receiveVector<myType>(temp, PARTY_C, 4);
+		//receiveVector<myType>(temp, PARTY_C, 4);
 		for (size_t i = 0; i < 4; ++i)
 			vec[i] = temp[i] + vec[i];
 	}
