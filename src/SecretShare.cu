@@ -79,11 +79,17 @@ void SecretShare<T>::join() {
 
     if (!rtxThread.joinable()) return;
     
+    std::cout << "SecretShare:82 " << std::endl;
     rtxThread.join();
+    std::cout << "SecretShare:84" << std::endl;
     if (!transmitting) {
+        std::cout << "SecretShare:86" << std::endl;
         thrust::copy(hostBuffer.begin(), hostBuffer.end(), data.begin());
+        std::cout << "SecretShare:88" << std::endl;
     }
+    std::cout << "SecretShare:90" << std::endl;
     std::vector<T>().swap(hostBuffer); // clear buffer
+    std::cout << "SecretShare:92" << std::endl;
 }
 
 /*

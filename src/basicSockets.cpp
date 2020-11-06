@@ -314,6 +314,7 @@ bool BmrNet::connectNow(){
 
 
 bool BmrNet::sendMsg(const void* data, int size, int conn){
+    std::cout << "sending Msg" << std::endl;
 	int left = size;
 	int n;
 	while (left > 0)

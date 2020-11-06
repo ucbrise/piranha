@@ -5,6 +5,7 @@
 #pragma once
 
 #include <exception>
+#include <iostream>
 #include <stdexcept>
 #include <thread>
 
@@ -26,7 +27,7 @@ void NEW_funcReconstruct(RSSData<T> &a, SecretShare<T> &reconstructed) {
         // 1 - send shareA to next party
         a[0].transmit(nextParty(partyNum));
 
-        // 2 - receive shareA from previous party into DeviceBuffer
+        // 2 - receive shareA from previous party into SecretShare 
         SecretShare<T> rxShare(a.size());
         rxShare.receive(prevParty(partyNum));
 
@@ -49,6 +50,7 @@ template void NEW_funcReconstruct<uint8_t>(RSSData<uint8_t> &a, SecretShare<uint
 template<typename T>
 void NEW_funcReconstruct3out3(SecretShare<T> &a, SecretShare<T> &reconstructed) {
 
+    std::cout << "hi " << SECURITY_TYPE << std::endl;
     if (SECURITY_TYPE.compare("Malicious") == 0) {
         throw std::runtime_error(
             "[reconstruct 3-out-3] malicious functionality not re-implemented"
@@ -58,11 +60,16 @@ void NEW_funcReconstruct3out3(SecretShare<T> &a, SecretShare<T> &reconstructed) 
     switch(partyNum) {
         case PARTY_A:
         case PARTY_B:
+            std::cout << "62" << std::endl;
             a.transmit(PARTY_C);
+            std::cout << "64" << std::endl;
             a.join();
+            std::cout << "66" << std::endl;
 
             reconstructed.receive(PARTY_C);
+            std::cout << "69" << std::endl;
             reconstructed.join();
+            std::cout << "70" << std::endl;
 
             break;
 
@@ -155,13 +162,18 @@ void NEW_funcMatMul(RSSData<T> &a, RSSData<T> &b, RSSData<T> &c,
     gpu::matrixMultiplication<T>(a[1], b[0], rawResult, transpose_a,
             transpose_b, rows, common_dim, columns);
     matmul_profiler.accumulate("gpu-mult");
+    std::cout << "post all matmul" << std::endl;
    
     RSSData<T> r(rows*columns), rPrime(rows*columns);
     PrecomputeObject.getDividedShares(r, rPrime, (1<<truncation), rows*columns); 
     rawResult -= rPrime[0];
+    
+    std::cout << "post modification" << std::endl;
 
     SecretShare<T> reconstructedResult(rows*columns);
+    std::cout << "pre reconstruct" << std::endl;
     NEW_funcReconstruct3out3(rawResult, reconstructedResult);
+    std::cout << "post reconstruct" << std::endl;
 
     if (SECURITY_TYPE.compare("Malicious") == 0) {
         throw std::runtime_error(
