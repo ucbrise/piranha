@@ -9,11 +9,11 @@
 #include <stdexcept>
 #include <thread>
 
+#include "convolution.cuh"
 #include "Functionalities.h"
-#include "matmul.cuh"
-#include "Profiler.h"
-
+#include "matrix.cuh"
 #include "Precompute.h"
+#include "Profiler.h"
 #include "RSSData.h"
 #include "SecretShare.h"
 
@@ -44,11 +44,13 @@ void NEW_funcReconstruct(RSSData<T> &a, SecretShare<T> &reconstructed) {
     }
 }
 
-template void NEW_funcReconstruct<uint32_t>(RSSData<uint32_t> &a, SecretShare<uint32_t> &reconstructed);
-template void NEW_funcReconstruct<uint8_t>(RSSData<uint8_t> &a, SecretShare<uint8_t> &reconstructed);
+template void NEW_funcReconstruct<uint32_t>(RSSData<uint32_t> &a,
+        SecretShare<uint32_t> &reconstructed);
+template void NEW_funcReconstruct<uint8_t>(RSSData<uint8_t> &a,
+        SecretShare<uint8_t> &reconstructed);
 
 template<typename T>
-void NEW_funcReconstruct3out3(SecretShare<T> &a, SecretShare<T> &reconstructed) {
+void NEW_funcReconstruct3out3(SecretShare<T> &a, SecretShare<T> &reconst) {
 
     std::cout << "hi " << SECURITY_TYPE << std::endl;
     if (SECURITY_TYPE.compare("Malicious") == 0) {
@@ -66,10 +68,8 @@ void NEW_funcReconstruct3out3(SecretShare<T> &a, SecretShare<T> &reconstructed) 
             a.join();
             std::cout << "66" << std::endl;
 
-            reconstructed.receive(PARTY_C);
-            std::cout << "69" << std::endl;
-            reconstructed.join();
-            std::cout << "70" << std::endl;
+            reconst.receive(PARTY_C);
+            reconst.join();
 
             break;
 
@@ -83,22 +83,22 @@ void NEW_funcReconstruct3out3(SecretShare<T> &a, SecretShare<T> &reconstructed) 
             fromB.join();
 
             fromA += a;
-            reconstructed = fromB + fromA;
+            reconst = fromB + fromA;
 
             // TODO parallelize this
-            reconstructed.transmit(PARTY_A);
-            reconstructed.join();
-            reconstructed.transmit(PARTY_B);
-            reconstructed.join();
+            reconst.transmit(PARTY_A);
+            reconst.join();
+            reconst.transmit(PARTY_B);
+            reconst.join();
 
             break;
     } 
 }
 
 template void NEW_funcReconstruct3out3<uint32_t>(SecretShare<uint32_t> &a,
-        SecretShare<uint32_t> &reconstructed);
+        SecretShare<uint32_t> &reconst);
 template void NEW_funcReconstruct3out3<uint8_t>(SecretShare<uint8_t> &a,
-        SecretShare<uint8_t> &reconstructed);
+        SecretShare<uint8_t> &reconst);
 
 template<typename T>
 void NEW_funcTruncate(RSSData<T> &a, size_t power) {
@@ -205,6 +205,104 @@ template void NEW_funcMatMul<uint32_t>(RSSData<uint32_t> &a, RSSData<uint32_t> &
 template void NEW_funcMatMul<uint8_t>(RSSData<uint8_t> &a, RSSData<uint8_t> &b,
         RSSData<uint8_t> &c, size_t rows, size_t common_dim, size_t columns,
         bool transpose_a, bool transpose_b, size_t truncation);
+
+/*
+ * Matrix-multiplication-based convolution functionality. Assumes only one
+ * batch.
+ */
+template<typename T>
+void NEW_funcConvolution(RSSData<T> &im, RSSData<T> &filters, RSSData<T> &out,
+                    size_t imageWidth, size_t imageHeight, size_t filterSize,
+                    size_t Din, size_t Dout, size_t stride, size_t padding,
+                    size_t truncation) {
+
+    RSSData<T> reshapedIm;
+    for(int share = 0; share <= 1; share++) {
+        gpu::im2row(im[share], reshapedIm[share], imageWidth, imageHeight,
+                filterSize, Din, stride, padding);
+    }
+
+    size_t widthKernels = ((imageWidth - filterSize + (2*padding))/stride)+1;
+    size_t heightKernels = ((imageHeight - filterSize + (2*padding))/stride)+1;
+
+    // perform the convolution
+    RSSData<T> convolvedResult;
+    NEW_funcMatMul(reshapedIm, filters, convolvedResult,
+        widthKernels * heightKernels, Din * filterSize * filterSize, Dout,
+        false, true);
+
+    for(int share = 0; share <= 1; share++) {
+        gpu::transpose(convolvedResult[share], out[share],
+                Din * filterSize * filterSize, Dout);
+    }
+}
+
+template void NEW_funcConvolution<uint32_t>(RSSData<uint32_t> &im,
+        SecretShare<uint32_t> &filters, RSSData<uint32_t> &result, size_t
+        imageWidth, size_t imageHeight, size_t filterSize, size_t Din, size_t
+        Dout, size_t stride, size_t padding, size_t truncation);
+template void NEW_funcConvolution<uint8_t>(RSSData<uint8_t> &im,
+        SecretShare<uint8_t> &filters, RSSData<uint8_t> &result, size_t
+        imageWidth, size_t imageHeight, size_t filterSize, size_t Din, size_t
+        Dout, size_t stride, size_t padding, size_t truncation);
+
+/*
+template<typename T, typename U>
+void NEW_funcRELU(RSSData<T> &x, std::vector<RSSData<U>> &r,
+        RSSData<T> &result) {
+
+
+}
+*/
+
+//Input is a, outputs are temp = ReLU'(a) and b = RELU(a).
+void funcRELU(const RSSVectorMyType &a, RSSVectorSmallType &temp, RSSVectorMyType &b, size_t size)
+{
+	log_print("funcRELU");
+
+	RSSVectorSmallType c(size), bXORc(size);
+	RSSVectorMyType m_c(size);
+	vector<smallType> reconst_b(size);
+
+	// cout << "ReLU': \t\t" << funcTime(funcRELUPrime, a, temp, size) << endl;
+	funcRELUPrime(a, temp, size);
+	PrecomputeObject.getSelectorBitShares(c, m_c, size);
+
+	for (int i = 0; i < size; ++i)
+	{
+		bXORc[i].first  = c[i].first ^ temp[i].first;
+		bXORc[i].second = c[i].second ^ temp[i].second;
+	}
+
+	funcReconstructBit(bXORc, reconst_b, size, "bXORc", false);
+	if (partyNum == PARTY_A)
+		for (int i = 0; i < size; ++i)
+			if (reconst_b[i] == 0)
+			{
+				m_c[i].first = (myType)1 - m_c[i].first;
+				m_c[i].second = - m_c[i].second;
+			}
+
+	if (partyNum == PARTY_B)
+		for (int i = 0; i < size; ++i)
+			if (reconst_b[i] == 0)
+			{
+				m_c[i].first = - m_c[i].first;
+				m_c[i].second = - m_c[i].second;
+			}
+
+	if (partyNum == PARTY_C)
+		for (int i = 0; i < size; ++i)
+			if (reconst_b[i] == 0)
+			{
+				m_c[i].first = - m_c[i].first;
+				m_c[i].second = (myType)1 - m_c[i].second;
+			}
+
+	// vector<myType> reconst_m_c(size);
+	// funcReconstruct(m_c, reconst_m_c, size, "m_c", true);
+	funcDotProduct(a, m_c, b, size, false, 0);
+}
 
 /*
 void funcMultiplyNeighbours(const RSSVectorSmallType &c_1, RSSVectorSmallType &c_2, size_t size)
