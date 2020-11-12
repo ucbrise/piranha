@@ -218,7 +218,7 @@ void NEW_funcConvolution(RSSData<T> &im, RSSData<T> &filters, RSSData<T> &out,
 
     RSSData<T> reshapedIm;
     for(int share = 0; share <= 1; share++) {
-        gpu::im2row(im[share], reshapedIm[share], imageWidth, imageHeight,
+        gpu::im2row<T>(im[share], reshapedIm[share], imageWidth, imageHeight,
                 filterSize, Din, stride, padding);
     }
 
@@ -226,36 +226,48 @@ void NEW_funcConvolution(RSSData<T> &im, RSSData<T> &filters, RSSData<T> &out,
     size_t heightKernels = ((imageHeight - filterSize + (2*padding))/stride)+1;
 
     // perform the convolution
-    RSSData<T> convolvedResult;
+    RSSData<T> convolvedResult(widthKernels * heightKernels * Dout);
     NEW_funcMatMul(reshapedIm, filters, convolvedResult,
         widthKernels * heightKernels, Din * filterSize * filterSize, Dout,
         false, true);
 
     for(int share = 0; share <= 1; share++) {
-        gpu::transpose(convolvedResult[share], out[share],
+        gpu::transpose<T>(convolvedResult[share], out[share],
                 Din * filterSize * filterSize, Dout);
     }
 }
 
 template void NEW_funcConvolution<uint32_t>(RSSData<uint32_t> &im,
-        SecretShare<uint32_t> &filters, RSSData<uint32_t> &result, size_t
-        imageWidth, size_t imageHeight, size_t filterSize, size_t Din, size_t
-        Dout, size_t stride, size_t padding, size_t truncation);
-template void NEW_funcConvolution<uint8_t>(RSSData<uint8_t> &im,
-        SecretShare<uint8_t> &filters, RSSData<uint8_t> &result, size_t
-        imageWidth, size_t imageHeight, size_t filterSize, size_t Din, size_t
-        Dout, size_t stride, size_t padding, size_t truncation);
+        RSSData<uint32_t> &filters, RSSData<uint32_t> &result,
+        size_t imageWidth, size_t imageHeight, size_t filterSize, size_t Din,
+        size_t Dout, size_t stride, size_t padding, size_t truncation);
 
-/*
+template void NEW_funcConvolution<uint8_t>(RSSData<uint8_t> &im,
+        RSSData<uint8_t> &filters, RSSData<uint8_t> &result,
+        size_t imageWidth, size_t imageHeight, size_t filterSize, size_t Din,
+        size_t Dout, size_t stride, size_t padding, size_t truncation);
+
 template<typename T, typename U>
-void NEW_funcRELU(RSSData<T> &x, std::vector<RSSData<U>> &r,
+void NEW_funcRELU(RSSData<T> &x, RSSData<T> &r, std::vector<RSSData<U>> &rbits,
         RSSData<T> &result) {
 
+    // [a]_2^k  = [x + r]_2^k, open a
+    RSSData<T> a = x + r;
+    SecretShare<T> reconstructedA;
+    NEW_funcReconstruct(a, reconstructedA);
 
+    // [t_j]_2 = [1 - r_j]_2 for all i values
+    // TODO could parallelize
+    std::vector<RSSData<U>> t;
+    for (int i = 0; i < rbits.size(); i++) {
+        t.push_back(1 - rbits[i]);
+    }
+
+    // TODO BitAdder
 }
-*/
 
 //Input is a, outputs are temp = ReLU'(a) and b = RELU(a).
+/*
 void funcRELU(const RSSVectorMyType &a, RSSVectorSmallType &temp, RSSVectorMyType &b, size_t size)
 {
 	log_print("funcRELU");
@@ -303,6 +315,7 @@ void funcRELU(const RSSVectorMyType &a, RSSVectorSmallType &temp, RSSVectorMyTyp
 	// funcReconstruct(m_c, reconst_m_c, size, "m_c", true);
 	funcDotProduct(a, m_c, b, size, false, 0);
 }
+*/
 
 /*
 void funcMultiplyNeighbours(const RSSVectorSmallType &c_1, RSSVectorSmallType &c_2, size_t size)

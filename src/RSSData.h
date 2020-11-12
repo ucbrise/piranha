@@ -12,6 +12,11 @@
 #include "globals.h"
 #include "SecretShare.h"
 
+template<typename T> class RSSData;
+template<typename T> RSSData<T> operator+(RSSData<T> lhs, const RSSData<T> &rhs);
+template<typename T> RSSData<T> operator-(RSSData<T> lhs, const RSSData<T> &rhs);
+template<typename T> RSSData<T> operator-(RSSData<T> lhs, const T rhs);
+
 template <typename T>
 class RSSData 
 {
@@ -24,6 +29,14 @@ class RSSData
         void zero();
 
         SecretShare<T>& operator [](int i);
+        RSSData<T> &operator+=(const RSSData<T>& rhs);
+        RSSData<T> &operator-=(const RSSData<T>& rhs);
+        RSSData<T> &operator-=(const T rhs);
+
+        friend RSSData<T> operator+ <> (RSSData<T> lhs, const RSSData<T> &rhs);
+        friend RSSData<T> operator- <> (RSSData<T> lhs, const RSSData<T> &rhs);
+
+        friend RSSData<T> operator- <> (RSSData<T> lhs, const T rhs);
 
     private:
 
