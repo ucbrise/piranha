@@ -8,10 +8,12 @@
 namespace kernel {
 
 template<typename T>
-__global__ void matrixMultiplication(
-        thrust::device_vector<T> &a, thrust::device_vector<T> &b,
-        thrust::device_vector<T> &c, bool transpose_a, bool transpose_b,
+__global__ void matrixMultiplication(T *a, T *b, T *c,
+        bool transpose_a, bool transpose_b,
         int rows, int shared, int cols);
+
+template<typename T>
+__global__ void transpose(T *a, T *b, int rows, int cols);
 
 }
 
@@ -22,5 +24,11 @@ void matrixMultiplication(
         SecretShare<T> &a, SecretShare<T> &b, SecretShare<T> &c,
         bool transpose_a, bool transpose_b,
         size_t rows, size_t shared, size_t cols);
+
+template<typename T>
+void transpose(
+        SecretShare<T> &a, SecretShare<T> &b,
+        bool transpose_a, bool transpose_b,
+        size_t rows, size_t cols);
 
 }

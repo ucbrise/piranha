@@ -1,6 +1,10 @@
 #pragma once
+
+#include <stdexcept>
+
 #include "CNNLayer.h"
 #include "Functionalities.h"
+
 using namespace std;
 
 extern bool LARGE_NETWORK;
@@ -49,7 +53,7 @@ void CNNLayer::printLayer()
 		 << conf.filters << " \t(Output)" << endl;
 }
 
-void CNNLayer::forward(const RSSVectorMyType& inputActivation)
+void CNNLayer::forward(const RSSVectorMyType &inputActivation)
 {
 	log_print("CNN.forward");
 
@@ -64,6 +68,13 @@ void CNNLayer::forward(const RSSVectorMyType& inputActivation)
 	size_t ow 	= (((iw-f+2*P)/S)+1);
 	size_t oh	= (((ih-f+2*P)/S)+1);
 
+    this->layer_profiler.start();
+    // TODO gpu::convolutionForward<T>(
+
+
+    this->layer_profiler.accumulate("cnn-forward-gpu");
+
+    /*
     this->layer_profiler.start();
 	//Reshape activations
 	RSSVectorMyType temp1((iw+2*P)*(ih+2*P)*Din*B, make_pair(0,0));
@@ -84,12 +95,12 @@ void CNNLayer::forward(const RSSVectorMyType& inputActivation)
     this->layer_profiler.start();
 	RSSVectorMyType temp3(Dout * (ow*oh*B));
     // TODO
-    /*
+    / *
 	if (FUNCTION_TIME)
 		cout << "funcMatMul: " << funcTime(funcMatMul, weights, temp2, temp3, Dout, (f*f*Din), (ow*oh*B), 0, 1, FLOAT_PRECISION) << endl;
 	else
 		funcMatMul(weights, temp2, temp3, Dout, (f*f*Din), (ow*oh*B), 0, 1, FLOAT_PRECISION);
-    */
+    * /
     this->layer_profiler.accumulate("cnn-forward-matmul");
 
     this->layer_profiler.start();
@@ -101,11 +112,15 @@ void CNNLayer::forward(const RSSVectorMyType& inputActivation)
 				activations[i*Dout*tempSize + j*tempSize + k] 
 					= temp3[j*B*tempSize + i*tempSize + k] + biases[j];
     this->layer_profiler.accumulate("cnn-forward-biasadd");
+    */
 }
-
 
 void CNNLayer::computeDelta(RSSVectorMyType& prevDelta)
 {
+    throw std::runtime_error(
+        "[CNNLayer::computeDelta] GPU implementation not yet completed"
+    );
+    /*
 	log_print("CNN.computeDelta");
 
 	size_t B 	= conf.batchSize;
@@ -180,12 +195,12 @@ void CNNLayer::computeDelta(RSSVectorMyType& prevDelta)
 	RSSVectorMyType temp3((Din) * (iw*ih*B), make_pair(0,0));
 
     // TODO
-    /*
+    / *
 	if (FUNCTION_TIME)
 		cout << "funcMatMul: " << funcTime(funcMatMul, temp2, temp1, temp3, Din, (f*f*Dout), (iw*ih*B), 0, 0, FLOAT_PRECISION) << endl;
 	else
 		funcMatMul(temp2, temp1, temp3, Din, (f*f*Dout), (iw*ih*B), 0, 0, FLOAT_PRECISION);
-    */
+    * /
     this->layer_profiler.accumulate("cnn-delta-matmul");
 
     this->layer_profiler.start();
@@ -208,10 +223,16 @@ void CNNLayer::computeDelta(RSSVectorMyType& prevDelta)
 					}
 	}
     this->layer_profiler.accumulate("cnn-delta-temp3");
+    */
 }
 
 void CNNLayer::updateEquations(const RSSVectorMyType& prevActivations)
 {
+    throw std::runtime_error(
+        "[CNNLayer::computeDelta] GPU implementation not yet completed"
+    );
+
+    /*
 	log_print("CNN.updateEquations");
 
 	size_t B 	= conf.batchSize;
@@ -226,7 +247,7 @@ void CNNLayer::updateEquations(const RSSVectorMyType& prevActivations)
 	size_t oh	= (((ih-f+2*P)/S)+1);
 
     this->layer_profiler.start();
-	/********************** Bias update **********************/
+	// ********************* Bias update **********************
 	//Bias update
 	RSSVectorMyType temp1(Dout, make_pair(0,0));
 	{
@@ -245,7 +266,7 @@ void CNNLayer::updateEquations(const RSSVectorMyType& prevActivations)
     this->layer_profiler.accumulate("cnn-update-bias");
 
     this->layer_profiler.start();
-	/********************** Weights update **********************/
+	// ********************** Weights update **********************
 	//Reshape activations
 	RSSVectorMyType temp3((f*f*Din) * (ow*oh*B));
 	{
@@ -295,14 +316,15 @@ void CNNLayer::updateEquations(const RSSVectorMyType& prevActivations)
     this->layer_profiler.start();
 	RSSVectorMyType temp4((Dout) * (f*f*Din));
     // TODO
-    /*
+    / *
 	if (FUNCTION_TIME)
 		cout << "funcMatMul: " << funcTime(funcMatMul, temp2, temp3, temp4, (Dout), (ow*oh*B), (f*f*Din), 0, 1, FLOAT_PRECISION + LOG_MINI_BATCH + LOG_LEARNING_RATE) << endl;
 	else
 		funcMatMul(temp2, temp3, temp4, (Dout), (ow*oh*B), (f*f*Din), 0, 1, 
 					FLOAT_PRECISION + LOG_MINI_BATCH + LOG_LEARNING_RATE);
-    */
+    * /
     this->layer_profiler.accumulate("cnn-update-matmul");
 	
 	subtractVectors<RSSMyType>(weights, temp4, weights, f*f*Din*Dout);
+    */
 }
