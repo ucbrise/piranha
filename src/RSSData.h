@@ -13,9 +13,16 @@
 #include "SecretShare.h"
 
 template<typename T> class RSSData;
+template<typename T> RSSData<T> operator+(RSSData<T> lhs, const T rhs);
+template<typename T> RSSData<T> operator-(RSSData<T> lhs, const T rhs);
+template<typename T> RSSData<T> operator*(RSSData<T> lhs, const T rhs);
+template<typename T> RSSData<T> operator+(RSSData<T> lhs, const SecretShare<T> &rhs);
+template<typename T> RSSData<T> operator-(RSSData<T> lhs, const SecretShare<T> &rhs);
+template<typename T> RSSData<T> operator*(RSSData<T> lhs, const SecretShare<T> &rhs);
 template<typename T> RSSData<T> operator+(RSSData<T> lhs, const RSSData<T> &rhs);
 template<typename T> RSSData<T> operator-(RSSData<T> lhs, const RSSData<T> &rhs);
-template<typename T> RSSData<T> operator-(RSSData<T> lhs, const T rhs);
+template<typename T> RSSData<T> operator*(RSSData<T> lhs, const RSSData<T> &rhs);
+template<typename T> RSSData<T> operator^(RSSData<T> lhs, const RSSData<T> &rhs);
 
 template <typename T>
 class RSSData 
@@ -27,16 +34,33 @@ class RSSData
 
         size_t size() const;
         void zero();
+        void unzip(RSSData<T> &even, RSSData<T> &odd);
+        void zip(RSSData<T> &even, RSSData<T> &odd);
 
         SecretShare<T>& operator [](int i);
-        RSSData<T> &operator+=(const RSSData<T>& rhs);
-        RSSData<T> &operator-=(const RSSData<T>& rhs);
-        RSSData<T> &operator-=(const T rhs);
 
+        RSSData<T> &operator+=(const T rhs);
+        RSSData<T> &operator-=(const T rhs);
+        RSSData<T> &operator*=(const T rhs);
+        friend RSSData<T> operator+ <> (RSSData<T> lhs, const T rhs);
+        friend RSSData<T> operator- <> (RSSData<T> lhs, const T rhs);
+        friend RSSData<T> operator* <> (RSSData<T> lhs, const T rhs);
+
+        RSSData<T> &operator+=(const SecretShare<T> &rhs);
+        RSSData<T> &operator-=(const SecretShare<T> &rhs);
+        RSSData<T> &operator*=(const SecretShare<T> &rhs);
+        friend RSSData<T> operator+ <> (RSSData<T> lhs, const SecretShare<T> &rhs);
+        friend RSSData<T> operator- <> (RSSData<T> lhs, const SecretShare<T> &rhs);
+        friend RSSData<T> operator* <> (RSSData<T> lhs, const SecretShare<T> &rhs);
+
+        RSSData<T> &operator+=(const RSSData<T> &rhs);
+        RSSData<T> &operator-=(const RSSData<T> &rhs);
+        RSSData<T> &operator*=(const RSSData<T> &rhs);
+        RSSData<T> &operator^=(const RSSData<T> &rhs);
         friend RSSData<T> operator+ <> (RSSData<T> lhs, const RSSData<T> &rhs);
         friend RSSData<T> operator- <> (RSSData<T> lhs, const RSSData<T> &rhs);
-
-        friend RSSData<T> operator- <> (RSSData<T> lhs, const T rhs);
+        friend RSSData<T> operator* <> (RSSData<T> lhs, const RSSData<T> &rhs);
+        friend RSSData<T> operator^ <> (RSSData<T> lhs, const RSSData<T> &rhs);
 
     private:
 

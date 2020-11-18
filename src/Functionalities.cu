@@ -101,6 +101,77 @@ template void NEW_funcReconstruct3out3<uint8_t>(SecretShare<uint8_t> &a,
         SecretShare<uint8_t> &reconst);
 
 template<typename T>
+void NEW_funcReshare(SecretShare<T> &c, RSSData<T> &reshared) {
+    if (SECURITY_TYPE.compare("Malicious") == 0) {
+        throw std::runtime_error(
+            "[reshare] malicious functionality not yet re-implemented"
+        ); 
+    }
+    
+    // TODO XXX use precomputation randomness XXX TODO
+    SecretShare<T> rndMask(c.size());
+    rndMask.zero(); 
+    reshared[0] = c + rndMask;
+
+    switch (partyNum) {
+        // send then receive
+        case PARTY_A:
+            c.transmit(PARTY_B);
+            c.join();
+            reshared[1].receive(PARTY_C);
+            reshared[1].join();
+            break; 
+        case PARTY_B:
+            c.transmit(PARTY_C);
+            c.join();
+            reshared[1].receive(PARTY_A);
+            reshared[1].join();
+            break; 
+        // receive then send
+        case PARTY_C:
+            reshared[1].receive(PARTY_B);
+            reshared[1].join();
+            c.transmit(PARTY_A);
+            c.join();
+            break;
+    }
+}
+
+template void NEW_funcReshare<uint32_t>(SecretShare<uint32_t> &c,
+        RSSData<uint32_t> &reshared);
+template void NEW_funcReshare<uint8_t>(SecretShare<uint8_t> &c,
+        RSSData<uint8_t> &reshared);
+
+template<typename T, U>
+void NEW_funcSelectShare(RSSData<T> &x, RSSData<T> &y, RSSData<U> &b,
+        RSSData<T> &z) {
+
+    int size = x.size();
+
+    // TODO XXX use precomputation randomness XXX TODO
+    RSSData<T> c(size);
+    c.zero();
+    RSSData<U> cbits(size);
+    cbits.zero();
+
+    // b XOR c, then open -> e
+    b ^= cbits;
+    SecretShare<U> e;
+    NEW_funcReconstruct(b, e);
+
+    // d = 1-c if e=1 else c -> d = (e)(1-c) + (1-e)(c)
+    RSSData<T> d = (e * (1 - c)) + ((1 - e) * c);
+     
+    // z = ((y - x) * d) + x
+    z = ((y - x) * d) + x;
+}
+
+template void NEW_funcSelectShare<uint32_t, uint8_t>(RSSData<uint32_t> &x,
+        RSSData<uint32_t> &y, RSSData<uint8_t> &b, RSSData<uint32_t> &z);
+template void NEW_funcSelectShare<uint8_t, uint8_t>(RSSData<uint8_t> &x,
+        RSSData<uint8_t> &y, RSSData<uint8_t> &b, RSSData<uint8_t> &z);
+
+template<typename T>
 void NEW_funcTruncate(RSSData<T> &a, size_t power) {
 
     size_t size = a.size();
@@ -133,7 +204,6 @@ void NEW_funcTruncate(RSSData<T> &a, size_t power) {
 template void NEW_funcTruncate<uint32_t>(RSSData<uint32_t> &a, size_t power);
 template void NEW_funcTruncate<uint8_t>(RSSData<uint8_t> &a, size_t power);
 
-Profiler matmul_profiler;
 /*
  * Matrix multiplication of a*b with transpose flags for a and b. Output is a
  * share between PARTY_A and PARTY_B. a ^ transpose_a is rows * common_dim and
@@ -154,26 +224,19 @@ void NEW_funcMatMul(RSSData<T> &a, RSSData<T> &b, RSSData<T> &c,
 
     SecretShare<T> rawResult(rows*columns);
 
-    matmul_profiler.start();
     gpu::matrixMultiplication<T>(a[0], b[0], rawResult, transpose_a,
             transpose_b, rows, common_dim, columns);
     gpu::matrixMultiplication<T>(a[0], b[1], rawResult, transpose_a,
             transpose_b, rows, common_dim, columns);
     gpu::matrixMultiplication<T>(a[1], b[0], rawResult, transpose_a,
             transpose_b, rows, common_dim, columns);
-    matmul_profiler.accumulate("gpu-mult");
-    std::cout << "post all matmul" << std::endl;
    
     RSSData<T> r(rows*columns), rPrime(rows*columns);
     PrecomputeObject.getDividedShares(r, rPrime, (1<<truncation), rows*columns); 
     rawResult -= rPrime[0];
     
-    std::cout << "post modification" << std::endl;
-
     SecretShare<T> reconstructedResult(rows*columns);
-    std::cout << "pre reconstruct" << std::endl;
     NEW_funcReconstruct3out3(rawResult, reconstructedResult);
-    std::cout << "post reconstruct" << std::endl;
 
     if (SECURITY_TYPE.compare("Malicious") == 0) {
         throw std::runtime_error(
@@ -247,23 +310,148 @@ template void NEW_funcConvolution<uint8_t>(RSSData<uint8_t> &im,
         size_t imageWidth, size_t imageHeight, size_t filterSize, size_t Din,
         size_t Dout, size_t stride, size_t padding, size_t truncation);
 
-template<typename T, typename U>
-void NEW_funcRELU(RSSData<T> &x, RSSData<T> &r, std::vector<RSSData<U>> &rbits,
-        RSSData<T> &result) {
+template<typename U>
+void carryOut(RSSData<U> &p, RSSData<U> &g, int k, RSSData<U> &out) {
+    // Split bits in alternating indexes
+    RSSData<U> pEven(p.size() / 2), pOdd(p.size() / 2);
+    RSSData<U> gEven(g.size() / 2), gOdd(g.size() / 2);
 
-    // [a]_2^k  = [x + r]_2^k, open a
-    RSSData<T> a = x + r;
-    SecretShare<T> reconstructedA;
-    NEW_funcReconstruct(a, reconstructedA);
+    p.unzip(pEven, pOdd);
+    g.unzip(gEven, gOdd);
 
-    // [t_j]_2 = [1 - r_j]_2 for all i values
-    // TODO could parallelize
-    std::vector<RSSData<U>> t;
-    for (int i = 0; i < rbits.size(); i++) {
-        t.push_back(1 - rbits[i]);
+    while (k > 1) {
+        (pOdd * pEven).unzip(pEven, pOdd);
+        (gEven + (pEven * gOdd)).unzip(gEven, gOdd);
+
+        // XXX looks weird
+        pEven.resize(pEven.size() / 2);
+        pOdd.resize(pOdd.size() / 2);
+        gEven.resize(gEven.size() / 2);
+        gOdd.resize(gOdd.size() / 2);
+
+        k /= 2;
     }
 
-    // TODO BitAdder
+    // final g bits are the desired output
+    out.zip(gEven, gOdd);
+}
+
+template void carryOut<uint8_t>(RSSData<uint8_t> &p, RSSData<uint8_t> &g, 
+        int k, RSSData<uint8_t> &out);
+
+/*
+ * DReLU comparison. Consumes value of `r` and `rbits` (which is r.size() *
+ * sizeof(T) values).
+ */
+template<typename T, typename U> 
+void NEW_funcDRELU(RSSData<T> &input, RSSData<T> &r, RSSData<U> &rbits,
+        RSSData<U> &result) {
+
+    SecretShare<T> a(input.size());
+    r += input;
+    NEW_funcReconstruct(r, a);
+    a += 1;
+
+    rbits = 1 - rbits; // element-wise subtract bits
+
+    SecretShare<U> abits(rbits.size());
+    gpu::bitexpand<T, U>(a, abits, true); // and fix MSB to 1
+
+    int numBits = sizeof(T) * 8;
+    for (int i = 0; i < input.size(); i++) { // fix MSB to 0
+        rbits[0][(i * numBits) + (numBits - 1)] = 0;
+        rbits[1][(i * numBits) + (numBits - 1)] = 0;
+    }
+
+    // (p, g) <- (a + b - 2ab, ab)
+    RSSData<U> g = abits * rbits;
+    RSSData<U> p = abits + rbits;
+    carryOut(p, g, numBits, result);
+}
+
+template void NEW_funcDRELU<uint32_t, uint8_t>(RSSData<uint32_t> &input,
+        RSSData<uint32_t> &r, RSSData<uint8_t> &rbits,
+        RSSData<uint32_t> &result);
+template void NEW_funcDRELU<uint8_t, uint8_t>(RSSData<uint8_t> &input,
+        RSSData<uint8_t> &r, RSSData<uint8_t> &rbits,
+        RSSData<uint8_t> &result);
+
+template<typename T, typename U> 
+void NEW_funcRELU(RSSData<T> &input, RSSData<T> &result, RSSData<U> &dresult) {
+
+    // TODO XXX use precomputation randomness XXX TODO
+    RSSData<U> r(input.size());
+    r.zero();
+    RSSData<U> rbits(input.size() * sizeof(T) * 8);
+    rbits.zero();
+
+    NEW_funcDRELU<T, U>(input, r, rbits, dresult);
+
+    RSSData<T> zeros(input.size());
+    zeros.zero();
+    NEW_funcSelectShare<T, U>(input, zeros, drelu, result);
+}
+
+template void NEW_funcRELU<uint32_t, uint8_t>(RSSData<uint32_t> &input,
+        RSSData<uint32_t> &result, RSSData<uint8_t> &dresult);
+template void NEW_funcRELU<uint8_t, uint8_t>(RSSData<uint8_t> &input,
+        RSSData<uint8_t> &result, RSSData<uint8_t> &dresult);
+
+template<typename T>
+void expandCompare(RSSData<T> &b, RSSData<T> &expanded) {
+    int expansionFactor = (expanded.size() / b.size()) / 2;
+    RSSData<T> inverseB = 1 - b;
+
+    // TODO parallelize
+    int expandedIndex = 0;
+    for (int bIndex = 0; bIndex < b.size(); b++) {
+        for (int i = 0; i < expansionFactor; i++, expandedIndex++) {
+            expanded[0][expandedIndex] = b[0][bIndex];
+            expanded[1][expandedIndex] = b[1][bIndex];
+        } 
+        for (int i = 0; i < expansionFactor; i++, expandedIndex++) {
+            expanded[0][expandedIndex] = inverseB[0][bIndex];
+            expanded[1][expandedIndex] = inverseB[1][bIndex];
+        }
+    }
+}
+
+template<typename T, typename U> 
+void NEW_funcMaxpool(RSSData<T> &input, RSSData<T> &result, RSSData<U> &dresult, int k) {
+
+    // TODO support non-powers of 2
+    RSSData<T> even(input.size() / 2), odd(input.size() / 2);
+    input.unzip(even, odd);
+
+    RSSData<T> zeros(dresult.size());
+    zeros.zero();
+    dresult.fillKnown(1);
+
+    while (k > 1) {
+             
+        // TODO XXX use precomputation randomness XXX TODO
+        RSSData<U> r(input.size());
+        r.zero();
+        RSSData<U> rbits(input.size() * sizeof(T) * 8);
+        rbits.zero();
+
+        RSSData<T> diff = even - odd;
+        RSSData<U> b(even.size());
+        NEW_funcDRELU<T, U>(diff, r, rbits, b);
+
+        ((b * even) + ((1 - b) * odd)).unzip(even, odd);
+        even.resize(even.size() / 2);
+        odd.resize(odd.size() / 2);
+
+        RSSData<U> expandedB(dresult.size());
+        expandCompare(b, expandedB);
+
+        NEW_funcSelectShare(dresult, zeros, expandedB);
+         
+        k /= 2;
+    }
+
+    result.zip(even, odd);
 }
 
 //Input is a, outputs are temp = ReLU'(a) and b = RELU(a).

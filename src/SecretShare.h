@@ -20,9 +20,11 @@ template<typename T> bool operator==(const SecretShare<T> &lhs, const SecretShar
 template<typename T> bool operator!=(const SecretShare<T> &lhs, const SecretShare<T> &rhs);
 template<typename T> SecretShare<T> operator+(SecretShare<T> lhs, const T rhs);
 template<typename T> SecretShare<T> operator-(SecretShare<T> lhs, const T rhs);
+template<typename T> SecretShare<T> operator*(SecretShare<T> lhs, const T rhs);
 template<typename T> SecretShare<T> operator/(SecretShare<T> lhs, const T rhs);
 template<typename T> SecretShare<T> operator+(SecretShare<T> lhs, const SecretShare<T> &rhs);
 template<typename T> SecretShare<T> operator-(SecretShare<T> lhs, const SecretShare<T> &rhs);
+template<typename T> SecretShare<T> operator*(SecretShare<T> lhs, const SecretShare<T> &rhs);
 template<typename T> SecretShare<T> operator/(SecretShare<T> lhs, const SecretShare<T> &rhs);
 
 template<typename T>
@@ -50,17 +52,22 @@ class SecretShare
         // scalar overloads
         friend SecretShare<T> operator+ <> (SecretShare<T> lhs, const T rhs);
         friend SecretShare<T> operator- <> (SecretShare<T> lhs, const T rhs);
+        friend SecretShare<T> operator* <> (SecretShare<T> lhs, const T rhs);
         friend SecretShare<T> operator/ <> (SecretShare<T> lhs, const T rhs);
         SecretShare<T> &operator+=(const T rhs);
         SecretShare<T> &operator-=(const T rhs);
+        SecretShare<T> &operator*=(const T rhs);
         SecretShare<T> &operator/=(const T rhs);
+        SecretShare<T> &operator|=(const T rhs);
 
         // vector overloads
         friend SecretShare<T> operator+ <> (SecretShare<T> lhs, const SecretShare<T> &rhs);
         friend SecretShare<T> operator- <> (SecretShare<T> lhs, const SecretShare<T> &rhs);
+        friend SecretShare<T> operator* <> (SecretShare<T> lhs, const SecretShare<T> &rhs);
         friend SecretShare<T> operator/ <> (SecretShare<T> lhs, const SecretShare<T> &rhs);
         SecretShare<T> &operator+=(const SecretShare<T>& rhs);
         SecretShare<T> &operator-=(const SecretShare<T>& rhs);
+        SecretShare<T> &operator*=(const SecretShare<T>& rhs);
         SecretShare<T> &operator/=(const SecretShare<T>& rhs);
 
     private:
