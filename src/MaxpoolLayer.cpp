@@ -3,10 +3,12 @@
 #include "Functionalities.h"
 using namespace std;
 
-Profiler MaxpoolLayer::maxpool_profiler;
+template<typename T>
+Profiler MaxpoolLayer<T>::maxpool_profiler;
 
-MaxpoolLayer::MaxpoolLayer(MaxpoolConfig* conf, int _layerNum)
-:Layer(_layerNum),
+template<typename T>
+MaxpoolLayer<T>::MaxpoolLayer(MaxpoolConfig* conf, int _layerNum)
+:Layer<T>(_layerNum),
  conf(conf->imageHeight, conf->imageWidth, conf->features, 
 	  conf->poolSize, conf->stride, conf->batchSize),
  activations(conf->batchSize * conf->features * 
@@ -20,19 +22,22 @@ MaxpoolLayer::MaxpoolLayer(MaxpoolConfig* conf, int _layerNum)
 		 conf->features * conf->batchSize * conf->poolSize * conf->poolSize)
 {};
 
-
-void MaxpoolLayer::printLayer()
+template<typename T>
+void MaxpoolLayer<T>::printLayer()
 {
 	cout << "----------------------------------------------" << endl;  	
-	cout << "(" << layerNum+1 << ") Maxpool Layer\t  " << conf.imageHeight << " x " << conf.imageWidth 
+	cout << "(" << this->layerNum+1 << ") Maxpool Layer\t  " << conf.imageHeight << " x " << conf.imageWidth 
 		 << " x " << conf.features << endl << "\t\t\t  " 
 		 << conf.poolSize << "  \t\t(Pooling Size)" << endl << "\t\t\t  " 
 		 << conf.stride << " \t\t(Stride)" << endl << "\t\t\t  " 
 		 << conf.batchSize << "\t\t(Batch Size)" << endl;
 }
 
-void MaxpoolLayer::forward(const RSSVectorMyType& inputActivation)
+template<typename T>
+void MaxpoolLayer<T>::forward(const RSSData<T>& inputActivation)
 {
+    // TODO
+    /*
 	log_print("Maxpool.forward");
 
 	size_t B 	= conf.batchSize;
@@ -71,21 +76,18 @@ void MaxpoolLayer::forward(const RSSVectorMyType& inputActivation)
     this->layer_profiler.start();
     maxpool_profiler.start();
 	//Pooling operation
-    // TODO
-    /*
-	if (FUNCTION_TIME)
-		cout << "funcMaxpool: " << funcTime(funcMaxpool, temp1, activations, maxPrime, ow*oh*Din*B, f*f) << endl;
-	else
-		funcMaxpool(temp1, activations, maxPrime, ow*oh*Din*B, f*f);
-    */
+	funcMaxpool(temp1, activations, maxPrime, ow*oh*Din*B, f*f);
 	
     this->layer_profiler.accumulate("maxpool-forward-pooling");
     maxpool_profiler.accumulate("maxpool-forward-pooling");
+    */
 }
 
-
-void MaxpoolLayer::computeDelta(RSSVectorMyType& prevDelta)
+template<typename T>
+void MaxpoolLayer<T>::computeDelta(RSSData<T> &prevDelta)
 {
+    //TODO
+    /*
 	log_print("Maxpool.computeDelta");
 
 	size_t B 	= conf.batchSize;
@@ -135,19 +137,18 @@ void MaxpoolLayer::computeDelta(RSSVectorMyType& prevDelta)
 
     this->layer_profiler.start();
     maxpool_profiler.start();
-    // TODO
-    /*
-	if (FUNCTION_TIME)
-		cout << "funcSelectShares: " << funcTime(funcSelectShares, temp2, temp1, prevDelta, iw*ih*Din*B) << endl;
-	else
-		funcSelectShares(temp2, temp1, prevDelta, iw*ih*Din*B);
-    */
+	funcSelectShares(temp2, temp1, prevDelta, iw*ih*Din*B);
 
     this->layer_profiler.accumulate("maxpool-delta-selectshares");
     maxpool_profiler.accumulate("maxpool-delta-selectshares");
+    */
 }
 
-void MaxpoolLayer::updateEquations(const RSSVectorMyType& prevActivations)
+template<typename T>
+void MaxpoolLayer<T>::updateEquations(const RSSData<T> &prevActivations)
 {
 	log_print("Maxpool.updateEquations");
 }
+
+template class MaxpoolLayer<uint32_t>;
+

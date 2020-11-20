@@ -20,12 +20,14 @@ template<typename T> bool operator==(const SecretShare<T> &lhs, const SecretShar
 template<typename T> bool operator!=(const SecretShare<T> &lhs, const SecretShare<T> &rhs);
 template<typename T> SecretShare<T> operator+(SecretShare<T> lhs, const T rhs);
 template<typename T> SecretShare<T> operator-(SecretShare<T> lhs, const T rhs);
+template<typename T> SecretShare<T> operator-(const T &lhs, const SecretShare<T> &rhs);
 template<typename T> SecretShare<T> operator*(SecretShare<T> lhs, const T rhs);
 template<typename T> SecretShare<T> operator/(SecretShare<T> lhs, const T rhs);
 template<typename T> SecretShare<T> operator+(SecretShare<T> lhs, const SecretShare<T> &rhs);
 template<typename T> SecretShare<T> operator-(SecretShare<T> lhs, const SecretShare<T> &rhs);
 template<typename T> SecretShare<T> operator*(SecretShare<T> lhs, const SecretShare<T> &rhs);
 template<typename T> SecretShare<T> operator/(SecretShare<T> lhs, const SecretShare<T> &rhs);
+template<typename T> SecretShare<T> operator^(SecretShare<T> lhs, const SecretShare<T> &rhs);
 
 template<typename T>
 class SecretShare
@@ -39,6 +41,7 @@ class SecretShare
         size_t size() const;
         void resize(size_t n);
         void fill(T val);
+        template<typename U> void copy(SecretShare<U> &src);
         thrust::device_vector<T> &getData();
 
         void transmit(size_t party);
@@ -52,6 +55,7 @@ class SecretShare
         // scalar overloads
         friend SecretShare<T> operator+ <> (SecretShare<T> lhs, const T rhs);
         friend SecretShare<T> operator- <> (SecretShare<T> lhs, const T rhs);
+        friend SecretShare<T> operator- <> (const T &lhs, const SecretShare<T> &rhs);
         friend SecretShare<T> operator* <> (SecretShare<T> lhs, const T rhs);
         friend SecretShare<T> operator/ <> (SecretShare<T> lhs, const T rhs);
         SecretShare<T> &operator+=(const T rhs);
@@ -65,15 +69,17 @@ class SecretShare
         friend SecretShare<T> operator- <> (SecretShare<T> lhs, const SecretShare<T> &rhs);
         friend SecretShare<T> operator* <> (SecretShare<T> lhs, const SecretShare<T> &rhs);
         friend SecretShare<T> operator/ <> (SecretShare<T> lhs, const SecretShare<T> &rhs);
+        friend SecretShare<T> operator^ <> (SecretShare<T> lhs, const SecretShare<T> &rhs);
         SecretShare<T> &operator+=(const SecretShare<T>& rhs);
         SecretShare<T> &operator-=(const SecretShare<T>& rhs);
         SecretShare<T> &operator*=(const SecretShare<T>& rhs);
         SecretShare<T> &operator/=(const SecretShare<T>& rhs);
+        SecretShare<T> &operator^=(const SecretShare<T>& rhs);
 
     private:
+        SecretShare();
 
         thrust::device_vector<T> data;
-
         bool transmitting;
         std::vector<T> hostBuffer;
         std::thread rtxThread;

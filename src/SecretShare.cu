@@ -6,6 +6,13 @@
 #include "connect.h"
 
 template<typename T>
+SecretShare<T>::SecretShare() : hostBuffer(0),
+                                transmitting(false),
+                                data(0, 0) {
+    //nothing else
+}
+
+template<typename T>
 SecretShare<T>::SecretShare(size_t n) : hostBuffer(0), 
                                         transmitting(false),
                                         data(n, 0) {
@@ -38,6 +45,16 @@ template<typename T>
 void SecretShare<T>::fill(T val) {
     thrust::fill(data.begin(), data.end(), val);
 }
+
+template<typename T>
+template<typename U>
+void SecretShare<T>::copy(SecretShare<U> &src) {
+    resize(src.size());
+    thrust::copy(src.getData().begin(), src.getData().end(), this->data.begin());
+}
+
+template void SecretShare<uint32_t>::copy<uint8_t>(SecretShare<uint8_t> &src);
+template void SecretShare<uint8_t>::copy<uint8_t>(SecretShare<uint8_t> &src);
 
 template<typename T>
 thrust::device_vector<T> &SecretShare<T>::getData() {
@@ -95,7 +112,6 @@ void SecretShare<T>::join() {
 /*
  * Operators
  */
-
 template<typename T>
 SecretShare<T> &SecretShare<T>::operator =(const SecretShare<T> &other) {
     if (this != &other) {
@@ -225,6 +241,7 @@ SecretShare<T> &SecretShare<T>::operator|=(const T rhs) {
     thrust::transform(this->data.begin(), this->data.end(),
                       this->data.begin(),
                       scalar_or_functor<T>(rhs)); 
+    return *this;
 }
 
 template<typename T>
@@ -244,6 +261,14 @@ SecretShare<T> operator-(SecretShare<T> lhs, const T rhs) {
 
 template SecretShare<uint32_t> operator-<uint32_t>(SecretShare<uint32_t> lhs, const uint32_t rhs);
 template SecretShare<uint8_t> operator-<uint8_t>(SecretShare<uint8_t> lhs, const uint8_t rhs);
+
+template<typename T>
+SecretShare<T> operator-(const T &lhs, const SecretShare<T> &rhs) {
+    return (rhs * (T)-1) + lhs;
+}
+
+template SecretShare<uint32_t> operator-(const uint32_t &lhs, const SecretShare<uint32_t> &rhs);
+template SecretShare<uint8_t> operator-(const uint8_t &lhs, const SecretShare<uint8_t> &rhs);
 
 template<typename T>
 SecretShare<T> operator*(SecretShare<T> lhs, const T rhs) {
@@ -300,6 +325,15 @@ SecretShare<T> &SecretShare<T>::operator/=(const SecretShare<T>& rhs) {
 }
 
 template<typename T>
+SecretShare<T> &SecretShare<T>::operator^=(const SecretShare<T>& rhs) {
+    thrust::transform(this->data.begin(), this->data.end(),
+                      rhs.data.begin(),
+                      this->data.begin(),
+                      thrust::bit_xor<T>());
+    return *this;
+}
+
+template<typename T>
 SecretShare<T> operator+(SecretShare<T> lhs, const SecretShare<T> &rhs) {
     lhs += rhs;
     return lhs;    
@@ -334,6 +368,15 @@ SecretShare<T> operator/(SecretShare<T> lhs, const SecretShare<T> &rhs) {
 
 template SecretShare<uint32_t> operator/<uint32_t>(SecretShare<uint32_t> lhs, const SecretShare<uint32_t> &rhs);
 template SecretShare<uint8_t> operator/<uint8_t>(SecretShare<uint8_t> lhs, const SecretShare<uint8_t> &rhs);
+
+template<typename T>
+SecretShare<T> operator^(SecretShare<T> lhs, const SecretShare<T> &rhs) {
+    lhs ^= rhs;
+    return lhs;
+}
+
+template SecretShare<uint32_t> operator^<uint32_t>(SecretShare<uint32_t> lhs, const SecretShare<uint32_t> &rhs);
+template SecretShare<uint8_t> operator^<uint8_t>(SecretShare<uint8_t> lhs, const SecretShare<uint8_t> &rhs);
 
 template class SecretShare<uint32_t>;
 template class SecretShare<uint8_t>;

@@ -9,28 +9,29 @@ using namespace std;
 
 extern int partyNum;
 
+template<typename T>
+class ReLULayer : public Layer<T> {
 
-class ReLULayer : public Layer
-{
-private:
-	ReLUConfig conf;
-	RSSVectorMyType activations;
-	RSSVectorMyType deltas;
-	RSSVectorSmallType reluPrime;
+    private:
+        ReLUConfig conf;
+        RSSData<T> activations;
+        RSSData<T> deltas;
+        RSSData<T> reluPrime;
 
-public:
-	//Constructor and initializer
-	ReLULayer(ReLUConfig* conf, int _layerNum);
+    public:
+        //Constructor and initializer
+        ReLULayer(ReLUConfig* conf, int _layerNum);
 
-	//Functions
-	void printLayer() override;
-	void forward(const RSSVectorMyType& inputActivation) override;
-	void computeDelta(RSSVectorMyType& prevDelta) override;
-	void updateEquations(const RSSVectorMyType& prevActivations) override;
+        //Functions
+        void printLayer() override;
+        void forward(const RSSData<T>& inputActivation) override;
+        void computeDelta(RSSData<T> &prevDelta) override;
+        void updateEquations(const RSSData<T> &prevActivations) override;
 
-	//Getters
-	RSSVectorMyType* getActivation() {return &activations;};
-	RSSVectorMyType* getDelta() {return &deltas;};
+        //Getters
+        RSSData<T> *getActivation() {return &activations;};
+        RSSData<T> *getDelta() {return &deltas;};
 
-    static Profiler relu_profiler;
+        static Profiler relu_profiler;
 };
+

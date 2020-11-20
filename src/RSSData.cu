@@ -4,6 +4,16 @@
 
 #include "RSSData.h"
 
+#include "bitwise.cuh"
+#include "Functionalities.h"
+
+extern int partyNum;
+
+template<typename T>
+RSSData<T>::RSSData() : shareA(0), shareB(0) {
+    // nothing
+}
+
 template<typename T>
 RSSData<T>::RSSData(size_t n) : shareA(n), shareB(n) {
     // nothing
@@ -26,7 +36,7 @@ size_t RSSData<T>::size() const {
 }
 
 template<typename T>
-void RSSData<T>::resize(size_t n) const {
+void RSSData<T>::resize(size_t n) {
     shareA.resize(n);
     shareB.resize(n);
 }
@@ -37,7 +47,7 @@ void RSSData<T>::zero() {
     shareB.fill(0);
 }
 
-template<typenname T>
+template<typename T>
 void RSSData<T>::fillKnown(T val) {
     shareA.fill(partyNum == PARTY_A ? val : 0);
     shareB.fill(0);
@@ -53,6 +63,13 @@ template<typename T>
 void RSSData<T>::zip(RSSData<T> &even, RSSData<T> &odd) {
     gpu::zip(shareA, even[0], odd[0]);
     gpu::zip(shareB, even[1], odd[1]);
+}
+
+template<typename T>
+template<typename U>
+void RSSData<T>::copy(const RSSData<U> &src) {
+    shareA.copy(src.shareA);
+    shareB.copy(src.shareB);
 }
 
 template<typename T>
@@ -85,13 +102,13 @@ RSSData<T> &RSSData<T>::operator*=(const T rhs) {
 }
 
 template<typename T>
-RSSData<T> operator+(RSSData<T> lhs, const T &rhs) {
+RSSData<T> operator+(RSSData<T> lhs, const T rhs) {
     lhs += rhs;
     return lhs;    
 }
 
-template RSSData<uint32_t> operator+(RSSData<uint32_t> lhs, const uint32_t &rhs);
-template RSSData<uint8_t> operator+(RSSData<uint8_t> lhs, const uint8_t &rhs);
+template RSSData<uint32_t> operator+(RSSData<uint32_t> lhs, const uint32_t rhs);
+template RSSData<uint8_t> operator+(RSSData<uint8_t> lhs, const uint8_t rhs);
 
 template<typename T>
 RSSData<T> operator-(RSSData<T> lhs, const T &rhs) {
@@ -102,14 +119,23 @@ RSSData<T> operator-(RSSData<T> lhs, const T &rhs) {
 template RSSData<uint32_t> operator-(RSSData<uint32_t> lhs, const uint32_t &rhs);
 template RSSData<uint8_t> operator-(RSSData<uint8_t> lhs, const uint8_t &rhs);
 
+// TODO triggers additional multiplication
 template<typename T>
-RSSData<T> operator*(RSSData<T> lhs, const T &rhs) {
+RSSData<T> operator-(const T lhs, const RSSData<T> &rhs) {
+    return (rhs * (T)-1) + lhs;
+}
+
+template RSSData<uint32_t> operator-(const uint32_t lhs, const RSSData<uint32_t> &rhs);
+template RSSData<uint8_t> operator-(const uint8_t lhs, const RSSData<uint8_t> &rhs);
+
+template<typename T>
+RSSData<T> operator*(RSSData<T> lhs, const T rhs) {
     lhs *= rhs;
     return lhs;    
 }
 
-template RSSData<uint32_t> operator*(RSSData<uint32_t> lhs, const uint32_t &rhs);
-template RSSData<uint8_t> operator*(RSSData<uint8_t> lhs, const uint8_t &rhs);
+template RSSData<uint32_t> operator*(RSSData<uint32_t> lhs, const uint32_t rhs);
+template RSSData<uint8_t> operator*(RSSData<uint8_t> lhs, const uint8_t rhs);
 
 // Element-wise overloads for public values
 
@@ -181,11 +207,11 @@ RSSData<T> &RSSData<T>::operator-=(const RSSData<T>& rhs) {
 
 template<typename T>
 RSSData<T> &RSSData<T>::operator*=(const RSSData<T>& rhs) {
-    SecretShare<T> c = this->shareA * rhs->shareA;
-    c += this->shareB * rhs->shareA;
-    c += this->shareA * rhs->shareB;
+    SecretShare<T> c = this->shareA * rhs.shareA;
+    c += this->shareB * rhs.shareA;
+    c += this->shareA * rhs.shareB;
 
-    NEW_funcReshare(c, *this);
+    NEW_funcReshare<T>(c, *this);
     return *this;
 }
 

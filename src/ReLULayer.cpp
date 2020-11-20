@@ -5,26 +5,30 @@
 #include "Profiler.h"
 using namespace std;
 
-Profiler ReLULayer::relu_profiler;
+template<typename T>
+Profiler ReLULayer<T>::relu_profiler;
 
-ReLULayer::ReLULayer(ReLUConfig* conf, int _layerNum)
-:Layer(_layerNum),
+template<typename T>
+ReLULayer<T>::ReLULayer(ReLUConfig* conf, int _layerNum)
+:Layer<T>(_layerNum),
  conf(conf->batchSize, conf->inputDim),
  activations(conf->batchSize * conf->inputDim), 
  deltas(conf->batchSize * conf->inputDim),
  reluPrime(conf->batchSize * conf->inputDim)
 {}
 
-
-void ReLULayer::printLayer()
+template<typename T>
+void ReLULayer<T>::printLayer()
 {
 	cout << "----------------------------------------------" << endl;  	
-	cout << "(" << layerNum+1 << ") ReLU Layer\t\t  " << conf.batchSize << " x " << conf.inputDim << endl;
+	cout << "(" << this->layerNum+1 << ") ReLU Layer\t\t  " << conf.batchSize << " x " << conf.inputDim << endl;
 }
 
-
-void ReLULayer::forward(const RSSVectorMyType &inputActivation)
+template<typename T>
+void ReLULayer<T>::forward(const RSSData<T> &inputActivation)
 {
+    // TODO
+    /*
 	log_print("ReLU.forward");
 
 	size_t rows = conf.batchSize;
@@ -34,21 +38,18 @@ void ReLULayer::forward(const RSSVectorMyType &inputActivation)
     this->layer_profiler.start();
     relu_profiler.start();
 
-    // TODO
-    /*
-	if (FUNCTION_TIME)
-		cout << "funcRELU: " << funcTime(funcRELU, inputActivation, reluPrime, activations, size) << endl;
-	else
-		funcRELU(inputActivation, reluPrime, activations, size);
-    */
+	funcRELU(inputActivation, reluPrime, activations, size);
 
     this->layer_profiler.accumulate("relu-forward");
     relu_profiler.accumulate("relu-forward");
+    */
 }
 
-
-void ReLULayer::computeDelta(RSSVectorMyType& prevDelta)
+template<typename T>
+void ReLULayer<T>::computeDelta(RSSData<T> &prevDelta)
 {
+    // TODO
+    /*
 	log_print("ReLU.computeDelta");
 
 	//Back Propagate	
@@ -58,19 +59,17 @@ void ReLULayer::computeDelta(RSSVectorMyType& prevDelta)
 
     this->layer_profiler.start();
     relu_profiler.start();
-    // TODO
-    /*
-	if (FUNCTION_TIME)
-		cout << "funcSelectShares: " << funcTime(funcSelectShares, deltas, reluPrime, prevDelta, size) << endl;
-	else
-		funcSelectShares(deltas, reluPrime, prevDelta, size);
-    */
+	funcSelectShares(deltas, reluPrime, prevDelta, size);
     this->layer_profiler.accumulate("relu-delta");
     relu_profiler.accumulate("relu-delta");
+    */
 }
 
-
-void ReLULayer::updateEquations(const RSSVectorMyType& prevActivations)
+template<typename T>
+void ReLULayer<T>::updateEquations(const RSSData<T> &prevActivations)
 {
 	log_print("ReLU.updateEquations");
 }
+
+template class ReLULayer<uint32_t>;
+

@@ -4,7 +4,7 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include "matmul.cuh"
+#include "matrix.cuh"
 #include "globals.h"
 
 namespace kernel {
@@ -49,9 +49,9 @@ __global__ void transpose(T* a, T* b, int rows, int cols) {
     }
 }
 
-template __global__ void tranpose<uint32_t>(uint32_t *a, uint32_t *b,
+template __global__ void transpose<uint32_t>(uint32_t *a, uint32_t *b,
         int rows, int cols);
-template __global__ void tranpose<uint8_t>(uint8_t *a, uint8_t *b,
+template __global__ void transpose<uint8_t>(uint8_t *a, uint8_t *b,
         int rows, int cols);
 
 } // namespace kernel

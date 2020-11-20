@@ -14,7 +14,7 @@ private:
 	//AES variables
 	__m128i pseudoRandomString[RANDOM_COMPUTE];
 	__m128i tempSecComp[RANDOM_COMPUTE];
-	unsigned long rCounter = -1;
+	unsigned long rCounter = (unsigned long) -1;
 	AES_KEY_TED aes_key;
 
 	//Extraction variables

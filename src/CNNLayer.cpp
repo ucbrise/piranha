@@ -9,8 +9,9 @@ using namespace std;
 
 extern bool LARGE_NETWORK;
 
-CNNLayer::CNNLayer(CNNConfig* conf, int _layerNum)
-:Layer(_layerNum),
+template<typename T>
+CNNLayer<T>::CNNLayer(CNNConfig* conf, int _layerNum)
+:Layer<T>(_layerNum),
  conf(conf->imageHeight, conf->imageWidth, conf->inputFeatures, 
 	  conf->filters, conf->filterSize, conf->stride, 
 	  conf->padding, conf->batchSize),
@@ -26,8 +27,8 @@ CNNLayer::CNNLayer(CNNConfig* conf, int _layerNum)
 	initialize();
 };
 
-
-void CNNLayer::initialize()
+template<typename T>
+void CNNLayer<T>::initialize()
 {
 	//Initialize weights and biases here.
 	//Ensure that initialization is correctly done.
@@ -36,14 +37,14 @@ void CNNLayer::initialize()
 	size_t decimation = 10000;
 	size_t size = weights.size();
 	
-	fill(biases.begin(), biases.end(), make_pair(0,0));
+    biases.zero();
 }
 
-
-void CNNLayer::printLayer()
+template<typename T>
+void CNNLayer<T>::printLayer()
 {
 	cout << "----------------------------------------------" << endl;  	
-	cout << "(" << layerNum+1 << ") CNN Layer\t\t  " << conf.imageHeight << " x " << conf.imageWidth 
+	cout << "(" << this->layerNum+1 << ") CNN Layer\t\t  " << conf.imageHeight << " x " << conf.imageWidth 
 		 << " x " << conf.inputFeatures << endl << "\t\t\t  " 
 		 << conf.filterSize << " x " << conf.filterSize << "  \t(Filter Size)" << endl << "\t\t\t  " 
 		 << conf.stride << " , " << conf.padding << " \t(Stride, padding)" << endl << "\t\t\t  " 
@@ -53,8 +54,11 @@ void CNNLayer::printLayer()
 		 << conf.filters << " \t(Output)" << endl;
 }
 
-void CNNLayer::forward(const RSSVectorMyType &inputActivation)
+template<typename T>
+void CNNLayer<T>::forward(const RSSData<T> &inputActivation)
 {
+    // TODO
+    /*
 	log_print("CNN.forward");
 
 	size_t B 	= conf.batchSize;
@@ -71,10 +75,8 @@ void CNNLayer::forward(const RSSVectorMyType &inputActivation)
     this->layer_profiler.start();
     // TODO gpu::convolutionForward<T>(
 
-
     this->layer_profiler.accumulate("cnn-forward-gpu");
 
-    /*
     this->layer_profiler.start();
 	//Reshape activations
 	RSSVectorMyType temp1((iw+2*P)*(ih+2*P)*Din*B, make_pair(0,0));
@@ -115,7 +117,8 @@ void CNNLayer::forward(const RSSVectorMyType &inputActivation)
     */
 }
 
-void CNNLayer::computeDelta(RSSVectorMyType& prevDelta)
+template<typename T>
+void CNNLayer<T>::computeDelta(RSSData<T> &prevDelta)
 {
     throw std::runtime_error(
         "[CNNLayer::computeDelta] GPU implementation not yet completed"
@@ -226,7 +229,8 @@ void CNNLayer::computeDelta(RSSVectorMyType& prevDelta)
     */
 }
 
-void CNNLayer::updateEquations(const RSSVectorMyType& prevActivations)
+template<typename T>
+void CNNLayer<T>::updateEquations(const RSSData<T> &prevActivations)
 {
     throw std::runtime_error(
         "[CNNLayer::computeDelta] GPU implementation not yet completed"
@@ -328,3 +332,6 @@ void CNNLayer::updateEquations(const RSSVectorMyType& prevActivations)
 	subtractVectors<RSSMyType>(weights, temp4, weights, f*f*Din*Dout);
     */
 }
+
+template class CNNLayer<uint32_t>;
+

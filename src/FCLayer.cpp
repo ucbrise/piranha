@@ -4,8 +4,9 @@
 #include "Functionalities.h"
 using namespace std;
 
-FCLayer::FCLayer(FCConfig* conf, int _layerNum)
-:Layer(_layerNum),
+template<typename T>
+FCLayer<T>::FCLayer(FCConfig* conf, int _layerNum)
+:Layer<T>(_layerNum),
  conf(conf->inputDim, conf->batchSize, conf->outputDim),
  activations(conf->batchSize * conf->outputDim), 
  deltas(conf->batchSize * conf->outputDim),
@@ -15,8 +16,8 @@ FCLayer::FCLayer(FCConfig* conf, int _layerNum)
 	initialize();
 }
 
-
-void FCLayer::initialize()
+template<typename T>
+void FCLayer<T>::initialize()
 {
 	//Initialize weights and biases here.
 	//Ensure that initialization is correctly done.
@@ -39,21 +40,22 @@ void FCLayer::initialize()
 	// 	for (size_t i = 0; i < size; ++i)
 	// 		weights[i] = 0;
 		
-	
-	fill(biases.begin(), biases.end(), make_pair(0,0));
+    biases.zero();	
 }
 
-
-void FCLayer::printLayer()
+template<typename T>
+void FCLayer<T>::printLayer()
 {
 	cout << "----------------------------------------------" << endl;  	
-	cout << "(" << layerNum+1 << ") FC Layer\t\t  " << conf.inputDim << " x " << conf.outputDim << endl << "\t\t\t  "
+	cout << "(" << this->layerNum+1 << ") FC Layer\t\t  " << conf.inputDim << " x " << conf.outputDim << endl << "\t\t\t  "
 		 << conf.batchSize << "\t\t (Batch Size)" << endl;
 }
 
-
-void FCLayer::forward(const RSSVectorMyType &inputActivation)
+template<typename T>
+void FCLayer<T>::forward(const RSSData<T> &inputActivation)
 {
+    // TODO
+    /*
 	log_print("FC.forward");
 
 	size_t rows = conf.batchSize;
@@ -63,23 +65,21 @@ void FCLayer::forward(const RSSVectorMyType &inputActivation)
 
     this->layer_profiler.start();
     // TODO
-    /*
-	if (FUNCTION_TIME)
-		cout << "funcMatMul: " << funcTime(funcMatMul, inputActivation, weights, activations, rows, common_dim, columns, 0, 0, FLOAT_PRECISION) << endl;
-	else
-		funcMatMul(inputActivation, weights, activations, rows, common_dim, columns, 0, 0, FLOAT_PRECISION);
-    */
+	//funcMatMul(inputActivation, weights, activations, rows, common_dim, columns, 0, 0, FLOAT_PRECISION);
 
 	for(size_t r = 0; r < rows; ++r)
 		for(size_t c = 0; c < columns; ++c)
 			activations[r*columns + c] = activations[r*columns + c] + biases[c];
 
     this->layer_profiler.accumulate("fc-forward");
+    */
 }
 
-
-void FCLayer::computeDelta(RSSVectorMyType& prevDelta)
+template<typename T>
+void FCLayer<T>::computeDelta(RSSData<T> &prevDelta)
 {
+    //TODO
+    /*
 	log_print("FC.computeDelta");
 
 	//Back Propagate	
@@ -89,19 +89,17 @@ void FCLayer::computeDelta(RSSVectorMyType& prevDelta)
 	
     this->layer_profiler.start();
     // TODO
-    /*
-	if (FUNCTION_TIME)
-		cout << "funcMatMul: " << funcTime(funcMatMul, deltas, weights, prevDelta, rows, common_dim, columns, 0, 1, FLOAT_PRECISION) << endl;
-	else
-		funcMatMul(deltas, weights, prevDelta, rows, common_dim, columns, 0, 1, FLOAT_PRECISION);
-    */
+	//funcMatMul(deltas, weights, prevDelta, rows, common_dim, columns, 0, 1, FLOAT_PRECISION);
 
     this->layer_profiler.accumulate("fc-delta");
+    */
 }
 
-
-void FCLayer::updateEquations(const RSSVectorMyType& prevActivations)
+template<typename T>
+void FCLayer<T>::updateEquations(const RSSData<T> &prevActivations)
 {
+    //TODO
+    /*
 	log_print("FC.updateEquations");
 
 	size_t rows = conf.batchSize;
@@ -128,16 +126,14 @@ void FCLayer::updateEquations(const RSSVectorMyType& prevActivations)
 	size = rows*columns;
 	RSSVectorMyType deltaWeight(size);
 
-    // TODO
-    /*
-	if (FUNCTION_TIME)
-		cout << "funcMatMul: " << funcTime(funcMatMul, prevActivations, deltas, deltaWeight, rows, common_dim, columns, 1, 0, FLOAT_PRECISION + LOG_LEARNING_RATE + LOG_MINI_BATCH) << endl;
-	else
-		funcMatMul(prevActivations, deltas, deltaWeight, rows, common_dim, columns, 1, 0, 
+	funcMatMul(prevActivations, deltas, deltaWeight, rows, common_dim, columns, 1, 0, 
 					FLOAT_PRECISION + LOG_LEARNING_RATE + LOG_MINI_BATCH);
-    */
 	
 	subtractVectors<RSSMyType>(weights, deltaWeight, weights, size);		
 
     this->layer_profiler.accumulate("fc-update");
+    */
 }
+
+template class FCLayer<uint32_t>;
+

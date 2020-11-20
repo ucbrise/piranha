@@ -25,13 +25,13 @@ public:
 	:numIterations(_numIterations)
 	{};
 
-	addLayer(FCConfig* fcl) {layerConf.push_back(fcl);};
-	addLayer(CNNConfig* cnnl) {layerConf.push_back(cnnl);};
-	addLayer(MaxpoolConfig* mpl) {layerConf.push_back(mpl);};
-	addLayer(ReLUConfig* relul) {layerConf.push_back(relul);};
-	addLayer(BNConfig* bnl) {layerConf.push_back(bnl);};
+	void addLayer(FCConfig* fcl) {layerConf.push_back(fcl);};
+	void addLayer(CNNConfig* cnnl) {layerConf.push_back(cnnl);};
+	void addLayer(MaxpoolConfig* mpl) {layerConf.push_back(mpl);};
+	void addLayer(ReLUConfig* relul) {layerConf.push_back(relul);};
+	void addLayer(BNConfig* bnl) {layerConf.push_back(bnl);};
 	
-	checkNetwork() 
+	void checkNetwork() 
 	{
 		//Checks
 		// assert(layerConf.back()->type.compare("FC") == 0 && "Last layer has to be FC");

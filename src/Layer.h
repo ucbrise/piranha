@@ -1,22 +1,25 @@
 
 #pragma once
+
 #include "globals.h"
 #include "Profiler.h"
+#include "RSSData.h"
 
+template<typename T>
 class Layer
 {
-public: 
-	int layerNum = 0;
-	Layer(int _layerNum): layerNum(_layerNum) {};
-    Profiler layer_profiler; 
+    public: 
+        int layerNum = 0;
+        Layer(int _layerNum): layerNum(_layerNum) {};
+        Profiler layer_profiler; 
 
-//Virtual functions	
-	virtual void printLayer() {};
-	virtual void forward(const RSSVectorMyType& inputActivation) {};
-	virtual void computeDelta(RSSVectorMyType& prevDelta) {};
-	virtual void updateEquations(const RSSVectorMyType& prevActivations) {};
+    //Virtual functions	
+        virtual void printLayer() {};
+        virtual void forward(const RSSData<T> &inputActivation) {};
+        virtual void computeDelta(RSSData<T> &prevDelta) {};
+        virtual void updateEquations(const RSSData<T> &prevActivations) {};
 
-//Getters
-	virtual RSSVectorMyType* getActivation() {};
-	virtual RSSVectorMyType* getDelta() {};
+    //Getters
+        virtual RSSData<T> *getActivation() {};
+        virtual RSSData<T> *getDelta() {};
 };

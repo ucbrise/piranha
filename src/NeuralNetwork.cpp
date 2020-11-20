@@ -15,37 +15,40 @@ extern size_t LAST_LAYER_SIZE;
 extern bool WITH_NORMALIZATION;
 extern bool LARGE_NETWORK;
 
-NeuralNetwork::NeuralNetwork(NeuralNetConfig* config)
+template<typename T>
+NeuralNetwork<T>::NeuralNetwork(NeuralNetConfig* config)
 :inputData(INPUT_SIZE * MINI_BATCH_SIZE),
  outputData(LAST_LAYER_SIZE * MINI_BATCH_SIZE)
 {
 	for (size_t i = 0; i < NUM_LAYERS; ++i)
 	{
 		if (config->layerConf[i]->type.compare("FC") == 0)
-			layers.push_back(new FCLayer(config->layerConf[i], i));
+			layers.push_back(new FCLayer<T>(config->layerConf[i], i));
 		else if (config->layerConf[i]->type.compare("CNN") == 0)
-			layers.push_back(new CNNLayer(config->layerConf[i], i));
+			layers.push_back(new CNNLayer<T>(config->layerConf[i], i));
 		else if (config->layerConf[i]->type.compare("Maxpool") == 0)
-			layers.push_back(new MaxpoolLayer(config->layerConf[i], i));
+			layers.push_back(new MaxpoolLayer<T>(config->layerConf[i], i));
 		else if (config->layerConf[i]->type.compare("ReLU") == 0)
-			layers.push_back(new ReLULayer(config->layerConf[i], i));
-		else if (config->layerConf[i]->type.compare("BN") == 0)
-			layers.push_back(new BNLayer(config->layerConf[i], i));
+			layers.push_back(new ReLULayer<T>(config->layerConf[i], i));
+		//else if (config->layerConf[i]->type.compare("BN") == 0)
+	    //	layers.push_back(new BNLayer(config->layerConf[i], i));
 		else
-			error("Only FC, CNN, ReLU, Maxpool, and BN layer types currently supported");
+			//error("Only FC, CNN, ReLU, Maxpool, and BN layer types currently supported");
+			error("Only FC, CNN, ReLU, and Maxpool layer types currently supported");
 	}
 }
 
-
-NeuralNetwork::~NeuralNetwork()
+template<typename T>
+NeuralNetwork<T>::~NeuralNetwork()
 {
-	for (vector<Layer*>::iterator it = layers.begin() ; it != layers.end(); ++it)
+	for (auto it = layers.begin() ; it != layers.end(); ++it)
 		delete (*it);
 
 	layers.clear();
 }
 
-void NeuralNetwork::forward()
+template<typename T>
+void NeuralNetwork<T>::forward()
 {
 	log_print("NN.forward");
 
@@ -61,16 +64,23 @@ void NeuralNetwork::forward()
 	}
 }
 
-void NeuralNetwork::backward()
+template<typename T>
+void NeuralNetwork<T>::backward()
 {
+    //TODO
+    /*
 	log_print("NN.backward");
 
 	computeDelta();
 	updateEquations();
+    */
 }
 
-void NeuralNetwork::computeDelta()
+template<typename T>
+void NeuralNetwork<T>::computeDelta()
 {
+    //TODO
+    /*
 	log_print("NN.computeDelta");
 
 	size_t rows = MINI_BATCH_SIZE;
@@ -122,10 +132,14 @@ void NeuralNetwork::computeDelta()
 		if (LARGE_NETWORK)
 			cout << "Delta \t\t" << layers[i]->layerNum << " completed..." << endl;
 	}
+    */
 }
 
-void NeuralNetwork::updateEquations()
+template<typename T>
+void NeuralNetwork<T>::updateEquations()
 {
+    //TODO
+    /*
 	log_print("NN.updateEquations");
 
 	for (size_t i = NUM_LAYERS-1; i > 0; --i)
@@ -138,10 +152,14 @@ void NeuralNetwork::updateEquations()
 	layers[0]->updateEquations(inputData);
 	if (LARGE_NETWORK)
 		cout << "First layer update Eq. completed." << endl;		
+    */
 }
 
-void NeuralNetwork::predict(RSSVectorMyType &maxIndex)
+template<typename T>
+void NeuralNetwork<T>::predict(RSSData<T> &maxIndex)
 {
+    //TODO
+    /*
 	log_print("NN.predict");
 
 	size_t rows = MINI_BATCH_SIZE;
@@ -149,12 +167,15 @@ void NeuralNetwork::predict(RSSVectorMyType &maxIndex)
 	RSSVectorMyType max(rows);
 	RSSVectorSmallType maxPrime(rows*columns);
 
-    // TODO
-	//funcMaxpool(*(layers[NUM_LAYERS-1]->getActivation()), max, maxPrime, rows, columns);
+	funcMaxpool(*(layers[NUM_LAYERS-1]->getActivation()), max, maxPrime, rows, columns);
+    */
 }
 
-void NeuralNetwork::getAccuracy(const RSSVectorMyType &maxIndex, vector<size_t> &counter)
+template<typename T>
+void NeuralNetwork<T>::getAccuracy(const RSSData<T> &maxIndex, vector<size_t> &counter)
 {
+    //TODO
+    /*
 	log_print("NN.getAccuracy");
 
 	size_t rows = MINI_BATCH_SIZE;
@@ -167,7 +188,7 @@ void NeuralNetwork::getAccuracy(const RSSVectorMyType &maxIndex, vector<size_t> 
 	//funcMaxpool(outputData, max, maxPrime, rows, columns);
 
 	//Reconstruct things
-/******************************** TODO ****************************************/
+    / ******************************** TODO **************************************** /
 	RSSVectorMyType temp_max(rows), temp_groundTruth(rows);
 	// if (partyNum == PARTY_B)
 	// 	sendTwoVectors<RSSMyType>(max, groundTruth, PARTY_A, rows, rows);
@@ -176,10 +197,10 @@ void NeuralNetwork::getAccuracy(const RSSVectorMyType &maxIndex, vector<size_t> 
 	// {
 	// 	receiveTwoVectors<RSSMyType>(temp_max, temp_groundTruth, PARTY_B, rows, rows);
 	// 	addVectors<RSSMyType>(temp_max, max, temp_max, rows);
-//		dividePlain(temp_max, (1 << FLOAT_PRECISION));
+    //	dividePlain(temp_max, (1 << FLOAT_PRECISION));
 	// 	addVectors<RSSMyType>(temp_groundTruth, groundTruth, temp_groundTruth, rows);	
 	// }
-/******************************** TODO ****************************************/
+    / ******************************** TODO **************************************** /
 
 	for (size_t i = 0; i < MINI_BATCH_SIZE; ++i)
 	{
@@ -190,6 +211,8 @@ void NeuralNetwork::getAccuracy(const RSSVectorMyType &maxIndex, vector<size_t> 
 
 	cout << "Rolling accuracy: " << counter[0] << " out of " 
 		 << counter[1] << " (" << (counter[0]*100/counter[1]) << " %)" << endl;
+    */
 }
 
+template class NeuralNetwork<uint32_t>;
 

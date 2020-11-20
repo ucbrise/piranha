@@ -27,4 +27,10 @@ namespace gpu {
 template<typename T, typename U>
 void bitexpand(SecretShare<T> &a, SecretShare<U> &b, bool fixedMSB);
 
+template<typename T>
+void zip(SecretShare<T> &out, SecretShare<T> &even, SecretShare<T> &odd);
+
+template<typename T>
+void unzip(SecretShare<T> &in, SecretShare<T> &even, SecretShare<T> &odd);
+
 }

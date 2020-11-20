@@ -3,9 +3,8 @@
 #include "Functionalities.h"
 using namespace std;
 
-
-BNLayer::BNLayer(BNConfig* conf, int _layerNum)
-:Layer(_layerNum),
+template<typename T>
+BNLayer<T>::BNLayer(BNConfig* conf, int _layerNum) : Layer<T>(_layerNum),
  conf(conf->inputSize, conf->numBatches),
  gamma(conf->numBatches),
  beta(conf->numBatches),
@@ -15,19 +14,22 @@ BNLayer::BNLayer(BNConfig* conf, int _layerNum)
  deltas(conf->inputSize * conf->numBatches)
 {initialize();};
 
+template<typename T>
+void BNLayer<T>::initialize() {};
 
-void BNLayer::initialize() {};
-
-
-void BNLayer::printLayer()
+template<typename T>
+void BNLayer<T>::printLayer()
 {
 	cout << "----------------------------------------------" << endl;  	
-	cout << "(" << layerNum+1 << ") BN Layer\t\t  " << conf.inputSize << " x " 
+	cout << "(" << this->layerNum+1 << ") BN Layer\t\t  " << conf.inputSize << " x " 
 		 << conf.numBatches << endl;
 }
 
-void BNLayer::forward(const RSSVectorMyType& inputActivation)
+template<typename T>
+void BNLayer<T>::forward(const RSSData<T> &inputActivation)
 {
+    //TODO
+    /*
 	log_print("BN.forward");
 
 	size_t B = conf.numBatches;
@@ -96,12 +98,15 @@ void BNLayer::forward(const RSSVectorMyType& inputActivation)
 		for (int j = 0; j < m; ++j)
 			activations[i*m+j] = activations[i*m+j] + beta[i];
     this->layer_profiler.accumulate("bn-forward");
+    */
 }
 
-
 //https://kevinzakka.github.io/2016/09/14/batch_normalization/
-void BNLayer::computeDelta(RSSVectorMyType& prevDelta)
+template<typename T>
+void BNLayer<T>::computeDelta(RSSData<T> &prevDelta)
 {
+    // TODO
+    /*
 	log_print("BN.computeDelta");
 
 	size_t B = conf.numBatches;
@@ -159,10 +164,14 @@ void BNLayer::computeDelta(RSSVectorMyType& prevDelta)
     // TODO
 	//funcBatchNorm(temp1, temp4, prevDelta, m, B);
     this->layer_profiler.accumulate("bn-delta");
+    */
 }
 
-void BNLayer::updateEquations(const RSSVectorMyType& prevActivations)
+template<typename T>
+void BNLayer<T>::updateEquations(const RSSData<T>& prevActivations)
 {
+    //TODO
+    /*
 	log_print("BN.updateEquations");
 
 	size_t B = conf.numBatches;
@@ -188,4 +197,8 @@ void BNLayer::updateEquations(const RSSVectorMyType& prevActivations)
 
 	subtractVectors<RSSMyType>(gamma, temp3, gamma, B);
     this->layer_profiler.accumulate("bn-update");
+    */
 }
+
+template class BNLayer<uint32_t>;
+

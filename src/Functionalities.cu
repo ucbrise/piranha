@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <thread>
 
+#include "bitwise.cuh"
 #include "convolution.cuh"
 #include "Functionalities.h"
 #include "matrix.cuh"
@@ -52,7 +53,6 @@ template void NEW_funcReconstruct<uint8_t>(RSSData<uint8_t> &a,
 template<typename T>
 void NEW_funcReconstruct3out3(SecretShare<T> &a, SecretShare<T> &reconst) {
 
-    std::cout << "hi " << SECURITY_TYPE << std::endl;
     if (SECURITY_TYPE.compare("Malicious") == 0) {
         throw std::runtime_error(
             "[reconstruct 3-out-3] malicious functionality not re-implemented"
@@ -62,11 +62,8 @@ void NEW_funcReconstruct3out3(SecretShare<T> &a, SecretShare<T> &reconst) {
     switch(partyNum) {
         case PARTY_A:
         case PARTY_B:
-            std::cout << "62" << std::endl;
             a.transmit(PARTY_C);
-            std::cout << "64" << std::endl;
             a.join();
-            std::cout << "66" << std::endl;
 
             reconst.receive(PARTY_C);
             reconst.join();
@@ -110,7 +107,7 @@ void NEW_funcReshare(SecretShare<T> &c, RSSData<T> &reshared) {
     
     // TODO XXX use precomputation randomness XXX TODO
     SecretShare<T> rndMask(c.size());
-    rndMask.zero(); 
+    rndMask.fill(0); 
     reshared[0] = c + rndMask;
 
     switch (partyNum) {
@@ -142,7 +139,7 @@ template void NEW_funcReshare<uint32_t>(SecretShare<uint32_t> &c,
 template void NEW_funcReshare<uint8_t>(SecretShare<uint8_t> &c,
         RSSData<uint8_t> &reshared);
 
-template<typename T, U>
+template<typename T, typename U>
 void NEW_funcSelectShare(RSSData<T> &x, RSSData<T> &y, RSSData<U> &b,
         RSSData<T> &z) {
 
@@ -156,11 +153,14 @@ void NEW_funcSelectShare(RSSData<T> &x, RSSData<T> &y, RSSData<U> &b,
 
     // b XOR c, then open -> e
     b ^= cbits;
-    SecretShare<U> e;
-    NEW_funcReconstruct(b, e);
+    SecretShare<U> etemp(b.size());
+    NEW_funcReconstruct(b, etemp);
+
+    SecretShare<T> e(etemp.size());
+    e.copy(etemp);
 
     // d = 1-c if e=1 else c -> d = (e)(1-c) + (1-e)(c)
-    RSSData<T> d = (e * (1 - c)) + ((1 - e) * c);
+    RSSData<T> d = ((T)1 - c) * e + c * ((T)1 - e);
      
     // z = ((y - x) * d) + x
     z = ((y - x) * d) + x;
@@ -279,7 +279,7 @@ void NEW_funcConvolution(RSSData<T> &im, RSSData<T> &filters, RSSData<T> &out,
                     size_t Din, size_t Dout, size_t stride, size_t padding,
                     size_t truncation) {
 
-    RSSData<T> reshapedIm;
+    RSSData<T> reshapedIm(0);
     for(int share = 0; share <= 1; share++) {
         gpu::im2row<T>(im[share], reshapedIm[share], imageWidth, imageHeight,
                 filterSize, Din, stride, padding);
@@ -292,7 +292,7 @@ void NEW_funcConvolution(RSSData<T> &im, RSSData<T> &filters, RSSData<T> &out,
     RSSData<T> convolvedResult(widthKernels * heightKernels * Dout);
     NEW_funcMatMul(reshapedIm, filters, convolvedResult,
         widthKernels * heightKernels, Din * filterSize * filterSize, Dout,
-        false, true);
+        false, true, truncation);
 
     for(int share = 0; share <= 1; share++) {
         gpu::transpose<T>(convolvedResult[share], out[share],
@@ -352,26 +352,26 @@ void NEW_funcDRELU(RSSData<T> &input, RSSData<T> &r, RSSData<U> &rbits,
     NEW_funcReconstruct(r, a);
     a += 1;
 
-    rbits = 1 - rbits; // element-wise subtract bits
+    rbits = (uint8_t)1 - rbits; // element-wise subtract bits
 
     SecretShare<U> abits(rbits.size());
     gpu::bitexpand<T, U>(a, abits, true); // and fix MSB to 1
 
     int numBits = sizeof(T) * 8;
     for (int i = 0; i < input.size(); i++) { // fix MSB to 0
-        rbits[0][(i * numBits) + (numBits - 1)] = 0;
-        rbits[1][(i * numBits) + (numBits - 1)] = 0;
+        rbits[0].getData()[(i * numBits) + (numBits - 1)] = 0;
+        rbits[1].getData()[(i * numBits) + (numBits - 1)] = 0;
     }
 
     // (p, g) <- (a + b - 2ab, ab)
-    RSSData<U> g = abits * rbits;
-    RSSData<U> p = abits + rbits;
+    RSSData<U> g = rbits * abits;
+    RSSData<U> p = rbits + abits;
     carryOut(p, g, numBits, result);
 }
 
 template void NEW_funcDRELU<uint32_t, uint8_t>(RSSData<uint32_t> &input,
         RSSData<uint32_t> &r, RSSData<uint8_t> &rbits,
-        RSSData<uint32_t> &result);
+        RSSData<uint8_t> &result);
 template void NEW_funcDRELU<uint8_t, uint8_t>(RSSData<uint8_t> &input,
         RSSData<uint8_t> &r, RSSData<uint8_t> &rbits,
         RSSData<uint8_t> &result);
@@ -380,7 +380,7 @@ template<typename T, typename U>
 void NEW_funcRELU(RSSData<T> &input, RSSData<T> &result, RSSData<U> &dresult) {
 
     // TODO XXX use precomputation randomness XXX TODO
-    RSSData<U> r(input.size());
+    RSSData<T> r(input.size());
     r.zero();
     RSSData<U> rbits(input.size() * sizeof(T) * 8);
     rbits.zero();
@@ -389,7 +389,7 @@ void NEW_funcRELU(RSSData<T> &input, RSSData<T> &result, RSSData<U> &dresult) {
 
     RSSData<T> zeros(input.size());
     zeros.zero();
-    NEW_funcSelectShare<T, U>(input, zeros, drelu, result);
+    NEW_funcSelectShare<T, U>(input, zeros, dresult, result);
 }
 
 template void NEW_funcRELU<uint32_t, uint8_t>(RSSData<uint32_t> &input,

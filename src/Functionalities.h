@@ -18,7 +18,7 @@ template<typename T>
 void NEW_funcReconstruct3out3(SecretShare<T> &a, SecretShare<T> &reconstructed);
 
 template<typename T>
-void NEW_funcReshare(SecretShare<T> &c, RSSData<uint32_t> &reshared);
+void NEW_funcReshare(SecretShare<T> &c, RSSData<T> &reshared);
 
 template<typename T>
 void NEW_funcTruncate(RSSData<T> &a, size_t power);

@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 #include "tools.h"
-#include "matmul.cuh"
+#include "matrix.cuh"
 #include "Profiler.h"
 #include "RSSData.h"
 
@@ -263,7 +263,7 @@ unsigned int charValue(char c)
     if (c >= '0' && c <= '9') { return c - '0';      }
     if (c >= 'a' && c <= 'f') { return c - 'a' + 10; }
     if (c >= 'A' && c <= 'F') { return c - 'A' + 10; }
-    return -1;
+    return (unsigned int) -1;
 }
 
 string convertBooltoChars(bool *input, int length)

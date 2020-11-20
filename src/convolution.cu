@@ -5,8 +5,9 @@
 #include <stdlib.h>
 
 #include "convolution.cuh"
-#include "matmul.cuh"
+
 #include "globals.h"
+#include "matrix.cuh"
 
 namespace kernel {
 
@@ -96,8 +97,8 @@ void im2row(SecretShare<T> &im, SecretShare<T> &output,
 
     for (int share = 0; share <= 1; share++) {
         kernel::im2row<T><<<blocksPerGrid,threadsPerBlock>>>(
-            thrust::raw_pointer_cast(im.data()),
-            thrust::raw_pointer_cast(output.data()),
+            thrust::raw_pointer_cast(im.getData().data()),
+            thrust::raw_pointer_cast(output.getData().data()),
             imageWidth, imageHeight, filterSize, Din, stride, padding
         );
     }

@@ -28,7 +28,6 @@ void matrixMultiplication(
 template<typename T>
 void transpose(
         SecretShare<T> &a, SecretShare<T> &b,
-        bool transpose_a, bool transpose_b,
         size_t rows, size_t cols);
 
 }

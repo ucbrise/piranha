@@ -5,19 +5,22 @@
 #include "globals.h"
 using namespace std;
 
+template<typename T>
 class NeuralNetwork
 {
-public:
-	RSSVectorMyType inputData;
-	RSSVectorMyType outputData;
-	vector<Layer*> layers;
+    public:
+        RSSData<T> inputData;
+        RSSData<T> outputData;
+        vector<Layer<T> *> layers;
 
-	NeuralNetwork(NeuralNetConfig* config);
-	~NeuralNetwork();
-	void forward();
-	void backward();
-	void computeDelta();
-	void updateEquations();
-	void predict(RSSVectorMyType &maxIndex);
-	void getAccuracy(const RSSVectorMyType &maxIndex, vector<size_t> &counter);
+        NeuralNetwork(NeuralNetConfig* config);
+        ~NeuralNetwork();
+
+        void forward();
+        void backward();
+        void computeDelta();
+        void updateEquations();
+        void predict(RSSData<T> &maxIndex);
+        void getAccuracy(const RSSData<T> &maxIndex, vector<size_t> &counter);
 };
+

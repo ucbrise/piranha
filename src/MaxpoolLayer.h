@@ -7,28 +7,29 @@
 #include "globals.h"
 using namespace std;
 
+template<typename T>
+class MaxpoolLayer : public Layer<T> {
 
-class MaxpoolLayer : public Layer
-{
-private:
-	MaxpoolConfig conf;
-	RSSVectorMyType activations;
-	RSSVectorMyType deltas;
-	RSSVectorSmallType maxPrime;
+    private:
+        MaxpoolConfig conf;
+        RSSData<T> activations;
+        RSSData<T> deltas;
+        RSSData<T> maxPrime;
 
-public:
-	//Constructor and initializer
-	MaxpoolLayer(MaxpoolConfig* conf, int _layerNum);
+    public:
+        //Constructor and initializer
+        MaxpoolLayer(MaxpoolConfig* conf, int _layerNum);
 
-	//Functions
-	void printLayer() override;
-	void forward(const RSSVectorMyType& inputActivation) override;
-	void computeDelta(RSSVectorMyType& prevDelta) override;
-	void updateEquations(const RSSVectorMyType& prevActivations) override;
+        //Functions
+        void printLayer() override;
+        void forward(const RSSData<T>& inputActivation) override;
+        void computeDelta(RSSData<T>& prevDelta) override;
+        void updateEquations(const RSSData<T>& prevActivations) override;
 
-	//Getters
-	RSSVectorMyType* getActivation() {return &activations;};
-	RSSVectorMyType* getDelta() {return &deltas;};
+        //Getters
+        RSSData<T> *getActivation() {return &activations;};
+        RSSData<T> *getDelta() {return &deltas;};
 
-    static Profiler maxpool_profiler;
+        static Profiler maxpool_profiler;
 };
+
