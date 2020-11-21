@@ -3,7 +3,7 @@
 
 #include <thrust/device_vector.h>
 
-#include "SecretShare.h"
+#include "DeviceBuffer.h"
 
 namespace kernel {
 
@@ -21,13 +21,13 @@ namespace gpu {
 
 template<typename T>
 void matrixMultiplication(
-        SecretShare<T> &a, SecretShare<T> &b, SecretShare<T> &c,
+        DeviceBuffer<T> &a, DeviceBuffer<T> &b, DeviceBuffer<T> &c,
         bool transpose_a, bool transpose_b,
         size_t rows, size_t shared, size_t cols);
 
 template<typename T>
 void transpose(
-        SecretShare<T> &a, SecretShare<T> &b,
+        DeviceBuffer<T> &a, DeviceBuffer<T> &b,
         size_t rows, size_t cols);
 
 }

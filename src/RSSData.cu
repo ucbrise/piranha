@@ -20,7 +20,7 @@ RSSData<T>::RSSData(size_t n) : shareA(n), shareB(n) {
 }
 
 template<typename T>
-RSSData<T>::RSSData(const SecretShare<T> &a, const SecretShare<T> &b) :
+RSSData<T>::RSSData(const DeviceBuffer<T> &a, const DeviceBuffer<T> &b) :
     shareA(a), shareB(b) {
     // nothing 
 }
@@ -73,7 +73,7 @@ void RSSData<T>::copy(const RSSData<U> &src) {
 }
 
 template<typename T>
-SecretShare<T>& RSSData<T>::operator [](int i) {
+DeviceBuffer<T>& RSSData<T>::operator [](int i) {
     return i ? shareB : shareA;
 }
 
@@ -140,7 +140,7 @@ template RSSData<uint8_t> operator*(RSSData<uint8_t> lhs, const uint8_t rhs);
 // Element-wise overloads for public values
 
 template<typename T>
-RSSData<T> &RSSData<T>::operator+=(const SecretShare<T>& rhs) {
+RSSData<T> &RSSData<T>::operator+=(const DeviceBuffer<T>& rhs) {
     if (partyNum == PARTY_A) {
         this->shareA += rhs;
     }
@@ -148,7 +148,7 @@ RSSData<T> &RSSData<T>::operator+=(const SecretShare<T>& rhs) {
 }
 
 template<typename T>
-RSSData<T> &RSSData<T>::operator-=(const SecretShare<T>& rhs) {
+RSSData<T> &RSSData<T>::operator-=(const DeviceBuffer<T>& rhs) {
     if (partyNum == PARTY_A) {
         this->shareA -= rhs;
     }
@@ -156,38 +156,38 @@ RSSData<T> &RSSData<T>::operator-=(const SecretShare<T>& rhs) {
 }
 
 template<typename T>
-RSSData<T> &RSSData<T>::operator*=(const SecretShare<T>& rhs) {
+RSSData<T> &RSSData<T>::operator*=(const DeviceBuffer<T>& rhs) {
     this->shareA *= rhs;
     this->shareB *= rhs;
     return *this;
 }
 
 template<typename T>
-RSSData<T> operator+(RSSData<T> lhs, const SecretShare<T> &rhs) {
+RSSData<T> operator+(RSSData<T> lhs, const DeviceBuffer<T> &rhs) {
     lhs += rhs;
     return lhs;    
 }
 
-template RSSData<uint32_t> operator+<uint32_t>(RSSData<uint32_t> lhs, const SecretShare<uint32_t> &rhs);
-template RSSData<uint8_t> operator+<uint8_t>(RSSData<uint8_t> lhs, const SecretShare<uint8_t> &rhs);
+template RSSData<uint32_t> operator+<uint32_t>(RSSData<uint32_t> lhs, const DeviceBuffer<uint32_t> &rhs);
+template RSSData<uint8_t> operator+<uint8_t>(RSSData<uint8_t> lhs, const DeviceBuffer<uint8_t> &rhs);
 
 template<typename T>
-RSSData<T> operator-(RSSData<T> lhs, const SecretShare<T> &rhs) {
+RSSData<T> operator-(RSSData<T> lhs, const DeviceBuffer<T> &rhs) {
     lhs -= rhs;
     return lhs;
 }
 
-template RSSData<uint32_t> operator-<uint32_t>(RSSData<uint32_t> lhs, const SecretShare<uint32_t> &rhs);
-template RSSData<uint8_t> operator-<uint8_t>(RSSData<uint8_t> lhs, const SecretShare<uint8_t> &rhs);
+template RSSData<uint32_t> operator-<uint32_t>(RSSData<uint32_t> lhs, const DeviceBuffer<uint32_t> &rhs);
+template RSSData<uint8_t> operator-<uint8_t>(RSSData<uint8_t> lhs, const DeviceBuffer<uint8_t> &rhs);
 
 template<typename T>
-RSSData<T> operator*(RSSData<T> lhs, const SecretShare<T> &rhs) {
+RSSData<T> operator*(RSSData<T> lhs, const DeviceBuffer<T> &rhs) {
     lhs *= rhs;
     return lhs;    
 }
 
-template RSSData<uint32_t> operator*<uint32_t>(RSSData<uint32_t> lhs, const SecretShare<uint32_t> &rhs);
-template RSSData<uint8_t> operator*<uint8_t>(RSSData<uint8_t> lhs, const SecretShare<uint8_t> &rhs);
+template RSSData<uint32_t> operator*<uint32_t>(RSSData<uint32_t> lhs, const DeviceBuffer<uint32_t> &rhs);
+template RSSData<uint8_t> operator*<uint8_t>(RSSData<uint8_t> lhs, const DeviceBuffer<uint8_t> &rhs);
 
 // Element-wise overloads
 
@@ -207,7 +207,7 @@ RSSData<T> &RSSData<T>::operator-=(const RSSData<T>& rhs) {
 
 template<typename T>
 RSSData<T> &RSSData<T>::operator*=(const RSSData<T>& rhs) {
-    SecretShare<T> c = this->shareA * rhs.shareA;
+    DeviceBuffer<T> c = this->shareA * rhs.shareA;
     c += this->shareB * rhs.shareA;
     c += this->shareA * rhs.shareB;
 

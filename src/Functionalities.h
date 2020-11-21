@@ -12,13 +12,13 @@ extern void end_time(std::string str);
 extern void end_communication(std::string str);
 
 template<typename T>
-void NEW_funcReconstruct(RSSData<T> &a, SecretShare<T> &reconstructed);
+void NEW_funcReconstruct(RSSData<T> &a, DeviceBuffer<T> &reconstructed);
 
 template<typename T>
-void NEW_funcReconstruct3out3(SecretShare<T> &a, SecretShare<T> &reconstructed);
+void NEW_funcReconstruct3out3(DeviceBuffer<T> &a, DeviceBuffer<T> &reconstructed);
 
 template<typename T>
-void NEW_funcReshare(SecretShare<T> &c, RSSData<T> &reshared);
+void NEW_funcReshare(DeviceBuffer<T> &c, RSSData<T> &reshared);
 
 template<typename T>
 void NEW_funcTruncate(RSSData<T> &a, size_t power);

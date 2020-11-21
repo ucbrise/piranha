@@ -60,7 +60,7 @@ namespace gpu {
 
 template<typename T>
 void matrixMultiplication(
-        SecretShare<T> &a, SecretShare<T> &b, SecretShare<T> &c,
+        DeviceBuffer<T> &a, DeviceBuffer<T> &b, DeviceBuffer<T> &c,
         bool transpose_a, bool transpose_b,
         size_t rows, size_t shared, size_t cols) {
         
@@ -82,17 +82,17 @@ void matrixMultiplication(
     );
 }
 
-template void matrixMultiplication(SecretShare<uint32_t> &a,
-        SecretShare<uint32_t> &b, SecretShare<uint32_t> &c,
+template void matrixMultiplication(DeviceBuffer<uint32_t> &a,
+        DeviceBuffer<uint32_t> &b, DeviceBuffer<uint32_t> &c,
         bool transpose_a, bool transpose_b,
         size_t rows, size_t shared, size_t cols);
-template void matrixMultiplication(SecretShare<uint8_t> &a,
-        SecretShare<uint8_t> &b, SecretShare<uint8_t> &c,
+template void matrixMultiplication(DeviceBuffer<uint8_t> &a,
+        DeviceBuffer<uint8_t> &b, DeviceBuffer<uint8_t> &c,
         bool transpose_a, bool transpose_b,
         size_t rows, size_t shared, size_t cols);
 
 template<typename T> 
-void transpose(SecretShare<T> &a, SecretShare<T> &b,
+void transpose(DeviceBuffer<T> &a, DeviceBuffer<T> &b,
         size_t rows, size_t cols) {
         
     dim3 threadsPerBlock(cols, rows);
@@ -112,10 +112,10 @@ void transpose(SecretShare<T> &a, SecretShare<T> &b,
     );
 }
 
-template void transpose<uint32_t>(SecretShare<uint32_t> &a,
-        SecretShare<uint32_t> &b, size_t rows, size_t cols);
-template void transpose<uint8_t>(SecretShare<uint8_t> &a,
-        SecretShare<uint8_t> &b, size_t rows, size_t cols);
+template void transpose<uint32_t>(DeviceBuffer<uint32_t> &a,
+        DeviceBuffer<uint32_t> &b, size_t rows, size_t cols);
+template void transpose<uint8_t>(DeviceBuffer<uint8_t> &a,
+        DeviceBuffer<uint8_t> &b, size_t rows, size_t cols);
 
 } // namespace gpu
 

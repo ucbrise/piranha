@@ -10,16 +10,16 @@
 #include <cstddef>
 
 #include "globals.h"
-#include "SecretShare.h"
+#include "DeviceBuffer.h"
 
 template<typename T> class RSSData;
 template<typename T> RSSData<T> operator+(RSSData<T> lhs, const T rhs);
 template<typename T> RSSData<T> operator-(RSSData<T> lhs, const T rhs);
 template<typename T> RSSData<T> operator-(const T lhs, const RSSData<T> &rhs);
 template<typename T> RSSData<T> operator*(RSSData<T> lhs, const T rhs);
-template<typename T> RSSData<T> operator+(RSSData<T> lhs, const SecretShare<T> &rhs);
-template<typename T> RSSData<T> operator-(RSSData<T> lhs, const SecretShare<T> &rhs);
-template<typename T> RSSData<T> operator*(RSSData<T> lhs, const SecretShare<T> &rhs);
+template<typename T> RSSData<T> operator+(RSSData<T> lhs, const DeviceBuffer<T> &rhs);
+template<typename T> RSSData<T> operator-(RSSData<T> lhs, const DeviceBuffer<T> &rhs);
+template<typename T> RSSData<T> operator*(RSSData<T> lhs, const DeviceBuffer<T> &rhs);
 template<typename T> RSSData<T> operator+(RSSData<T> lhs, const RSSData<T> &rhs);
 template<typename T> RSSData<T> operator-(RSSData<T> lhs, const RSSData<T> &rhs);
 template<typename T> RSSData<T> operator*(RSSData<T> lhs, const RSSData<T> &rhs);
@@ -41,7 +41,7 @@ class RSSData {
         void zip(RSSData<T> &even, RSSData<T> &odd);
         template<typename U> void copy(const RSSData<U> &src);
 
-        SecretShare<T>& operator [](int i);
+        DeviceBuffer<T>& operator [](int i);
 
         RSSData<T> &operator+=(const T rhs);
         RSSData<T> &operator-=(const T rhs);
@@ -51,12 +51,12 @@ class RSSData {
         friend RSSData<T> operator- <> (const T lhs, const RSSData<T> &rhs);
         friend RSSData<T> operator* <> (RSSData<T> lhs, const T rhs);
 
-        RSSData<T> &operator+=(const SecretShare<T> &rhs);
-        RSSData<T> &operator-=(const SecretShare<T> &rhs);
-        RSSData<T> &operator*=(const SecretShare<T> &rhs);
-        friend RSSData<T> operator+ <> (RSSData<T> lhs, const SecretShare<T> &rhs);
-        friend RSSData<T> operator- <> (RSSData<T> lhs, const SecretShare<T> &rhs);
-        friend RSSData<T> operator* <> (RSSData<T> lhs, const SecretShare<T> &rhs);
+        RSSData<T> &operator+=(const DeviceBuffer<T> &rhs);
+        RSSData<T> &operator-=(const DeviceBuffer<T> &rhs);
+        RSSData<T> &operator*=(const DeviceBuffer<T> &rhs);
+        friend RSSData<T> operator+ <> (RSSData<T> lhs, const DeviceBuffer<T> &rhs);
+        friend RSSData<T> operator- <> (RSSData<T> lhs, const DeviceBuffer<T> &rhs);
+        friend RSSData<T> operator* <> (RSSData<T> lhs, const DeviceBuffer<T> &rhs);
 
         RSSData<T> &operator+=(const RSSData<T> &rhs);
         RSSData<T> &operator-=(const RSSData<T> &rhs);
@@ -69,8 +69,8 @@ class RSSData {
 
     private:
 
-        RSSData(const SecretShare<T> &a, const SecretShare<T> &b);
+        RSSData(const DeviceBuffer<T> &a, const DeviceBuffer<T> &b);
 
-        SecretShare<T> shareA;
-        SecretShare<T> shareB;
+        DeviceBuffer<T> shareA;
+        DeviceBuffer<T> shareB;
 };

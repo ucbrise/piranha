@@ -2,7 +2,7 @@
 #pragma once
 #include "globals.h"
 #include "RSSData.h"
-#include "SecretShare.h"
+#include "DeviceBuffer.h"
 
 class Precompute
 {

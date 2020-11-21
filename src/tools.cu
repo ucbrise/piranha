@@ -381,7 +381,7 @@ Profiler matmul_profiler;
 
 template<typename T>
 void matrixMultRSS(const RSSData<T> &a, const RSSData<T> &b,
-                   SecretShare<T> &result,
+                   DeviceBuffer<T> &result,
 				   size_t rows, size_t common_dim, size_t columns,
 				   bool transpose_a, bool transpose_b)
 {

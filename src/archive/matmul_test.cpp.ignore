@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
     NEW_funcMatMul<uint32_t>(a, b, c, 4, 4, 4, false, false, FLOAT_PRECISION);
     std::cout << "post matmul" << std::endl;
 
-    SecretShare<uint32_t> result(16);
+    DeviceBuffer<uint32_t> result(16);
     NEW_funcReconstruct<uint32_t>(c, result);
 
     if (partyNum == 0) {

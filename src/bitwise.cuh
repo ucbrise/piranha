@@ -3,7 +3,7 @@
 
 #include <thrust/device_vector.h>
 
-#include "SecretShare.h"
+#include "DeviceBuffer.h"
 
 namespace kernel {
 
@@ -25,12 +25,12 @@ __global__ void transpose(T *a, T *b, int rows, int cols);
 namespace gpu {
 
 template<typename T, typename U>
-void bitexpand(SecretShare<T> &a, SecretShare<U> &b, bool fixedMSB);
+void bitexpand(DeviceBuffer<T> &a, DeviceBuffer<U> &b, bool fixedMSB);
 
 template<typename T>
-void zip(SecretShare<T> &out, SecretShare<T> &even, SecretShare<T> &odd);
+void zip(DeviceBuffer<T> &out, DeviceBuffer<T> &even, DeviceBuffer<T> &odd);
 
 template<typename T>
-void unzip(SecretShare<T> &in, SecretShare<T> &even, SecretShare<T> &odd);
+void unzip(DeviceBuffer<T> &in, DeviceBuffer<T> &even, DeviceBuffer<T> &odd);
 
 }

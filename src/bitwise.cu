@@ -67,7 +67,7 @@ template __global__ void zip<uint8_t>(uint8_t *out, uint8_t *even,
 namespace gpu {
 
 template<typename T, typename U>
-void bitexpand(SecretShare<T> &a, SecretShare<U> &b, bool fixedMSB) {
+void bitexpand(DeviceBuffer<T> &a, DeviceBuffer<U> &b, bool fixedMSB) {
 
     int cols = sizeof(T) * 8;
     int rows = a.size();
@@ -90,13 +90,13 @@ void bitexpand(SecretShare<T> &a, SecretShare<U> &b, bool fixedMSB) {
     );
 }
 
-template void bitexpand<uint32_t, uint8_t>(SecretShare<uint32_t> &a,
-        SecretShare<uint8_t> &b, bool fixedMSB);
-template void bitexpand<uint8_t, uint8_t>(SecretShare<uint8_t> &a,
-        SecretShare<uint8_t> &b, bool fixedMSB);
+template void bitexpand<uint32_t, uint8_t>(DeviceBuffer<uint32_t> &a,
+        DeviceBuffer<uint8_t> &b, bool fixedMSB);
+template void bitexpand<uint8_t, uint8_t>(DeviceBuffer<uint8_t> &a,
+        DeviceBuffer<uint8_t> &b, bool fixedMSB);
 
 template<typename T>
-void unzip(SecretShare<T> &in, SecretShare<T> &even, SecretShare<T> &odd) {
+void unzip(DeviceBuffer<T> &in, DeviceBuffer<T> &even, DeviceBuffer<T> &odd) {
 
     int cols = in.size();
     int rows = 1;
@@ -119,13 +119,13 @@ void unzip(SecretShare<T> &in, SecretShare<T> &even, SecretShare<T> &odd) {
     );
 }
 
-template void unzip<uint32_t>(SecretShare<uint32_t> &in,
-        SecretShare<uint32_t> &even, SecretShare<uint32_t> &odd);
-template void unzip<uint8_t>(SecretShare<uint8_t> &in,
-        SecretShare<uint8_t> &even, SecretShare<uint8_t> &odd);
+template void unzip<uint32_t>(DeviceBuffer<uint32_t> &in,
+        DeviceBuffer<uint32_t> &even, DeviceBuffer<uint32_t> &odd);
+template void unzip<uint8_t>(DeviceBuffer<uint8_t> &in,
+        DeviceBuffer<uint8_t> &even, DeviceBuffer<uint8_t> &odd);
 
 template<typename T>
-void zip(SecretShare<T> &out, SecretShare<T> &even, SecretShare<T> &odd) {
+void zip(DeviceBuffer<T> &out, DeviceBuffer<T> &even, DeviceBuffer<T> &odd) {
 
     int cols = out.size();
     int rows = 1;
@@ -148,10 +148,10 @@ void zip(SecretShare<T> &out, SecretShare<T> &even, SecretShare<T> &odd) {
     );
 }
 
-template void zip<uint32_t>(SecretShare<uint32_t> &in,
-        SecretShare<uint32_t> &even, SecretShare<uint32_t> &odd);
-template void zip<uint8_t>(SecretShare<uint8_t> &in,
-        SecretShare<uint8_t> &even, SecretShare<uint8_t> &odd);
+template void zip<uint32_t>(DeviceBuffer<uint32_t> &in,
+        DeviceBuffer<uint32_t> &even, DeviceBuffer<uint32_t> &odd);
+template void zip<uint8_t>(DeviceBuffer<uint8_t> &in,
+        DeviceBuffer<uint8_t> &even, DeviceBuffer<uint8_t> &odd);
 
 } // namespace gpu
 

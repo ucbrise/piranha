@@ -16,20 +16,20 @@
 #include "Precompute.h"
 #include "Profiler.h"
 #include "RSSData.h"
-#include "SecretShare.h"
+#include "DeviceBuffer.h"
 
 extern Precompute PrecomputeObject;
 extern std::string SECURITY_TYPE;
 
 template<typename T>
-void NEW_funcReconstruct(RSSData<T> &a, SecretShare<T> &reconstructed) {
+void NEW_funcReconstruct(RSSData<T> &a, DeviceBuffer<T> &reconstructed) {
 
     if (SECURITY_TYPE.compare("Semi-honest") == 0) {
         // 1 - send shareA to next party
         a[0].transmit(nextParty(partyNum));
 
-        // 2 - receive shareA from previous party into SecretShare 
-        SecretShare<T> rxShare(a.size());
+        // 2 - receive shareA from previous party into DeviceBuffer 
+        DeviceBuffer<T> rxShare(a.size());
         rxShare.receive(prevParty(partyNum));
 
         a[0].join();
@@ -46,12 +46,12 @@ void NEW_funcReconstruct(RSSData<T> &a, SecretShare<T> &reconstructed) {
 }
 
 template void NEW_funcReconstruct<uint32_t>(RSSData<uint32_t> &a,
-        SecretShare<uint32_t> &reconstructed);
+        DeviceBuffer<uint32_t> &reconstructed);
 template void NEW_funcReconstruct<uint8_t>(RSSData<uint8_t> &a,
-        SecretShare<uint8_t> &reconstructed);
+        DeviceBuffer<uint8_t> &reconstructed);
 
 template<typename T>
-void NEW_funcReconstruct3out3(SecretShare<T> &a, SecretShare<T> &reconst) {
+void NEW_funcReconstruct3out3(DeviceBuffer<T> &a, DeviceBuffer<T> &reconst) {
 
     if (SECURITY_TYPE.compare("Malicious") == 0) {
         throw std::runtime_error(
@@ -72,7 +72,7 @@ void NEW_funcReconstruct3out3(SecretShare<T> &a, SecretShare<T> &reconst) {
 
         case PARTY_C:
 
-            SecretShare<T> fromA(a.size()), fromB(a.size());
+            DeviceBuffer<T> fromA(a.size()), fromB(a.size());
 
             fromA.receive(PARTY_A);
             fromB.receive(PARTY_B);
@@ -92,13 +92,13 @@ void NEW_funcReconstruct3out3(SecretShare<T> &a, SecretShare<T> &reconst) {
     } 
 }
 
-template void NEW_funcReconstruct3out3<uint32_t>(SecretShare<uint32_t> &a,
-        SecretShare<uint32_t> &reconst);
-template void NEW_funcReconstruct3out3<uint8_t>(SecretShare<uint8_t> &a,
-        SecretShare<uint8_t> &reconst);
+template void NEW_funcReconstruct3out3<uint32_t>(DeviceBuffer<uint32_t> &a,
+        DeviceBuffer<uint32_t> &reconst);
+template void NEW_funcReconstruct3out3<uint8_t>(DeviceBuffer<uint8_t> &a,
+        DeviceBuffer<uint8_t> &reconst);
 
 template<typename T>
-void NEW_funcReshare(SecretShare<T> &c, RSSData<T> &reshared) {
+void NEW_funcReshare(DeviceBuffer<T> &c, RSSData<T> &reshared) {
     if (SECURITY_TYPE.compare("Malicious") == 0) {
         throw std::runtime_error(
             "[reshare] malicious functionality not yet re-implemented"
@@ -106,7 +106,7 @@ void NEW_funcReshare(SecretShare<T> &c, RSSData<T> &reshared) {
     }
     
     // TODO XXX use precomputation randomness XXX TODO
-    SecretShare<T> rndMask(c.size());
+    DeviceBuffer<T> rndMask(c.size());
     rndMask.fill(0); 
     reshared[0] = c + rndMask;
 
@@ -134,9 +134,9 @@ void NEW_funcReshare(SecretShare<T> &c, RSSData<T> &reshared) {
     }
 }
 
-template void NEW_funcReshare<uint32_t>(SecretShare<uint32_t> &c,
+template void NEW_funcReshare<uint32_t>(DeviceBuffer<uint32_t> &c,
         RSSData<uint32_t> &reshared);
-template void NEW_funcReshare<uint8_t>(SecretShare<uint8_t> &c,
+template void NEW_funcReshare<uint8_t>(DeviceBuffer<uint8_t> &c,
         RSSData<uint8_t> &reshared);
 
 template<typename T, typename U>
@@ -153,10 +153,10 @@ void NEW_funcSelectShare(RSSData<T> &x, RSSData<T> &y, RSSData<U> &b,
 
     // b XOR c, then open -> e
     b ^= cbits;
-    SecretShare<U> etemp(b.size());
+    DeviceBuffer<U> etemp(b.size());
     NEW_funcReconstruct(b, etemp);
 
-    SecretShare<T> e(etemp.size());
+    DeviceBuffer<T> e(etemp.size());
     e.copy(etemp);
 
     // d = 1-c if e=1 else c -> d = (e)(1-c) + (1-e)(c)
@@ -181,7 +181,7 @@ void NEW_funcTruncate(RSSData<T> &a, size_t power) {
     a[0] -= rPrime[0];
     a[1] -= rPrime[1];
     
-    SecretShare<T> reconstructed(size);
+    DeviceBuffer<T> reconstructed(size);
     NEW_funcReconstruct(a, reconstructed);
     reconstructed /= (1 << power);
 
@@ -222,7 +222,7 @@ void NEW_funcMatMul(RSSData<T> &a, RSSData<T> &b, RSSData<T> &c,
         throw std::runtime_error("[MatMul] matrix c incorrect size");
     }
 
-    SecretShare<T> rawResult(rows*columns);
+    DeviceBuffer<T> rawResult(rows*columns);
 
     gpu::matrixMultiplication<T>(a[0], b[0], rawResult, transpose_a,
             transpose_b, rows, common_dim, columns);
@@ -235,7 +235,7 @@ void NEW_funcMatMul(RSSData<T> &a, RSSData<T> &b, RSSData<T> &c,
     PrecomputeObject.getDividedShares(r, rPrime, (1<<truncation), rows*columns); 
     rawResult -= rPrime[0];
     
-    SecretShare<T> reconstructedResult(rows*columns);
+    DeviceBuffer<T> reconstructedResult(rows*columns);
     NEW_funcReconstruct3out3(rawResult, reconstructedResult);
 
     if (SECURITY_TYPE.compare("Malicious") == 0) {
@@ -347,14 +347,14 @@ template<typename T, typename U>
 void NEW_funcDRELU(RSSData<T> &input, RSSData<T> &r, RSSData<U> &rbits,
         RSSData<U> &result) {
 
-    SecretShare<T> a(input.size());
+    DeviceBuffer<T> a(input.size());
     r += input;
     NEW_funcReconstruct(r, a);
     a += 1;
 
     rbits = (uint8_t)1 - rbits; // element-wise subtract bits
 
-    SecretShare<U> abits(rbits.size());
+    DeviceBuffer<U> abits(rbits.size());
     gpu::bitexpand<T, U>(a, abits, true); // and fix MSB to 1
 
     int numBits = sizeof(T) * 8;

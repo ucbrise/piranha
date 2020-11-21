@@ -66,7 +66,7 @@ namespace gpu {
 
 // for one batch
 template<typename T>
-void im2row(SecretShare<T> &im, SecretShare<T> &output,
+void im2row(DeviceBuffer<T> &im, DeviceBuffer<T> &output,
         size_t imageWidth,
         size_t imageHeight,
         size_t filterSize,
@@ -104,10 +104,10 @@ void im2row(SecretShare<T> &im, SecretShare<T> &output,
     }
 }
 
-template void im2row(SecretShare<uint32_t> &im, SecretShare<uint32_t> &output,
+template void im2row(DeviceBuffer<uint32_t> &im, DeviceBuffer<uint32_t> &output,
         size_t imageWidth, size_t imageHeight, size_t filterSize, size_t Din,
         size_t stride, size_t padding);
-template void im2row(SecretShare<uint8_t> &im, SecretShare<uint8_t> &output,
+template void im2row(DeviceBuffer<uint8_t> &im, DeviceBuffer<uint8_t> &output,
         size_t imageWidth, size_t imageHeight, size_t filterSize, size_t Din,
         size_t stride, size_t padding);
 

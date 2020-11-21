@@ -1,71 +1,71 @@
 /*
- * SecretShare.cu
+ * DeviceBuffer.cu
  */
 
-#include "SecretShare.h"
+#include "DeviceBuffer.h"
 #include "connect.h"
 
 template<typename T>
-SecretShare<T>::SecretShare() : hostBuffer(0),
+DeviceBuffer<T>::DeviceBuffer() : hostBuffer(0),
                                 transmitting(false),
                                 data(0, 0) {
     //nothing else
 }
 
 template<typename T>
-SecretShare<T>::SecretShare(size_t n) : hostBuffer(0), 
+DeviceBuffer<T>::DeviceBuffer(size_t n) : hostBuffer(0), 
                                         transmitting(false),
                                         data(n, 0) {
     // nothing else
 }
 
 template<typename T>
-SecretShare<T>::SecretShare(const SecretShare<T> &b) : hostBuffer(0), 
+DeviceBuffer<T>::DeviceBuffer(const DeviceBuffer<T> &b) : hostBuffer(0), 
                                                        transmitting(false),
                                                        data(b.data) {
     // nothing else
 }
 
 template<typename T>
-SecretShare<T>::~SecretShare() {
+DeviceBuffer<T>::~DeviceBuffer() {
     // nothing (for now)
 }
 
 template<typename T>
-size_t SecretShare<T>::size() const {
+size_t DeviceBuffer<T>::size() const {
     return data.size();
 }
 
 template<typename T>
-void SecretShare<T>::resize(size_t n) {
+void DeviceBuffer<T>::resize(size_t n) {
     data.resize(n);
 }
 
 template<typename T>
-void SecretShare<T>::fill(T val) {
+void DeviceBuffer<T>::fill(T val) {
     thrust::fill(data.begin(), data.end(), val);
 }
 
 template<typename T>
 template<typename U>
-void SecretShare<T>::copy(SecretShare<U> &src) {
+void DeviceBuffer<T>::copy(DeviceBuffer<U> &src) {
     resize(src.size());
     thrust::copy(src.getData().begin(), src.getData().end(), this->data.begin());
 }
 
-template void SecretShare<uint32_t>::copy<uint8_t>(SecretShare<uint8_t> &src);
-template void SecretShare<uint8_t>::copy<uint8_t>(SecretShare<uint8_t> &src);
+template void DeviceBuffer<uint32_t>::copy<uint8_t>(DeviceBuffer<uint8_t> &src);
+template void DeviceBuffer<uint8_t>::copy<uint8_t>(DeviceBuffer<uint8_t> &src);
 
 template<typename T>
-thrust::device_vector<T> &SecretShare<T>::getData() {
+thrust::device_vector<T> &DeviceBuffer<T>::getData() {
     return data;
 }
 
 template<typename T>
-void SecretShare<T>::transmit(size_t party) {
+void DeviceBuffer<T>::transmit(size_t party) {
 
     if (rtxThread.joinable()) {
-        throw std::runtime_error("SecretShare tx failed: already transmitting or receiving");
+        throw std::runtime_error("DeviceBuffer tx failed: already transmitting or receiving");
     }
 
     // copy to host
@@ -78,10 +78,10 @@ void SecretShare<T>::transmit(size_t party) {
 }
 
 template<typename T>
-void SecretShare<T>::receive(size_t party) {
+void DeviceBuffer<T>::receive(size_t party) {
 
     if (rtxThread.joinable()) {
-        throw std::runtime_error("SecretShare rx failed: already transmitting or receiving");
+        throw std::runtime_error("DeviceBuffer rx failed: already transmitting or receiving");
     }
 
     hostBuffer.resize(size());
@@ -92,28 +92,28 @@ void SecretShare<T>::receive(size_t party) {
 }
 
 template<typename T>
-void SecretShare<T>::join() {
+void DeviceBuffer<T>::join() {
 
     if (!rtxThread.joinable()) return;
     
-    std::cout << "SecretShare:82 " << std::endl;
+    std::cout << "DeviceBuffer:82 " << std::endl;
     rtxThread.join();
-    std::cout << "SecretShare:84" << std::endl;
+    std::cout << "DeviceBuffer:84" << std::endl;
     if (!transmitting) {
-        std::cout << "SecretShare:86" << std::endl;
+        std::cout << "DeviceBuffer:86" << std::endl;
         thrust::copy(hostBuffer.begin(), hostBuffer.end(), data.begin());
-        std::cout << "SecretShare:88" << std::endl;
+        std::cout << "DeviceBuffer:88" << std::endl;
     }
-    std::cout << "SecretShare:90" << std::endl;
+    std::cout << "DeviceBuffer:90" << std::endl;
     std::vector<T>().swap(hostBuffer); // clear buffer
-    std::cout << "SecretShare:92" << std::endl;
+    std::cout << "DeviceBuffer:92" << std::endl;
 }
 
 /*
  * Operators
  */
 template<typename T>
-SecretShare<T> &SecretShare<T>::operator =(const SecretShare<T> &other) {
+DeviceBuffer<T> &DeviceBuffer<T>::operator =(const DeviceBuffer<T> &other) {
     if (this != &other) {
         if (this->size() != other.size()) {
             this->data.resize(other.size());
@@ -127,20 +127,20 @@ SecretShare<T> &SecretShare<T>::operator =(const SecretShare<T> &other) {
 }
 
 template<typename T>
-bool operator==(const SecretShare<T> &lhs, const SecretShare<T> &rhs) {
+bool operator==(const DeviceBuffer<T> &lhs, const DeviceBuffer<T> &rhs) {
     return thrust::equal(lhs.data.begin(), lhs.data.end(), rhs.data.begin());
 }
 
-template bool operator==<uint32_t>(const SecretShare<uint32_t> &lhs, const SecretShare<uint32_t> &rhs);
-template bool operator==<uint8_t>(const SecretShare<uint8_t> &lhs, const SecretShare<uint8_t> &rhs);
+template bool operator==<uint32_t>(const DeviceBuffer<uint32_t> &lhs, const DeviceBuffer<uint32_t> &rhs);
+template bool operator==<uint8_t>(const DeviceBuffer<uint8_t> &lhs, const DeviceBuffer<uint8_t> &rhs);
 
 template<typename T>
-bool operator!=(const SecretShare<T> &lhs, const SecretShare<T> &rhs) {
+bool operator!=(const DeviceBuffer<T> &lhs, const DeviceBuffer<T> &rhs) {
     return !(lhs == rhs);
 }
 
-template bool operator!=<uint32_t>(const SecretShare<uint32_t> &lhs, const SecretShare<uint32_t> &rhs);
-template bool operator!=<uint8_t>(const SecretShare<uint8_t> &lhs, const SecretShare<uint8_t> &rhs);
+template bool operator!=<uint32_t>(const DeviceBuffer<uint32_t> &lhs, const DeviceBuffer<uint32_t> &rhs);
+template bool operator!=<uint8_t>(const DeviceBuffer<uint8_t> &lhs, const DeviceBuffer<uint8_t> &rhs);
 
 // Scalar
 
@@ -205,7 +205,7 @@ struct scalar_or_functor{
 };
 
 template<typename T>
-SecretShare<T> &SecretShare<T>::operator+=(const T rhs) {
+DeviceBuffer<T> &DeviceBuffer<T>::operator+=(const T rhs) {
     thrust::transform(this->data.begin(), this->data.end(),
                       this->data.begin(),
                       scalar_plus_functor<T>(rhs));
@@ -213,7 +213,7 @@ SecretShare<T> &SecretShare<T>::operator+=(const T rhs) {
 }
 
 template<typename T>
-SecretShare<T> &SecretShare<T>::operator-=(const T rhs) {
+DeviceBuffer<T> &DeviceBuffer<T>::operator-=(const T rhs) {
     thrust::transform(this->data.begin(), this->data.end(),
                       this->data.begin(),
                       scalar_minus_functor<T>(rhs));
@@ -221,7 +221,7 @@ SecretShare<T> &SecretShare<T>::operator-=(const T rhs) {
 }
 
 template<typename T>
-SecretShare<T> &SecretShare<T>::operator*=(const T rhs) {
+DeviceBuffer<T> &DeviceBuffer<T>::operator*=(const T rhs) {
     thrust::transform(this->data.begin(), this->data.end(),
                       this->data.begin(),
                       scalar_mult_functor<T>(rhs));
@@ -229,7 +229,7 @@ SecretShare<T> &SecretShare<T>::operator*=(const T rhs) {
 }
 
 template<typename T>
-SecretShare<T> &SecretShare<T>::operator/=(const T rhs) {
+DeviceBuffer<T> &DeviceBuffer<T>::operator/=(const T rhs) {
     thrust::transform(this->data.begin(), this->data.end(),
                       this->data.begin(),
                       scalar_divide_functor<T>(rhs));
@@ -237,7 +237,7 @@ SecretShare<T> &SecretShare<T>::operator/=(const T rhs) {
 }
 
 template<typename T>
-SecretShare<T> &SecretShare<T>::operator|=(const T rhs) {
+DeviceBuffer<T> &DeviceBuffer<T>::operator|=(const T rhs) {
     thrust::transform(this->data.begin(), this->data.end(),
                       this->data.begin(),
                       scalar_or_functor<T>(rhs)); 
@@ -245,51 +245,51 @@ SecretShare<T> &SecretShare<T>::operator|=(const T rhs) {
 }
 
 template<typename T>
-SecretShare<T> operator+(SecretShare<T> lhs, const T rhs) {
+DeviceBuffer<T> operator+(DeviceBuffer<T> lhs, const T rhs) {
     lhs += rhs;
     return lhs;
 }
 
-template SecretShare<uint32_t> operator+<uint32_t>(SecretShare<uint32_t> lhs, const uint32_t rhs);
-template SecretShare<uint8_t> operator+<uint8_t>(SecretShare<uint8_t> lhs, const uint8_t rhs);
+template DeviceBuffer<uint32_t> operator+<uint32_t>(DeviceBuffer<uint32_t> lhs, const uint32_t rhs);
+template DeviceBuffer<uint8_t> operator+<uint8_t>(DeviceBuffer<uint8_t> lhs, const uint8_t rhs);
 
 template<typename T>
-SecretShare<T> operator-(SecretShare<T> lhs, const T rhs) {
+DeviceBuffer<T> operator-(DeviceBuffer<T> lhs, const T rhs) {
     lhs -= rhs;
     return lhs;
 }
 
-template SecretShare<uint32_t> operator-<uint32_t>(SecretShare<uint32_t> lhs, const uint32_t rhs);
-template SecretShare<uint8_t> operator-<uint8_t>(SecretShare<uint8_t> lhs, const uint8_t rhs);
+template DeviceBuffer<uint32_t> operator-<uint32_t>(DeviceBuffer<uint32_t> lhs, const uint32_t rhs);
+template DeviceBuffer<uint8_t> operator-<uint8_t>(DeviceBuffer<uint8_t> lhs, const uint8_t rhs);
 
 template<typename T>
-SecretShare<T> operator-(const T &lhs, const SecretShare<T> &rhs) {
+DeviceBuffer<T> operator-(const T &lhs, const DeviceBuffer<T> &rhs) {
     return (rhs * (T)-1) + lhs;
 }
 
-template SecretShare<uint32_t> operator-(const uint32_t &lhs, const SecretShare<uint32_t> &rhs);
-template SecretShare<uint8_t> operator-(const uint8_t &lhs, const SecretShare<uint8_t> &rhs);
+template DeviceBuffer<uint32_t> operator-(const uint32_t &lhs, const DeviceBuffer<uint32_t> &rhs);
+template DeviceBuffer<uint8_t> operator-(const uint8_t &lhs, const DeviceBuffer<uint8_t> &rhs);
 
 template<typename T>
-SecretShare<T> operator*(SecretShare<T> lhs, const T rhs) {
+DeviceBuffer<T> operator*(DeviceBuffer<T> lhs, const T rhs) {
     lhs *= rhs;
     return lhs;
 }
 
-template SecretShare<uint32_t> operator*<uint32_t>(SecretShare<uint32_t> lhs, const uint32_t rhs);
-template SecretShare<uint8_t> operator*<uint8_t>(SecretShare<uint8_t> lhs, const uint8_t rhs);
+template DeviceBuffer<uint32_t> operator*<uint32_t>(DeviceBuffer<uint32_t> lhs, const uint32_t rhs);
+template DeviceBuffer<uint8_t> operator*<uint8_t>(DeviceBuffer<uint8_t> lhs, const uint8_t rhs);
 
 template<typename T>
-SecretShare<T> operator/(SecretShare<T> lhs, const T rhs) {
+DeviceBuffer<T> operator/(DeviceBuffer<T> lhs, const T rhs) {
     lhs /= rhs;
     return lhs;
 }
 
-template SecretShare<uint32_t> operator/<uint32_t>(SecretShare<uint32_t> lhs, const uint32_t rhs);
-template SecretShare<uint8_t> operator/<uint8_t>(SecretShare<uint8_t> lhs, const uint8_t rhs);
+template DeviceBuffer<uint32_t> operator/<uint32_t>(DeviceBuffer<uint32_t> lhs, const uint32_t rhs);
+template DeviceBuffer<uint8_t> operator/<uint8_t>(DeviceBuffer<uint8_t> lhs, const uint8_t rhs);
 
 template<typename T>
-SecretShare<T> &SecretShare<T>::operator+=(const SecretShare<T>& rhs) {
+DeviceBuffer<T> &DeviceBuffer<T>::operator+=(const DeviceBuffer<T>& rhs) {
     thrust::transform(this->data.begin(), this->data.end(),
                       rhs.data.begin(),
                       this->data.begin(),
@@ -298,7 +298,7 @@ SecretShare<T> &SecretShare<T>::operator+=(const SecretShare<T>& rhs) {
 }
 
 template<typename T>
-SecretShare<T> &SecretShare<T>::operator-=(const SecretShare<T>& rhs) {
+DeviceBuffer<T> &DeviceBuffer<T>::operator-=(const DeviceBuffer<T>& rhs) {
     thrust::transform(this->data.begin(), this->data.end(),
                       rhs.data.begin(),
                       this->data.begin(),
@@ -307,7 +307,7 @@ SecretShare<T> &SecretShare<T>::operator-=(const SecretShare<T>& rhs) {
 }
 
 template<typename T>
-SecretShare<T> &SecretShare<T>::operator*=(const SecretShare<T>& rhs) {
+DeviceBuffer<T> &DeviceBuffer<T>::operator*=(const DeviceBuffer<T>& rhs) {
     thrust::transform(this->data.begin(), this->data.end(),
                       rhs.data.begin(),
                       this->data.begin(),
@@ -316,7 +316,7 @@ SecretShare<T> &SecretShare<T>::operator*=(const SecretShare<T>& rhs) {
 }
 
 template<typename T>
-SecretShare<T> &SecretShare<T>::operator/=(const SecretShare<T>& rhs) {
+DeviceBuffer<T> &DeviceBuffer<T>::operator/=(const DeviceBuffer<T>& rhs) {
     thrust::transform(this->data.begin(), this->data.end(),
                       rhs.data.begin(),
                       this->data.begin(),
@@ -325,7 +325,7 @@ SecretShare<T> &SecretShare<T>::operator/=(const SecretShare<T>& rhs) {
 }
 
 template<typename T>
-SecretShare<T> &SecretShare<T>::operator^=(const SecretShare<T>& rhs) {
+DeviceBuffer<T> &DeviceBuffer<T>::operator^=(const DeviceBuffer<T>& rhs) {
     thrust::transform(this->data.begin(), this->data.end(),
                       rhs.data.begin(),
                       this->data.begin(),
@@ -334,50 +334,50 @@ SecretShare<T> &SecretShare<T>::operator^=(const SecretShare<T>& rhs) {
 }
 
 template<typename T>
-SecretShare<T> operator+(SecretShare<T> lhs, const SecretShare<T> &rhs) {
+DeviceBuffer<T> operator+(DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs) {
     lhs += rhs;
     return lhs;    
 }
 
-template SecretShare<uint32_t> operator+<uint32_t>(SecretShare<uint32_t> lhs, const SecretShare<uint32_t> &rhs);
-template SecretShare<uint8_t> operator+<uint8_t>(SecretShare<uint8_t> lhs, const SecretShare<uint8_t> &rhs);
+template DeviceBuffer<uint32_t> operator+<uint32_t>(DeviceBuffer<uint32_t> lhs, const DeviceBuffer<uint32_t> &rhs);
+template DeviceBuffer<uint8_t> operator+<uint8_t>(DeviceBuffer<uint8_t> lhs, const DeviceBuffer<uint8_t> &rhs);
 
 template<typename T>
-SecretShare<T> operator-(SecretShare<T> lhs, const SecretShare<T> &rhs) {
+DeviceBuffer<T> operator-(DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs) {
     lhs -= rhs;
     return lhs;
 }
 
-template SecretShare<uint32_t> operator-<uint32_t>(SecretShare<uint32_t> lhs, const SecretShare<uint32_t> &rhs);
-template SecretShare<uint8_t> operator-<uint8_t>(SecretShare<uint8_t> lhs, const SecretShare<uint8_t> &rhs);
+template DeviceBuffer<uint32_t> operator-<uint32_t>(DeviceBuffer<uint32_t> lhs, const DeviceBuffer<uint32_t> &rhs);
+template DeviceBuffer<uint8_t> operator-<uint8_t>(DeviceBuffer<uint8_t> lhs, const DeviceBuffer<uint8_t> &rhs);
 
 template<typename T>
-SecretShare<T> operator*(SecretShare<T> lhs, const SecretShare<T> &rhs) {
+DeviceBuffer<T> operator*(DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs) {
     lhs *= rhs;
     return lhs;
 }
 
-template SecretShare<uint32_t> operator*<uint32_t>(SecretShare<uint32_t> lhs, const SecretShare<uint32_t> &rhs);
-template SecretShare<uint8_t> operator*<uint8_t>(SecretShare<uint8_t> lhs, const SecretShare<uint8_t> &rhs);
+template DeviceBuffer<uint32_t> operator*<uint32_t>(DeviceBuffer<uint32_t> lhs, const DeviceBuffer<uint32_t> &rhs);
+template DeviceBuffer<uint8_t> operator*<uint8_t>(DeviceBuffer<uint8_t> lhs, const DeviceBuffer<uint8_t> &rhs);
 
 template<typename T>
-SecretShare<T> operator/(SecretShare<T> lhs, const SecretShare<T> &rhs) {
+DeviceBuffer<T> operator/(DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs) {
     lhs /= rhs;
     return lhs;
 }
 
-template SecretShare<uint32_t> operator/<uint32_t>(SecretShare<uint32_t> lhs, const SecretShare<uint32_t> &rhs);
-template SecretShare<uint8_t> operator/<uint8_t>(SecretShare<uint8_t> lhs, const SecretShare<uint8_t> &rhs);
+template DeviceBuffer<uint32_t> operator/<uint32_t>(DeviceBuffer<uint32_t> lhs, const DeviceBuffer<uint32_t> &rhs);
+template DeviceBuffer<uint8_t> operator/<uint8_t>(DeviceBuffer<uint8_t> lhs, const DeviceBuffer<uint8_t> &rhs);
 
 template<typename T>
-SecretShare<T> operator^(SecretShare<T> lhs, const SecretShare<T> &rhs) {
+DeviceBuffer<T> operator^(DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs) {
     lhs ^= rhs;
     return lhs;
 }
 
-template SecretShare<uint32_t> operator^<uint32_t>(SecretShare<uint32_t> lhs, const SecretShare<uint32_t> &rhs);
-template SecretShare<uint8_t> operator^<uint8_t>(SecretShare<uint8_t> lhs, const SecretShare<uint8_t> &rhs);
+template DeviceBuffer<uint32_t> operator^<uint32_t>(DeviceBuffer<uint32_t> lhs, const DeviceBuffer<uint32_t> &rhs);
+template DeviceBuffer<uint8_t> operator^<uint8_t>(DeviceBuffer<uint8_t> lhs, const DeviceBuffer<uint8_t> &rhs);
 
-template class SecretShare<uint32_t>;
-template class SecretShare<uint8_t>;
+template class DeviceBuffer<uint32_t>;
+template class DeviceBuffer<uint8_t>;
 
