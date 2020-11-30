@@ -75,10 +75,13 @@ void bitexpand(DeviceBuffer<T> &a, DeviceBuffer<U> &b, bool fixedMSB) {
     dim3 threadsPerBlock(cols, rows);
     dim3 blocksPerGrid(1, 1);
 
-    if (rows*cols > MAX_THREADS_PER_BLOCK){
+    if (cols > MAX_THREADS_PER_BLOCK) {
         threadsPerBlock.x = MAX_THREADS_PER_BLOCK;
-        threadsPerBlock.y = MAX_THREADS_PER_BLOCK;
         blocksPerGrid.x = ceil(double(cols)/double(threadsPerBlock.x));
+    }
+    
+    if (rows > MAX_THREADS_PER_BLOCK) {
+        threadsPerBlock.y = MAX_THREADS_PER_BLOCK;
         blocksPerGrid.y = ceil(double(rows)/double(threadsPerBlock.y));
     }
 
@@ -104,10 +107,13 @@ void unzip(DeviceBuffer<T> &in, DeviceBuffer<T> &even, DeviceBuffer<T> &odd) {
     dim3 threadsPerBlock(cols, rows);
     dim3 blocksPerGrid(1, 1);
 
-    if (rows*cols > MAX_THREADS_PER_BLOCK){
+    if (cols > MAX_THREADS_PER_BLOCK) {
         threadsPerBlock.x = MAX_THREADS_PER_BLOCK;
-        threadsPerBlock.y = MAX_THREADS_PER_BLOCK;
         blocksPerGrid.x = ceil(double(cols)/double(threadsPerBlock.x));
+    }
+    
+    if (rows > MAX_THREADS_PER_BLOCK) {
+        threadsPerBlock.y = MAX_THREADS_PER_BLOCK;
         blocksPerGrid.y = ceil(double(rows)/double(threadsPerBlock.y));
     }
 
@@ -133,10 +139,13 @@ void zip(DeviceBuffer<T> &out, DeviceBuffer<T> &even, DeviceBuffer<T> &odd) {
     dim3 threadsPerBlock(cols, rows);
     dim3 blocksPerGrid(1, 1);
 
-    if (rows*cols > MAX_THREADS_PER_BLOCK){
+    if (cols > MAX_THREADS_PER_BLOCK) {
         threadsPerBlock.x = MAX_THREADS_PER_BLOCK;
-        threadsPerBlock.y = MAX_THREADS_PER_BLOCK;
         blocksPerGrid.x = ceil(double(cols)/double(threadsPerBlock.x));
+    }
+    
+    if (rows > MAX_THREADS_PER_BLOCK) {
+        threadsPerBlock.y = MAX_THREADS_PER_BLOCK;
         blocksPerGrid.y = ceil(double(rows)/double(threadsPerBlock.y));
     }
 

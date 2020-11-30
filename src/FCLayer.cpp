@@ -52,10 +52,8 @@ void FCLayer<T>::printLayer()
 }
 
 template<typename T>
-void FCLayer<T>::forward(const RSSData<T> &inputActivation)
+void FCLayer<T>::forward(RSSData<T> &inputActivation)
 {
-    // TODO
-    /*
 	log_print("FC.forward");
 
 	size_t rows = conf.batchSize;
@@ -63,16 +61,16 @@ void FCLayer<T>::forward(const RSSData<T> &inputActivation)
 	size_t common_dim = conf.inputDim;
 	size_t size = rows*columns;
 
-    this->layer_profiler.start();
-    // TODO
-	//funcMatMul(inputActivation, weights, activations, rows, common_dim, columns, 0, 0, FLOAT_PRECISION);
+    //this->layer_profiler.start();
+	NEW_funcMatMul(inputActivation, weights, activations, rows, common_dim, columns, false, false, FLOAT_PRECISION);
 
-	for(size_t r = 0; r < rows; ++r)
-		for(size_t c = 0; c < columns; ++c)
-			activations[r*columns + c] = activations[r*columns + c] + biases[c];
+	for(size_t r = 0; r < rows; ++r) {
+		for(size_t c = 0; c < columns; ++c) {
+			activations[r*columns + c] += biases[c];
+        }
+    }
 
-    this->layer_profiler.accumulate("fc-forward");
-    */
+    //this->layer_profiler.accumulate("fc-forward");
 }
 
 template<typename T>

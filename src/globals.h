@@ -25,7 +25,7 @@
 #define STRING_BUFFER_SIZE 256
 #define PARALLEL true
 #define NO_CORES 8
-#define MAX_THREADS_PER_BLOCK 512
+#define MAX_THREADS_PER_BLOCK 32
 
 /********************* MPC globals *********************/
 #define NUM_OF_PARTIES 3
@@ -41,7 +41,7 @@
 
 /********************* Neural Network globals *********************/
 //Batch size has to be a power of two
-#define LOG_MINI_BATCH 7
+#define LOG_MINI_BATCH 3
 #define MINI_BATCH_SIZE (1 << LOG_MINI_BATCH)
 #define LOG_LEARNING_RATE 5
 #define LEARNING_RATE (1 << (FLOAT_PRECISION - LOG_LEARNING_RATE))

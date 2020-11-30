@@ -5,17 +5,19 @@
 #include "DeviceBuffer.h"
 #include "connect.h"
 
+#include <iostream>
+
 template<typename T>
 DeviceBuffer<T>::DeviceBuffer() : hostBuffer(0),
                                 transmitting(false),
-                                data(0, 0) {
+                                data(0) {
     //nothing else
 }
 
 template<typename T>
 DeviceBuffer<T>::DeviceBuffer(size_t n) : hostBuffer(0), 
                                         transmitting(false),
-                                        data(n, 0) {
+                                        data(n) {
     // nothing else
 }
 
@@ -96,17 +98,11 @@ void DeviceBuffer<T>::join() {
 
     if (!rtxThread.joinable()) return;
     
-    std::cout << "DeviceBuffer:82 " << std::endl;
     rtxThread.join();
-    std::cout << "DeviceBuffer:84" << std::endl;
     if (!transmitting) {
-        std::cout << "DeviceBuffer:86" << std::endl;
         thrust::copy(hostBuffer.begin(), hostBuffer.end(), data.begin());
-        std::cout << "DeviceBuffer:88" << std::endl;
     }
-    std::cout << "DeviceBuffer:90" << std::endl;
     std::vector<T>().swap(hostBuffer); // clear buffer
-    std::cout << "DeviceBuffer:92" << std::endl;
 }
 
 /*

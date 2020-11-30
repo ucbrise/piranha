@@ -55,10 +55,8 @@ void CNNLayer<T>::printLayer()
 }
 
 template<typename T>
-void CNNLayer<T>::forward(const RSSData<T> &inputActivation)
+void CNNLayer<T>::forward(RSSData<T> &inputActivation)
 {
-    // TODO
-    /*
 	log_print("CNN.forward");
 
 	size_t B 	= conf.batchSize;
@@ -72,49 +70,12 @@ void CNNLayer<T>::forward(const RSSData<T> &inputActivation)
 	size_t ow 	= (((iw-f+2*P)/S)+1);
 	size_t oh	= (((ih-f+2*P)/S)+1);
 
-    this->layer_profiler.start();
-    // TODO gpu::convolutionForward<T>(
+    //this->layer_profiler.start();
 
-    this->layer_profiler.accumulate("cnn-forward-gpu");
+    NEW_funcConvolution(inputActivation, weights, activations,
+            iw, ih, f, Din, Dout, S, P, FLOAT_PRECISION); 
 
-    this->layer_profiler.start();
-	//Reshape activations
-	RSSVectorMyType temp1((iw+2*P)*(ih+2*P)*Din*B, make_pair(0,0));
-	// if (FUNCTION_TIME)
-	// 	cout << "ZP: \t" << funcTime(zeroPad, inputActivation, temp1, iw, ih, P, Din, B) << endl;
-	// else
-		zeroPad(inputActivation, temp1, iw, ih, P, Din, B);
-
-	//Reshape for convolution
-	RSSVectorMyType temp2((f*f*Din) * (ow * oh * B));
-	if (FUNCTION_TIME)
-		cout << "convToMult: " << funcTime(convToMult, temp1, temp2, (iw+2*P), (ih+2*P), f, Din, S, B) << endl;
-	else
-		convToMult(temp1, temp2, (iw+2*P), (ih+2*P), f, Din, S, B);
-    this->layer_profiler.accumulate("cnn-forward-reshape");
-
-	//Perform the multiplication, transpose the actications.
-    this->layer_profiler.start();
-	RSSVectorMyType temp3(Dout * (ow*oh*B));
-    // TODO
-    / *
-	if (FUNCTION_TIME)
-		cout << "funcMatMul: " << funcTime(funcMatMul, weights, temp2, temp3, Dout, (f*f*Din), (ow*oh*B), 0, 1, FLOAT_PRECISION) << endl;
-	else
-		funcMatMul(weights, temp2, temp3, Dout, (f*f*Din), (ow*oh*B), 0, 1, FLOAT_PRECISION);
-    * /
-    this->layer_profiler.accumulate("cnn-forward-matmul");
-
-    this->layer_profiler.start();
-	//Add biases and meta-transpose
-	size_t tempSize = ow*oh;
-	for (size_t i = 0; i < B; ++i)
-		for (size_t j = 0; j < Dout; ++j) 
-			for (size_t k = 0; k < tempSize; ++k)
-				activations[i*Dout*tempSize + j*tempSize + k] 
-					= temp3[j*B*tempSize + i*tempSize + k] + biases[j];
-    this->layer_profiler.accumulate("cnn-forward-biasadd");
-    */
+    //this->layer_profiler.accumulate("cnn-forward-gpu");
 }
 
 template<typename T>

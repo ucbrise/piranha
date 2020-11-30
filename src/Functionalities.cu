@@ -36,7 +36,7 @@ void NEW_funcReconstruct(RSSData<T> &a, DeviceBuffer<T> &reconstructed) {
         rxShare.join();
 
         // 3 - result is our shareB + received shareA
-        reconstructed = a[1] + rxShare;
+        reconstructed = a[0] + a[1] + rxShare;
 
     } else if (SECURITY_TYPE.compare("Malicious") == 0) {
         throw std::runtime_error(
@@ -58,38 +58,39 @@ void NEW_funcReconstruct3out3(DeviceBuffer<T> &a, DeviceBuffer<T> &reconst) {
             "[reconstruct 3-out-3] malicious functionality not re-implemented"
         ); 
     }
+
+    auto next = nextParty(partyNum);
+    auto prev = prevParty(partyNum);
     
-    switch(partyNum) {
-        case PARTY_A:
-        case PARTY_B:
-            a.transmit(PARTY_C);
-            a.join();
+    DeviceBuffer<T> reconst1(a.size());
+    DeviceBuffer<T> reconst2(a.size());
 
-            reconst.receive(PARTY_C);
-            reconst.join();
+    reconst = a;
+    // TODO allow multiple sends in parallel
+    if (partyNum == PARTY_A) {
+        reconst1.receive(next);
+        reconst2.receive(prev);
+        reconst1.join();
+        reconst2.join();
 
-            break;
+        a.transmit(next);
+        a.join();
+        a.transmit(prev);
+        a.join();
+    } else {
+        a.transmit(next);
+        a.join();
+        a.transmit(prev);
+        a.join();
 
-        case PARTY_C:
+        reconst1.receive(next);
+        reconst2.receive(prev);
+        reconst1.join();
+        reconst2.join();
+    }
 
-            DeviceBuffer<T> fromA(a.size()), fromB(a.size());
-
-            fromA.receive(PARTY_A);
-            fromB.receive(PARTY_B);
-            fromA.join();
-            fromB.join();
-
-            fromA += a;
-            reconst = fromB + fromA;
-
-            // TODO parallelize this
-            reconst.transmit(PARTY_A);
-            reconst.join();
-            reconst.transmit(PARTY_B);
-            reconst.join();
-
-            break;
-    } 
+    reconst += reconst1;
+    reconst += reconst2;
 }
 
 template void NEW_funcReconstruct3out3<uint32_t>(DeviceBuffer<uint32_t> &a,
@@ -156,6 +157,8 @@ void NEW_funcSelectShare(RSSData<T> &x, RSSData<T> &y, RSSData<U> &b,
     DeviceBuffer<U> etemp(b.size());
     NEW_funcReconstruct(b, etemp);
 
+    // TODO fix templating to avoid this, enable public-RSS multiplication
+    // etemp (uint8_t) -> e (uint32_t)
     DeviceBuffer<T> e(etemp.size());
     e.copy(etemp);
 
@@ -214,52 +217,56 @@ void NEW_funcMatMul(RSSData<T> &a, RSSData<T> &b, RSSData<T> &c,
                     size_t rows, size_t common_dim, size_t columns,
                     bool transpose_a, bool transpose_b, size_t truncation) {
 
-    if (a.size() != rows * common_dim) {
-        throw std::runtime_error("[MatMul] matrix a incorrect size"); 
-    } else if (b.size() != common_dim * columns) {
-        throw std::runtime_error("[MatMul] matrix b incorrect size"); 
-    } else if (c.size() != rows * columns) {
-        throw std::runtime_error("[MatMul] matrix c incorrect size");
-    }
-
-    DeviceBuffer<T> rawResult(rows*columns);
-
-    gpu::matrixMultiplication<T>(a[0], b[0], rawResult, transpose_a,
-            transpose_b, rows, common_dim, columns);
-    gpu::matrixMultiplication<T>(a[0], b[1], rawResult, transpose_a,
-            transpose_b, rows, common_dim, columns);
-    gpu::matrixMultiplication<T>(a[1], b[0], rawResult, transpose_a,
-            transpose_b, rows, common_dim, columns);
-   
-    RSSData<T> r(rows*columns), rPrime(rows*columns);
-    PrecomputeObject.getDividedShares(r, rPrime, (1<<truncation), rows*columns); 
-    rawResult -= rPrime[0];
-    
-    DeviceBuffer<T> reconstructedResult(rows*columns);
-    NEW_funcReconstruct3out3(rawResult, reconstructedResult);
-
     if (SECURITY_TYPE.compare("Malicious") == 0) {
         throw std::runtime_error(
             "[MatMul] malicious functionality not re-implemented"
         ); 
     }
 
-    reconstructedResult /= (1 << truncation);
-
-    switch(partyNum) {
-        case PARTY_A:
-            c[0] = r[0] + reconstructedResult;
-            c[1] = r[1];
-            break;
-        case PARTY_B:
-            c[0] = r[0];
-            c[1] = r[1];
-            break;
-        case PARTY_C:
-            c[0] = r[0];
-            c[1] = r[1] + reconstructedResult;
-            break;
+    if (a.size() != rows * common_dim) {
+        std::cerr << "Expected Matrix A size " << rows << " x " << common_dim << " = " << rows * common_dim << " but got " << a.size() << " instead." << std::endl;
+        throw std::runtime_error("[MatMul] matrix a incorrect size"); 
+    } else if (b.size() != common_dim * columns) {
+        std::cerr << "Expected Matrix B size " << common_dim << " x " << columns << " = " << common_dim * columns << " but got " << b.size() << " instead." << std::endl;
+        throw std::runtime_error("[MatMul] matrix b incorrect size"); 
+    } else if (c.size() != rows * columns) {
+        std::cerr << "Expected Matrix C size " << rows << " x " << columns << " = " << rows * columns << " but got " << c.size() << " instead." << std::endl;
+        throw std::runtime_error("[MatMul] matrix c incorrect size");
     }
+
+    /*
+    size_t free, total;
+    cudaMemGetInfo(&free, &total);
+    std::cout << "using " << total-free << "/" << total << " bytes on GPU" << std::endl;
+    */
+    DeviceBuffer<T> rawResult(rows*columns);
+
+    gpu::matrixMultiplication<T>(a[0], b[0], rawResult, transpose_a,
+            transpose_b, rows, common_dim, columns);
+    cudaThreadSynchronize();
+    gpu::matrixMultiplication<T>(a[0], b[1], rawResult, transpose_a,
+            transpose_b, rows, common_dim, columns);
+    cudaThreadSynchronize();
+    gpu::matrixMultiplication<T>(a[1], b[0], rawResult, transpose_a,
+            transpose_b, rows, common_dim, columns);
+    cudaThreadSynchronize();
+   
+    std::cout << "truncation" << std::endl;
+
+    RSSData<T> r(rows*columns);
+    RSSData<T> rPrime(rows*columns);
+    PrecomputeObject.getDividedShares(r, rPrime, (1<<truncation), rows*columns); 
+
+    rawResult -= r[0];
+
+    std::cout << "reconstruction" << std::endl;
+    DeviceBuffer<T> reconstructedResult(rows*columns);
+    NEW_funcReconstruct3out3(rawResult, reconstructedResult);
+
+    reconstructedResult /= (1 << truncation);
+    reconstructedResult += rPrime[0];
+
+    NEW_funcReshare(reconstructedResult, c);
 }
 
 template void NEW_funcMatMul<uint32_t>(RSSData<uint32_t> &a, RSSData<uint32_t> &b,
@@ -298,6 +305,17 @@ void NEW_funcConvolution(RSSData<T> &im, RSSData<T> &filters, RSSData<T> &out,
         gpu::transpose<T>(convolvedResult[share], out[share],
                 Din * filterSize * filterSize, Dout);
     }
+    
+    // TODO
+    //Add biases and meta-transpose
+    /*
+	size_t tempSize = ow*oh;
+	for (size_t i = 0; i < B; ++i)
+		for (size_t j = 0; j < Dout; ++j) 
+			for (size_t k = 0; k < tempSize; ++k)
+				activations[i*Dout*tempSize + j*tempSize + k] 
+					= temp3[j*B*tempSize + i*tempSize + k] + biases[j];
+    */
 }
 
 template void NEW_funcConvolution<uint32_t>(RSSData<uint32_t> &im,
@@ -387,6 +405,7 @@ void NEW_funcRELU(RSSData<T> &input, RSSData<T> &result, RSSData<U> &dresult) {
 
     NEW_funcDRELU<T, U>(input, r, rbits, dresult);
 
+    // TODO XXX randomness use XXX TODO
     RSSData<T> zeros(input.size());
     zeros.zero();
     NEW_funcSelectShare<T, U>(input, zeros, dresult, result);
@@ -415,6 +434,9 @@ void expandCompare(RSSData<T> &b, RSSData<T> &expanded) {
         }
     }
 }
+
+//template void expandCompare<uint32_t>(RSSData<uint32_t> &b, RSSData<uint32_t> &expanded);
+//template void expandCompare<uint8_t>(RSSData<uint8_t> &b, RSSData<uint8_t> &expanded);
 
 template<typename T, typename U> 
 void NEW_funcMaxpool(RSSData<T> &input, RSSData<T> &result, RSSData<U> &dresult, int k) {
@@ -453,6 +475,9 @@ void NEW_funcMaxpool(RSSData<T> &input, RSSData<T> &result, RSSData<U> &dresult,
 
     result.zip(even, odd);
 }
+
+//template void NEW_funcMaxpool<uint32_t, uint8_t>(RSSData<uint32_t> &input, RSSData<uint32_t> &result, RSSData<uint8_t> &dresult, int k);
+//template void NEW_funcMaxpool<uint8_t, uint8_t>(RSSData<uint8_t> &input, RSSData<uint8_t> &result, RSSData<uint8_t> &dresult, int k);
 
 //Input is a, outputs are temp = ReLU'(a) and b = RELU(a).
 /*

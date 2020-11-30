@@ -79,14 +79,16 @@ void test(NeuralNetwork<T> *net)
 	log_print("test");
 
 	// counter[0]: Correct samples, counter[1]: total samples
+    /* XXX
 	vector<size_t> counter(2,0);
 	RSSData<T> maxIndex(MINI_BATCH_SIZE);
+    */
 
 	for (int i = 0; i < NUM_ITERATIONS; ++i)
 	{
-        // TODO
-		// readMiniBatch(net, "TESTING");
+		readMiniBatch(net, "TESTING");
 		net->forward();
+        // TODO
 		// net->predict(maxIndex);
 		// net->getAccuracy(maxIndex, counter);
 	}
@@ -227,6 +229,7 @@ void readMiniBatch(NeuralNetwork<T> *net, string phase)
 
 	if (phase == "TRAINING")
 	{
+        // TODO
 		for (int i = 0; i < INPUT_SIZE * MINI_BATCH_SIZE; ++i)
 			net->inputData[i] = trainData[(trainDataBatchCounter + i)%s];
 
@@ -248,11 +251,13 @@ void readMiniBatch(NeuralNetwork<T> *net, string phase)
 
 	if (phase == "TESTING")
 	{
-		for (int i = 0; i < INPUT_SIZE * MINI_BATCH_SIZE; ++i)
+		for (int i = 0; i < INPUT_SIZE * MINI_BATCH_SIZE; ++i) {
 			net->inputData[i] = testData[(testDataBatchCounter + i)%p];
+        }
 
-		for (int i = 0; i < LAST_LAYER_SIZE * MINI_BATCH_SIZE; ++i)
+		for (int i = 0; i < LAST_LAYER_SIZE * MINI_BATCH_SIZE; ++i) {
 			net->outputData[i] = testLabels[(testLabelsBatchCounter + i)%q];
+        }
 
 		testDataBatchCounter += INPUT_SIZE * MINI_BATCH_SIZE;
 		testLabelsBatchCounter += LAST_LAYER_SIZE * MINI_BATCH_SIZE;
@@ -818,10 +823,9 @@ double diff(timespec start, timespec end)
 void deleteObjects()
 {
 	//close connection
-	for (int i = 0; i < NUM_OF_PARTIES; i++)
-	{
-		if (i != partyNum)
-		{
+    /*
+	for (int i = 0; i < NUM_OF_PARTIES; i++) {
+		if (i != partyNum) {
 			delete communicationReceivers[i];
 			delete communicationSenders[i];
 		}
@@ -829,6 +833,7 @@ void deleteObjects()
 	delete[] communicationReceivers;
 	delete[] communicationSenders;
 	delete[] addrs;
+    */
 }
 
 

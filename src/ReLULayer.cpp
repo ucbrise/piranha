@@ -25,24 +25,21 @@ void ReLULayer<T>::printLayer()
 }
 
 template<typename T>
-void ReLULayer<T>::forward(const RSSData<T> &inputActivation)
+void ReLULayer<T>::forward(RSSData<T> &inputActivation)
 {
-    // TODO
-    /*
 	log_print("ReLU.forward");
 
 	size_t rows = conf.batchSize;
 	size_t columns = conf.inputDim;
 	size_t size = rows*columns;
 
-    this->layer_profiler.start();
-    relu_profiler.start();
+    //this->layer_profiler.start();
+    //relu_profiler.start();
 
-	funcRELU(inputActivation, reluPrime, activations, size);
+    NEW_funcRELU(inputActivation, activations, reluPrime);
 
-    this->layer_profiler.accumulate("relu-forward");
-    relu_profiler.accumulate("relu-forward");
-    */
+    //this->layer_profiler.accumulate("relu-forward");
+    //relu_profiler.accumulate("relu-forward");
 }
 
 template<typename T>

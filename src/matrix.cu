@@ -63,16 +63,22 @@ void matrixMultiplication(
         DeviceBuffer<T> &a, DeviceBuffer<T> &b, DeviceBuffer<T> &c,
         bool transpose_a, bool transpose_b,
         size_t rows, size_t shared, size_t cols) {
-        
+
     dim3 threadsPerBlock(cols, rows);
     dim3 blocksPerGrid(1, 1);
 
-    if (rows*cols > MAX_THREADS_PER_BLOCK){
+    if (cols > MAX_THREADS_PER_BLOCK) {
         threadsPerBlock.x = MAX_THREADS_PER_BLOCK;
-        threadsPerBlock.y = MAX_THREADS_PER_BLOCK;
         blocksPerGrid.x = ceil(double(cols)/double(threadsPerBlock.x));
+    }
+    
+    if (rows > MAX_THREADS_PER_BLOCK) {
+        threadsPerBlock.y = MAX_THREADS_PER_BLOCK;
         blocksPerGrid.y = ceil(double(rows)/double(threadsPerBlock.y));
     }
+
+    std::cout << "rows " << rows << " shared " << shared << " cols " << cols << std::endl;
+    std::cout << "grid x = " << blocksPerGrid.x << " y = " << blocksPerGrid.y << " threads x = " << threadsPerBlock.x << " y = " << threadsPerBlock.y << std::endl;
 
     kernel::matrixMultiplication<T><<<blocksPerGrid,threadsPerBlock>>>(
         thrust::raw_pointer_cast(a.getData().data()),
@@ -98,10 +104,13 @@ void transpose(DeviceBuffer<T> &a, DeviceBuffer<T> &b,
     dim3 threadsPerBlock(cols, rows);
     dim3 blocksPerGrid(1, 1);
 
-    if (rows*cols > MAX_THREADS_PER_BLOCK){
+    if (cols > MAX_THREADS_PER_BLOCK) {
         threadsPerBlock.x = MAX_THREADS_PER_BLOCK;
-        threadsPerBlock.y = MAX_THREADS_PER_BLOCK;
         blocksPerGrid.x = ceil(double(cols)/double(threadsPerBlock.x));
+    }
+    
+    if (rows > MAX_THREADS_PER_BLOCK) {
+        threadsPerBlock.y = MAX_THREADS_PER_BLOCK;
         blocksPerGrid.y = ceil(double(rows)/double(threadsPerBlock.y));
     }
 

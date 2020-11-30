@@ -26,7 +26,7 @@ void BNLayer<T>::printLayer()
 }
 
 template<typename T>
-void BNLayer<T>::forward(const RSSData<T> &inputActivation)
+void BNLayer<T>::forward(RSSData<T> &inputActivation)
 {
     //TODO
     /*

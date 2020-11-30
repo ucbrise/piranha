@@ -28,6 +28,19 @@ void NEW_funcMatMul(RSSData<T> &a, RSSData<T> &b, RSSData<T> &c,
                     size_t rows, size_t common_dim, size_t columns,
                     bool transpose_a, bool transpose_b, size_t truncation);
 
+template<typename T, typename U> 
+void NEW_funcRELU(RSSData<T> &input, RSSData<T> &result, RSSData<U> &dresult);
+
+
+template<typename T>
+void NEW_funcConvolution(RSSData<T> &im, RSSData<T> &filters, RSSData<T> &out,
+                    size_t imageWidth, size_t imageHeight, size_t filterSize,
+                    size_t Din, size_t Dout, size_t stride, size_t padding,
+                    size_t truncation);
+
+template<typename T, typename U> 
+void NEW_funcMaxpool(RSSData<T> &input, RSSData<T> &result, RSSData<U> &dresult, int k);
+
 /*
 void funcTruncate(RSSVectorMyType &a, size_t power, size_t size);
 void funcTruncatePublic(RSSVectorMyType &a, size_t divisor, size_t size);

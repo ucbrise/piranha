@@ -27,7 +27,7 @@ class FCLayer : public Layer<T> {
 
         //Functions
         void printLayer() override;
-        void forward(const RSSData<T> &inputActivation) override;
+        void forward(RSSData<T> &inputActivation) override;
         void computeDelta(RSSData<T> &prevDelta) override;
         void updateEquations(const RSSData<T> &prevActivations) override;
 

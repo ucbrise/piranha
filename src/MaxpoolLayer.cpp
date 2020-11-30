@@ -34,10 +34,8 @@ void MaxpoolLayer<T>::printLayer()
 }
 
 template<typename T>
-void MaxpoolLayer<T>::forward(const RSSData<T>& inputActivation)
+void MaxpoolLayer<T>::forward(RSSData<T>& inputActivation)
 {
-    // TODO
-    /*
 	log_print("Maxpool.forward");
 
 	size_t B 	= conf.batchSize;
@@ -49,38 +47,13 @@ void MaxpoolLayer<T>::forward(const RSSData<T>& inputActivation)
 	size_t ow 	= (((iw-f)/S)+1);
 	size_t oh	= (((ih-f)/S)+1);
 
-    this->layer_profiler.start();
-    maxpool_profiler.start();
+    //this->layer_profiler.start();
+    //maxpool_profiler.start();
+    
+    //TODO NEW_funcMaxpool(inputActivation, activations, maxPrime, sizeof(T) * 8);
 
-	RSSVectorMyType temp1(ow*oh*Din*B*f*f);
-	{
-		size_t sizeBeta = iw;
-		size_t sizeD 	= sizeBeta*ih;
-		size_t sizeB 	= sizeD*Din;
-		size_t counter 	= 0;
-		for (int b = 0; b < B; ++b)
-			for (size_t r = 0; r < Din; ++r)
-				for (size_t beta = 0; beta < ih-f+1; beta+=S) 
-					for (size_t alpha = 0; alpha < iw-f+1; alpha+=S)
-						for (int q = 0; q < f; ++q)
-							for (int p = 0; p < f; ++p)
-							{
-								temp1[counter++] = 
-									inputActivation[b*sizeB + r*sizeD + 
-										(beta + q)*sizeBeta + (alpha + p)];
-							}
-	}
-    this->layer_profiler.accumulate("maxpool-forward-temp1");
-    maxpool_profiler.accumulate("maxpool-forward-temp1");
-
-    this->layer_profiler.start();
-    maxpool_profiler.start();
-	//Pooling operation
-	funcMaxpool(temp1, activations, maxPrime, ow*oh*Din*B, f*f);
-	
-    this->layer_profiler.accumulate("maxpool-forward-pooling");
-    maxpool_profiler.accumulate("maxpool-forward-pooling");
-    */
+    //this->layer_profiler.accumulate("maxpool-forward-temp1");
+    //maxpool_profiler.accumulate("maxpool-forward-temp1");
 }
 
 template<typename T>

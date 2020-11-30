@@ -7,6 +7,8 @@
 #include "bitwise.cuh"
 #include "Functionalities.h"
 
+#include <iostream>
+
 extern int partyNum;
 
 template<typename T>

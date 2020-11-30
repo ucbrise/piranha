@@ -49,6 +49,7 @@ int main(int argc, char** argv)
 	initializeCommunication(argv[2], partyNum);
 	synchronize(2000000);
 
+
 /****************************** RUN NETWORK/UNIT TESTS ******************************/ 
 	start_m();
 	//Run unit tests in two modes: 
@@ -68,6 +69,7 @@ int main(int argc, char** argv)
 	//train(net, config);
 
 	network += " test";
+    std::cout << "--testing net--" << std::endl;
 	test(net);
 
 	end_m(network);
@@ -78,13 +80,13 @@ int main(int argc, char** argv)
 	cout << "----------------------------------------------" << endl << endl;  
 
     //double total_measured_runtime = 0.0;
+    /* XXX
     for (int l = 0; l < net->layers.size(); l++) {
         net->layers[l]->printLayer();
         //net->layers[l]->layer_profiler.dump_all();
         //total_measured_runtime += net->layers[l]->layer_profiler.get_elapsed_all();
     }
 
-    /*
     cout << "-- Total Matrix Multiplication --" << endl; 
     matmul_profiler.dump_all();
 
@@ -103,9 +105,12 @@ int main(int argc, char** argv)
 	delete aes_next;
 	delete aes_prev;
 	delete config;
-	delete net;
+	//delete net;
 	deleteObjects();
 
+    std::cout << "~~~~~ done ~~~~~" << std::endl;
+    std::cout << std::flush;
+    for(int i = 0; i < 100000000; i++);
 	return 0;
 }
 

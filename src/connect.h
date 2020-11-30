@@ -150,13 +150,9 @@ void sendVector(size_t player, const std::vector<T> &vec) {
 		cout << "smallType" << endl;
 #endif
     */
-    std::cout << vec.data() << " " << vec.size() << std::endl;
-    std::cout << communicationSenders << std::endl;
-    std::cout << communicationSenders[player] << std::endl;
 	if(!communicationSenders[player]->sendMsg(vec.data(), vec.size() * sizeof(T), 0)) {
         std::cout << "Send vector error" << std::endl;
     }
-    std::cout << "yeet" << std::endl;
 }
 
 template void sendVector<uint32_t>(size_t player, const std::vector<uint32_t> &vec);

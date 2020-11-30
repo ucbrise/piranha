@@ -88,10 +88,13 @@ void im2row(DeviceBuffer<T> &im, DeviceBuffer<T> &output,
     dim3 threadsPerBlock(xThreads, yThreads);
     dim3 blocksPerGrid(1, 1);
 
-    if (xThreads * yThreads > MAX_THREADS_PER_BLOCK){
+    if (xThreads > MAX_THREADS_PER_BLOCK) {
         threadsPerBlock.x = MAX_THREADS_PER_BLOCK;
-        threadsPerBlock.y = MAX_THREADS_PER_BLOCK;
         blocksPerGrid.x = ceil(double(xThreads)/double(threadsPerBlock.x));
+    }
+    
+    if (yThreads > MAX_THREADS_PER_BLOCK) {
+        threadsPerBlock.y = MAX_THREADS_PER_BLOCK;
         blocksPerGrid.y = ceil(double(yThreads)/double(threadsPerBlock.y));
     }
 
