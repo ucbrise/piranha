@@ -23,6 +23,7 @@ template<typename T> DeviceBuffer<T> operator-(DeviceBuffer<T> lhs, const T rhs)
 template<typename T> DeviceBuffer<T> operator-(const T &lhs, const DeviceBuffer<T> &rhs);
 template<typename T> DeviceBuffer<T> operator*(DeviceBuffer<T> lhs, const T rhs);
 template<typename T> DeviceBuffer<T> operator/(DeviceBuffer<T> lhs, const T rhs);
+template<typename T> DeviceBuffer<T> operator>>(DeviceBuffer<T> lhs, const T rhs);
 template<typename T> DeviceBuffer<T> operator+(DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs);
 template<typename T> DeviceBuffer<T> operator-(DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs);
 template<typename T> DeviceBuffer<T> operator*(DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs);
@@ -34,12 +35,15 @@ class DeviceBuffer
 {
     public:
 
+        DeviceBuffer();
         DeviceBuffer(size_t n);
+        DeviceBuffer(std::initializer_list<float> il);
         DeviceBuffer(const DeviceBuffer &b);
         ~DeviceBuffer();
 
         size_t size() const;
         void resize(size_t n);
+        void zero();
         void fill(T val);
         template<typename U> void copy(DeviceBuffer<U> &src);
         thrust::device_vector<T> &getData();
@@ -58,11 +62,13 @@ class DeviceBuffer
         friend DeviceBuffer<T> operator- <> (const T &lhs, const DeviceBuffer<T> &rhs);
         friend DeviceBuffer<T> operator* <> (DeviceBuffer<T> lhs, const T rhs);
         friend DeviceBuffer<T> operator/ <> (DeviceBuffer<T> lhs, const T rhs);
+        friend DeviceBuffer<T> operator>> <> (DeviceBuffer<T> lhs, const T rhs);
         DeviceBuffer<T> &operator+=(const T rhs);
         DeviceBuffer<T> &operator-=(const T rhs);
         DeviceBuffer<T> &operator*=(const T rhs);
         DeviceBuffer<T> &operator/=(const T rhs);
         DeviceBuffer<T> &operator|=(const T rhs);
+        DeviceBuffer<T> &operator>>=(const T rhs);
 
         // vector overloads
         friend DeviceBuffer<T> operator+ <> (DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs);
@@ -77,7 +83,6 @@ class DeviceBuffer
         DeviceBuffer<T> &operator^=(const DeviceBuffer<T>& rhs);
 
     private:
-        DeviceBuffer();
 
         thrust::device_vector<T> data;
         bool transmitting;

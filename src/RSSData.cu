@@ -21,6 +21,26 @@ RSSData<T>::RSSData(size_t n) : shareA(n), shareB(n) {
     // nothing
 }
 
+/*
+ * Test initializer. Assumes Party A's share is the given values and all other
+ * shares are zero
+ */
+template<typename T>
+RSSData<T>::RSSData(std::initializer_list<float> il) : shareA(il), shareB(il) {
+    switch (partyNum) {
+        case PARTY_A:
+            shareB.zero(); 
+            break;
+        case PARTY_B:
+            shareA.zero(); 
+            shareB.zero();
+            break;
+        case PARTY_C:
+            shareA.zero();
+            break;
+    }
+}
+
 template<typename T>
 RSSData<T>::RSSData(const DeviceBuffer<T> &a, const DeviceBuffer<T> &b) :
     shareA(a), shareB(b) {
@@ -69,10 +89,14 @@ void RSSData<T>::zip(RSSData<T> &even, RSSData<T> &odd) {
 
 template<typename T>
 template<typename U>
-void RSSData<T>::copy(const RSSData<U> &src) {
-    shareA.copy(src.shareA);
-    shareB.copy(src.shareB);
+void RSSData<T>::copy(RSSData<U> &src) {
+    shareA.copy(src[0]);
+    shareB.copy(src[1]);
 }
+
+template void RSSData<uint32_t>::copy<uint8_t>(RSSData<uint8_t> &src);
+template void RSSData<uint32_t>::copy<uint32_t>(RSSData<uint32_t> &src);
+template void RSSData<uint8_t>::copy<uint8_t>(RSSData<uint8_t> &src);
 
 template<typename T>
 DeviceBuffer<T>& RSSData<T>::operator [](int i) {

@@ -72,7 +72,7 @@ void CNNLayer<T>::forward(RSSData<T> &inputActivation)
 
     //this->layer_profiler.start();
 
-    NEW_funcConvolution(inputActivation, weights, activations,
+    NEW_funcConvolution(inputActivation, weights, biases, activations,
             iw, ih, f, Din, Dout, S, P, FLOAT_PRECISION); 
 
     //this->layer_profiler.accumulate("cnn-forward-gpu");

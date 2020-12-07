@@ -1,7 +1,6 @@
-#pragma once
+
 #include "MaxpoolLayer.h"
 #include "Functionalities.h"
-using namespace std;
 
 template<typename T>
 Profiler MaxpoolLayer<T>::maxpool_profiler;
@@ -50,7 +49,7 @@ void MaxpoolLayer<T>::forward(RSSData<T>& inputActivation)
     //this->layer_profiler.start();
     //maxpool_profiler.start();
     
-    //TODO NEW_funcMaxpool(inputActivation, activations, maxPrime, sizeof(T) * 8);
+    NEW_funcMaxpool(inputActivation, activations, maxPrime);
 
     //this->layer_profiler.accumulate("maxpool-forward-temp1");
     //maxpool_profiler.accumulate("maxpool-forward-temp1");

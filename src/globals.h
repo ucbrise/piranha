@@ -18,7 +18,7 @@
 
 
 /********************* AES and other globals *********************/
-#define LOG_DEBUG true
+#define LOG_DEBUG false
 #define LOG_DEBUG_NETWORK false
 #define FUNCTION_TIME false
 #define RANDOM_COMPUTE 256	//Size of buffer for random elements

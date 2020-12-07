@@ -14,7 +14,8 @@ class MaxpoolLayer : public Layer<T> {
         MaxpoolConfig conf;
         RSSData<T> activations;
         RSSData<T> deltas;
-        RSSData<uint8_t> maxPrime;
+        //RSSData<uint8_t> maxPrime;
+        RSSData<T> maxPrime;
 
     public:
         //Constructor and initializer

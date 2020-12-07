@@ -8,6 +8,7 @@
 #pragma once
 
 #include <cstddef>
+#include <initializer_list>
 
 #include "globals.h"
 #include "DeviceBuffer.h"
@@ -31,6 +32,8 @@ class RSSData {
 
         RSSData();
         RSSData(size_t n);
+        RSSData(std::initializer_list<float> il);
+        RSSData(const DeviceBuffer<T> &a, const DeviceBuffer<T> &b);
         ~RSSData();
 
         size_t size() const;
@@ -39,7 +42,7 @@ class RSSData {
         void resize(size_t n);
         void unzip(RSSData<T> &even, RSSData<T> &odd);
         void zip(RSSData<T> &even, RSSData<T> &odd);
-        template<typename U> void copy(const RSSData<U> &src);
+        template<typename U> void copy(RSSData<U> &src);
 
         DeviceBuffer<T>& operator [](int i);
 
@@ -68,8 +71,6 @@ class RSSData {
         friend RSSData<T> operator^ <> (RSSData<T> lhs, const RSSData<T> &rhs);
 
     private:
-
-        RSSData(const DeviceBuffer<T> &a, const DeviceBuffer<T> &b);
 
         DeviceBuffer<T> shareA;
         DeviceBuffer<T> shareB;

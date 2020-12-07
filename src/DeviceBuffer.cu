@@ -3,9 +3,10 @@
  */
 
 #include "DeviceBuffer.h"
-#include "connect.h"
 
-#include <iostream>
+#include <thrust/transform.h>
+
+#include "connect.h"
 
 template<typename T>
 DeviceBuffer<T>::DeviceBuffer() : hostBuffer(0),
@@ -18,7 +19,18 @@ template<typename T>
 DeviceBuffer<T>::DeviceBuffer(size_t n) : hostBuffer(0), 
                                         transmitting(false),
                                         data(n) {
-    // nothing else
+    fill(0);
+}
+
+template<typename T>
+DeviceBuffer<T>::DeviceBuffer(std::initializer_list<float> il) : hostBuffer(0),
+                                                             transmitting(false),
+                                                             data(il.size()) {
+    std::vector<T> fixedPointRepr;
+    for (float f : il) {
+        fixedPointRepr.push_back((T)(f * (1 << FLOAT_PRECISION)));
+    }
+    thrust::copy(fixedPointRepr.begin(), fixedPointRepr.end(), data.begin());
 }
 
 template<typename T>
@@ -49,6 +61,11 @@ void DeviceBuffer<T>::fill(T val) {
 }
 
 template<typename T>
+void DeviceBuffer<T>::zero() {
+    fill(0);
+}
+
+template<typename T>
 template<typename U>
 void DeviceBuffer<T>::copy(DeviceBuffer<U> &src) {
     resize(src.size());
@@ -56,6 +73,7 @@ void DeviceBuffer<T>::copy(DeviceBuffer<U> &src) {
 }
 
 template void DeviceBuffer<uint32_t>::copy<uint8_t>(DeviceBuffer<uint8_t> &src);
+template void DeviceBuffer<uint32_t>::copy<uint32_t>(DeviceBuffer<uint32_t> &src);
 template void DeviceBuffer<uint8_t>::copy<uint8_t>(DeviceBuffer<uint8_t> &src);
 
 template<typename T>
@@ -201,6 +219,18 @@ struct scalar_or_functor{
 };
 
 template<typename T>
+struct scalar_arith_rshift_functor{
+    const T a;
+
+    scalar_arith_rshift_functor(T _a) : a(_a) {}
+
+    __host__ __device__
+    T operator()(const T &x) const {
+        return ((x >> ((sizeof(T) * 8) - 1)) * (~((1 << ((sizeof(T) * 8) - a)) - 1))) | (x >> a);
+    }
+};
+
+template<typename T>
 DeviceBuffer<T> &DeviceBuffer<T>::operator+=(const T rhs) {
     thrust::transform(this->data.begin(), this->data.end(),
                       this->data.begin(),
@@ -237,6 +267,14 @@ DeviceBuffer<T> &DeviceBuffer<T>::operator|=(const T rhs) {
     thrust::transform(this->data.begin(), this->data.end(),
                       this->data.begin(),
                       scalar_or_functor<T>(rhs)); 
+    return *this;
+}
+
+template<typename T>
+DeviceBuffer<T> &DeviceBuffer<T>::operator>>=(const T rhs) {
+    thrust::transform(this->data.begin(), this->data.end(),
+                      this->data.begin(),
+                      scalar_arith_rshift_functor<T>(rhs)); 
     return *this;
 }
 
@@ -283,6 +321,15 @@ DeviceBuffer<T> operator/(DeviceBuffer<T> lhs, const T rhs) {
 
 template DeviceBuffer<uint32_t> operator/<uint32_t>(DeviceBuffer<uint32_t> lhs, const uint32_t rhs);
 template DeviceBuffer<uint8_t> operator/<uint8_t>(DeviceBuffer<uint8_t> lhs, const uint8_t rhs);
+
+template<typename T>
+DeviceBuffer<T> operator>>(DeviceBuffer<T> lhs, const T rhs) {
+    lhs >>= rhs;
+    return lhs;
+}
+
+template DeviceBuffer<uint32_t> operator>><uint32_t>(DeviceBuffer<uint32_t> lhs, const uint32_t rhs);
+template DeviceBuffer<uint8_t> operator>><uint8_t>(DeviceBuffer<uint8_t> lhs, const uint8_t rhs);
 
 template<typename T>
 DeviceBuffer<T> &DeviceBuffer<T>::operator+=(const DeviceBuffer<T>& rhs) {

@@ -1,6 +1,5 @@
 
 #include <cuda_runtime.h>
-#include <iostream>
 #include <math.h>
 #include <stdlib.h>
 
@@ -12,7 +11,7 @@ namespace kernel {
 template<typename T>
 __global__ void matrixMultiplication(T *a, T *b, T *c,
         bool transpose_a, bool transpose_b,
-        int rows, int shared, int cols) {
+        int rows, int shared, int cols, int party) {
 
     int ROW = blockIdx.y*blockDim.y+threadIdx.y;
     int COL = blockIdx.x*blockDim.x+threadIdx.x;
@@ -21,10 +20,16 @@ __global__ void matrixMultiplication(T *a, T *b, T *c,
         // each thread accumulates one element of the block sub-matrix
         for (int k = 0; k < shared; k++) {
             // C[ROW, COL] = A[ROW, k] * B[k, COL], account for transpose
-            int a_idx = transpose_a ? k * shared + ROW : ROW * shared + k;
-            int b_idx = transpose_b ? COL * cols + k : k * cols + COL;
+            int a_idx = transpose_a ? k * cols + ROW : ROW * shared + k;
+            int b_idx = transpose_b ? COL * shared + k : k * cols + COL;
 
             c[ROW * cols + COL] += a[a_idx] * b[b_idx];
+            /*
+            if (ROW == 1 && COL == 1) {
+                printf("k = %d a_idx = %d b_idx = %d\n", k, a_idx, b_idx);
+                printf("c += %d * %d -> %d\n", a[a_idx], b[b_idx], c[ROW * cols + COL]);
+            }
+            */
         }
     }
 }
@@ -32,11 +37,11 @@ __global__ void matrixMultiplication(T *a, T *b, T *c,
 template __global__ void matrixMultiplication<uint32_t>(uint32_t *a,
         uint32_t *b, uint32_t *c,
         bool transpose_a, bool transpose_b,
-        int rows, int shared, int cols);
+        int rows, int shared, int cols, int party);
 template __global__ void matrixMultiplication<uint8_t>(uint8_t *a,
         uint8_t *b, uint8_t *c,
         bool transpose_a, bool transpose_b,
-        int rows, int shared, int cols);
+        int rows, int shared, int cols, int party);
 
 template<typename T>
 __global__ void transpose(T* a, T* b, int rows, int cols) {
@@ -45,7 +50,8 @@ __global__ void transpose(T* a, T* b, int rows, int cols) {
     int COL = blockIdx.x*blockDim.x+threadIdx.x;
 
     if (ROW < rows && COL < cols) {
-        b[ROW * cols + COL] += a[COL * cols + ROW];
+        //printf("b[%d] += %d (a[%d])\n", COL * rows + ROW, a[ROW * cols + COL], ROW * cols + COL);
+        b[COL * rows + ROW] += a[ROW * cols + COL];
     }
 }
 
@@ -54,7 +60,27 @@ template __global__ void transpose<uint32_t>(uint32_t *a, uint32_t *b,
 template __global__ void transpose<uint8_t>(uint8_t *a, uint8_t *b,
         int rows, int cols);
 
+// add vector b to every row/col in a
+template<typename T>
+__global__ void elementVectorAdd(T* a, T* b, bool rowwise, int rows, int cols) {
+
+    int ROW = blockIdx.y*blockDim.y+threadIdx.y;
+    int COL = blockIdx.x*blockDim.x+threadIdx.x;
+
+    if (ROW < rows && COL < cols) {
+        a[ROW * cols + COL] += b[rowwise ? COL : ROW];
+    }
+}
+
+template __global__ void elementVectorAdd<uint32_t>(uint32_t *a, uint32_t *b,
+        bool rowwise, int rows, int cols);
+template __global__ void elementVectorAdd<uint8_t>(uint8_t *a, uint8_t *b,
+        bool rowwise, int rows, int cols);
+
+
 } // namespace kernel
+
+extern int partyNum;
 
 namespace gpu {
 
@@ -77,14 +103,14 @@ void matrixMultiplication(
         blocksPerGrid.y = ceil(double(rows)/double(threadsPerBlock.y));
     }
 
-    std::cout << "rows " << rows << " shared " << shared << " cols " << cols << std::endl;
-    std::cout << "grid x = " << blocksPerGrid.x << " y = " << blocksPerGrid.y << " threads x = " << threadsPerBlock.x << " y = " << threadsPerBlock.y << std::endl;
+    //std::cout << "rows " << rows << " shared " << shared << " cols " << cols << std::endl;
+    //std::cout << "grid x = " << blocksPerGrid.x << " y = " << blocksPerGrid.y << " threads x = " << threadsPerBlock.x << " y = " << threadsPerBlock.y << std::endl;
 
     kernel::matrixMultiplication<T><<<blocksPerGrid,threadsPerBlock>>>(
         thrust::raw_pointer_cast(a.getData().data()),
         thrust::raw_pointer_cast(b.getData().data()),
         thrust::raw_pointer_cast(c.getData().data()),
-        transpose_a, transpose_b, rows, shared, cols
+        transpose_a, transpose_b, rows, shared, cols, partyNum
     );
 }
 
@@ -125,6 +151,35 @@ template void transpose<uint32_t>(DeviceBuffer<uint32_t> &a,
         DeviceBuffer<uint32_t> &b, size_t rows, size_t cols);
 template void transpose<uint8_t>(DeviceBuffer<uint8_t> &a,
         DeviceBuffer<uint8_t> &b, size_t rows, size_t cols);
+
+template<typename T> 
+void elementVectorAdd(DeviceBuffer<T> &a, DeviceBuffer<T> &b,
+        bool rowwise, size_t rows, size_t cols) {
+        
+    dim3 threadsPerBlock(cols, rows);
+    dim3 blocksPerGrid(1, 1);
+
+    if (cols > MAX_THREADS_PER_BLOCK) {
+        threadsPerBlock.x = MAX_THREADS_PER_BLOCK;
+        blocksPerGrid.x = ceil(double(cols)/double(threadsPerBlock.x));
+    }
+    
+    if (rows > MAX_THREADS_PER_BLOCK) {
+        threadsPerBlock.y = MAX_THREADS_PER_BLOCK;
+        blocksPerGrid.y = ceil(double(rows)/double(threadsPerBlock.y));
+    }
+
+    kernel::elementVectorAdd<T><<<blocksPerGrid,threadsPerBlock>>>(
+        thrust::raw_pointer_cast(a.getData().data()),
+        thrust::raw_pointer_cast(b.getData().data()),
+        rowwise, rows, cols
+    );
+}
+
+template void elementVectorAdd<uint32_t>(DeviceBuffer<uint32_t> &a,
+        DeviceBuffer<uint32_t> &b, bool rowwise, size_t rows, size_t cols);
+template void elementVectorAdd<uint8_t>(DeviceBuffer<uint8_t> &a,
+        DeviceBuffer<uint8_t> &b, bool rowwise, size_t rows, size_t cols);
 
 } // namespace gpu
 

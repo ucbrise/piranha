@@ -17,8 +17,8 @@ AESObject* aes_next;
 AESObject* aes_prev;
 Precompute PrecomputeObject;
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
+
 /****************************** PREPROCESSING ******************************/ 
 	parseInputs(argc, argv);
 	NeuralNetConfig* config = new NeuralNetConfig(NUM_ITERATIONS);
@@ -49,42 +49,51 @@ int main(int argc, char** argv)
 	initializeCommunication(argv[2], partyNum);
 	synchronize(2000000);
 
-
 /****************************** RUN NETWORK/UNIT TESTS ******************************/ 
-	start_m();
-	//Run unit tests in two modes: 
-	//	1. Debug {Mat-Mul, DotProd, PC, Wrap, ReLUPrime, ReLU, Division, SSBits, SS, and Maxpool}
-	//	2. Test {Mat-Mul1, Mat-Mul2, Mat-Mul3 (and similarly) Conv*, ReLU*, ReLUPrime*, and Maxpool*} where * = {1,2,3}
-	//runTest("Debug", "BN", network);
-	// runTest("Test", "ReLUPrime1", network);
+    
+    int returnCode = 0;
+
+	// TEST
+    returnCode = runTests(argc, argv);
 
 	// Run forward/backward for single layers
 	//  1. what {F, D, U}
 	// 	2. l {0,1,....NUM_LAYERS-1}
-	//size_t l = 13;
-	//string what = "F";
-	//runOnly(net, l, what, network);
+    /*
+	size_t l = 13;
+	string what = "F";
+	runOnly(net, l, what, network);
+    */
 
-	//network += " train";
-	//train(net, config);
+	//start_m();
 
+    // TRAIN
+    /*
+	network += " train";
+	train(net, config);
+    */
+
+    // INFERENCE
+    /*
 	network += " test";
-    std::cout << "--testing net--" << std::endl;
 	test(net);
+    */
 
-	end_m(network);
+	//end_m(network);
+    
+    // STATS
+    /*
 	cout << "----------------------------------------------" << endl;  	
 	cout << "Run details: " << NUM_OF_PARTIES << "PC (P" << partyNum 
 		 << "), " << NUM_ITERATIONS << " iterations, batch size " << MINI_BATCH_SIZE << endl 
 		 << "Running " << security << " " << network << " on " << dataset << " dataset" << endl;
 	cout << "----------------------------------------------" << endl << endl;  
 
-    //double total_measured_runtime = 0.0;
-    /* XXX
+    double total_measured_runtime = 0.0;
     for (int l = 0; l < net->layers.size(); l++) {
         net->layers[l]->printLayer();
-        //net->layers[l]->layer_profiler.dump_all();
-        //total_measured_runtime += net->layers[l]->layer_profiler.get_elapsed_all();
+        net->layers[l]->layer_profiler.dump_all();
+        total_measured_runtime += net->layers[l]->layer_profiler.get_elapsed_all();
     }
 
     cout << "-- Total Matrix Multiplication --" << endl; 
@@ -108,10 +117,12 @@ int main(int argc, char** argv)
 	//delete net;
 	deleteObjects();
 
+    // wait a bit for the prints to flush
     std::cout << "~~~~~ done ~~~~~" << std::endl;
     std::cout << std::flush;
     for(int i = 0; i < 100000000; i++);
-	return 0;
+   
+	return returnCode;
 }
 
 

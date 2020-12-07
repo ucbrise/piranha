@@ -24,11 +24,14 @@ __global__ void bitexpand(T *a, size_t nVals, U *b, bool fixedMSB) {
             val = ((a[VAL_IDX] >> BIT_IDX) & 1);
         }
         b[VAL_IDX * nBits + BIT_IDX] = val;
+        //printf("b[%d] = %d\n", VAL_IDX * nBits + BIT_IDX, val);
     }
 }
 
 template __global__ void bitexpand<uint32_t, uint8_t>(uint32_t *a,
         size_t nVals, uint8_t *b, bool fixedMSB);
+template __global__ void bitexpand<uint32_t, uint32_t>(uint32_t *a,
+        size_t nVals, uint32_t *b, bool fixedMSB);
 template __global__ void bitexpand<uint8_t, uint8_t>(uint8_t *a,
         size_t nVals, uint8_t *b, bool fixedMSB);
 
@@ -95,6 +98,8 @@ void bitexpand(DeviceBuffer<T> &a, DeviceBuffer<U> &b, bool fixedMSB) {
 
 template void bitexpand<uint32_t, uint8_t>(DeviceBuffer<uint32_t> &a,
         DeviceBuffer<uint8_t> &b, bool fixedMSB);
+template void bitexpand<uint32_t, uint32_t>(DeviceBuffer<uint32_t> &a,
+        DeviceBuffer<uint32_t> &b, bool fixedMSB);
 template void bitexpand<uint8_t, uint8_t>(DeviceBuffer<uint8_t> &a,
         DeviceBuffer<uint8_t> &b, bool fixedMSB);
 

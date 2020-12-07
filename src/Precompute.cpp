@@ -22,10 +22,13 @@ void Precompute::getDividedShares(RSSData<T> &r, RSSData<T> &rPrime,
     assert(r.size() == size && "r.size is incorrect");
     assert(rPrime.size() == size && "rPrime.size is incorrect");
 
-    r[0].fill(1);
-    r[1].fill(1);
+    // TODO use random numbers
+
     rPrime[0].fill(d);
     rPrime[1].fill(d);
+
+    r[0].fill(1);
+    r[1].fill(1);
 }
 
 template void Precompute::getDividedShares<uint32_t>(RSSData<uint32_t> &r,

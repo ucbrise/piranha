@@ -1,8 +1,7 @@
 
-#pragma once
 #include "FCLayer.h"
 #include "Functionalities.h"
-using namespace std;
+#include "matrix.cuh"
 
 template<typename T>
 FCLayer<T>::FCLayer(FCConfig* conf, int _layerNum)
@@ -62,12 +61,12 @@ void FCLayer<T>::forward(RSSData<T> &inputActivation)
 	size_t size = rows*columns;
 
     //this->layer_profiler.start();
-	NEW_funcMatMul(inputActivation, weights, activations, rows, common_dim, columns, false, false, FLOAT_PRECISION);
+	NEW_funcMatMul(inputActivation, weights, activations,
+            rows, common_dim, columns, false, false, FLOAT_PRECISION);
 
-	for(size_t r = 0; r < rows; ++r) {
-		for(size_t c = 0; c < columns; ++c) {
-			activations[r*columns + c] += biases[c];
-        }
+    // add biases to each column
+    for (int share = 0; share <= 1; share++) {
+        gpu::elementVectorAdd(activations[share], biases[share], false, rows, columns);
     }
 
     //this->layer_profiler.accumulate("fc-forward");
@@ -76,61 +75,37 @@ void FCLayer<T>::forward(RSSData<T> &inputActivation)
 template<typename T>
 void FCLayer<T>::computeDelta(RSSData<T> &prevDelta)
 {
-    //TODO
-    /*
 	log_print("FC.computeDelta");
 
-	//Back Propagate	
-	size_t rows = conf.batchSize;
-	size_t columns = conf.inputDim;
-	size_t common_dim = conf.outputDim;
-	
-    this->layer_profiler.start();
-    // TODO
-	//funcMatMul(deltas, weights, prevDelta, rows, common_dim, columns, 0, 1, FLOAT_PRECISION);
+    //this->layer_profiler.start();
+    
+    // prevDelta = deltas * W.T
+    NEW_funcMatMul(deltas, weights, prevDelta,
+            conf.batchSize, conf.outputDim, conf.inputDim, false, true, FLOAT_PRECISION);
 
-    this->layer_profiler.accumulate("fc-delta");
-    */
+    //this->layer_profiler.accumulate("fc-delta");
 }
 
 template<typename T>
 void FCLayer<T>::updateEquations(const RSSData<T> &prevActivations)
 {
-    //TODO
-    /*
 	log_print("FC.updateEquations");
 
-	size_t rows = conf.batchSize;
-	size_t columns = conf.outputDim;
-	size_t common_dim = conf.inputDim;
-	size_t size = rows*columns;	
-	RSSVectorMyType temp(columns, std::make_pair(0,0));
-
-    this->layer_profiler.start();
-
-	//Update Biases
-	for (size_t i = 0; i < rows; ++i)
-		for (size_t j = 0; j < columns; ++j)
-			temp[j] = temp[j] + deltas[i*columns + j];
-
+    /*
+    RSSData<uint32_t> db(conf.outputDim);
     // TODO
-	//funcTruncate(temp, LOG_MINI_BATCH + LOG_LEARNING_RATE, columns);
-	subtractVectors<RSSMyType>(biases, temp, biases, columns);
-
-	//Update Weights 
-	rows = conf.inputDim;
-	columns = conf.outputDim;
-	common_dim = conf.batchSize;
-	size = rows*columns;
-	RSSVectorMyType deltaWeight(size);
-
-	funcMatMul(prevActivations, deltas, deltaWeight, rows, common_dim, columns, 1, 0, 
-					FLOAT_PRECISION + LOG_LEARNING_RATE + LOG_MINI_BATCH);
-	
-	subtractVectors<RSSMyType>(weights, deltaWeight, weights, size);		
-
-    this->layer_profiler.accumulate("fc-update");
+    // some sort of sumRows(deltas, db)
+    biases -= db;
+     
+    RSSData<uint32_t> dW(conf.outputDim * conf.inputDim);
+    NEW_funcMatMul(deltas, prevActivations, dW,
+            conf.outputDim, conf.batchSize, conf.inputDim, true, false, FLOAT_PRECISION);
+    // XXX transpose goes the other way?
+    // XXX truncation -> FLOAT_PRECISION + LOG_LEARNING_RATE + LOG_MINI_BATCH?
+    weights -= dW;
     */
+    
+    this->layer_profiler.accumulate("fc-update");
 }
 
 template class FCLayer<uint32_t>;
