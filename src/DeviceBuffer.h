@@ -29,6 +29,7 @@ template<typename T> DeviceBuffer<T> operator-(DeviceBuffer<T> lhs, const Device
 template<typename T> DeviceBuffer<T> operator*(DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs);
 template<typename T> DeviceBuffer<T> operator/(DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs);
 template<typename T> DeviceBuffer<T> operator^(DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs);
+template<typename T> DeviceBuffer<T> operator&(DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs);
 
 template<typename T>
 class DeviceBuffer
@@ -67,7 +68,6 @@ class DeviceBuffer
         DeviceBuffer<T> &operator-=(const T rhs);
         DeviceBuffer<T> &operator*=(const T rhs);
         DeviceBuffer<T> &operator/=(const T rhs);
-        DeviceBuffer<T> &operator|=(const T rhs);
         DeviceBuffer<T> &operator>>=(const T rhs);
 
         // vector overloads
@@ -76,11 +76,13 @@ class DeviceBuffer
         friend DeviceBuffer<T> operator* <> (DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs);
         friend DeviceBuffer<T> operator/ <> (DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs);
         friend DeviceBuffer<T> operator^ <> (DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs);
+        friend DeviceBuffer<T> operator& <> (DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs);
         DeviceBuffer<T> &operator+=(const DeviceBuffer<T>& rhs);
         DeviceBuffer<T> &operator-=(const DeviceBuffer<T>& rhs);
         DeviceBuffer<T> &operator*=(const DeviceBuffer<T>& rhs);
         DeviceBuffer<T> &operator/=(const DeviceBuffer<T>& rhs);
         DeviceBuffer<T> &operator^=(const DeviceBuffer<T>& rhs);
+        DeviceBuffer<T> &operator&=(const DeviceBuffer<T>& rhs);
 
     private:
 

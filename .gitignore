@@ -1,3 +1,4 @@
 BMRPassive.out
 *.o
 *.swp
+.nfs*

@@ -33,12 +33,12 @@ void ReLULayer<T>::forward(RSSData<T> &inputActivation)
 	size_t columns = conf.inputDim;
 	size_t size = rows*columns;
 
-    //this->layer_profiler.start();
+    this->layer_profiler.start();
     //relu_profiler.start();
 
     NEW_funcRELU(inputActivation, activations, reluPrime);
 
-    //this->layer_profiler.accumulate("relu-forward");
+    this->layer_profiler.accumulate("relu-forward");
     //relu_profiler.accumulate("relu-forward");
 }
 

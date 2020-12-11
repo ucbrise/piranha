@@ -10,30 +10,25 @@
 namespace kernel {
 
 template<typename T, typename U>
-__global__ void bitexpand(T *a, size_t nVals, U *b, bool fixedMSB) {
+__global__ void bitexpand(T *a, size_t nVals, U *b) {
 
     int VAL_IDX = blockIdx.y*blockDim.y+threadIdx.y;
     int BIT_IDX = blockIdx.x*blockDim.x+threadIdx.x;
     int nBits = sizeof(T) * 8;
 
     if (VAL_IDX <= nVals && BIT_IDX < nBits) {
-        U val = 0;
-        if (BIT_IDX == nBits - 1 && fixedMSB) {
-            val = 1;     
-        } else {
-            val = ((a[VAL_IDX] >> BIT_IDX) & 1);
-        }
+        U val = ((a[VAL_IDX] >> BIT_IDX) & 1);
         b[VAL_IDX * nBits + BIT_IDX] = val;
         //printf("b[%d] = %d\n", VAL_IDX * nBits + BIT_IDX, val);
     }
 }
 
 template __global__ void bitexpand<uint32_t, uint8_t>(uint32_t *a,
-        size_t nVals, uint8_t *b, bool fixedMSB);
+        size_t nVals, uint8_t *b);
 template __global__ void bitexpand<uint32_t, uint32_t>(uint32_t *a,
-        size_t nVals, uint32_t *b, bool fixedMSB);
+        size_t nVals, uint32_t *b);
 template __global__ void bitexpand<uint8_t, uint8_t>(uint8_t *a,
-        size_t nVals, uint8_t *b, bool fixedMSB);
+        size_t nVals, uint8_t *b);
 
 template<typename T>
 __global__ void unzip(T *in, T *even, T *odd, size_t n) {
@@ -70,7 +65,7 @@ template __global__ void zip<uint8_t>(uint8_t *out, uint8_t *even,
 namespace gpu {
 
 template<typename T, typename U>
-void bitexpand(DeviceBuffer<T> &a, DeviceBuffer<U> &b, bool fixedMSB) {
+void bitexpand(DeviceBuffer<T> &a, DeviceBuffer<U> &b) {
 
     int cols = sizeof(T) * 8;
     int rows = a.size();
@@ -91,17 +86,16 @@ void bitexpand(DeviceBuffer<T> &a, DeviceBuffer<U> &b, bool fixedMSB) {
     kernel::bitexpand<T, U><<<blocksPerGrid,threadsPerBlock>>>(
         thrust::raw_pointer_cast(a.getData().data()),
         rows,
-        thrust::raw_pointer_cast(b.getData().data()),
-        fixedMSB
+        thrust::raw_pointer_cast(b.getData().data())
     );
 }
 
 template void bitexpand<uint32_t, uint8_t>(DeviceBuffer<uint32_t> &a,
-        DeviceBuffer<uint8_t> &b, bool fixedMSB);
+        DeviceBuffer<uint8_t> &b);
 template void bitexpand<uint32_t, uint32_t>(DeviceBuffer<uint32_t> &a,
-        DeviceBuffer<uint32_t> &b, bool fixedMSB);
+        DeviceBuffer<uint32_t> &b);
 template void bitexpand<uint8_t, uint8_t>(DeviceBuffer<uint8_t> &a,
-        DeviceBuffer<uint8_t> &b, bool fixedMSB);
+        DeviceBuffer<uint8_t> &b);
 
 template<typename T>
 void unzip(DeviceBuffer<T> &in, DeviceBuffer<T> &even, DeviceBuffer<T> &odd) {

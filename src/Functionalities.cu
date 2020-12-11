@@ -21,6 +21,8 @@
 extern Precompute PrecomputeObject;
 extern std::string SECURITY_TYPE;
 
+Profiler func_profiler;
+
 template<typename T>
 void NEW_funcReconstruct(RSSData<T> &a, DeviceBuffer<T> &reconstructed) {
 
@@ -109,19 +111,20 @@ void NEW_funcReshare(DeviceBuffer<T> &c, RSSData<T> &reshared) {
     // TODO XXX use precomputation randomness XXX TODO
     DeviceBuffer<T> rndMask(c.size());
     rndMask.fill(0); 
+
     reshared[0] = c + rndMask;
 
     switch (partyNum) {
         // send then receive
         case PARTY_A:
-            c.transmit(PARTY_C);
-            c.join();
+            reshared[0].transmit(PARTY_C);
+            reshared[0].join();
             reshared[1].receive(PARTY_B);
             reshared[1].join();
             break; 
         case PARTY_B:
-            c.transmit(PARTY_A);
-            c.join();
+            reshared[0].transmit(PARTY_A);
+            reshared[0].join();
             reshared[1].receive(PARTY_C);
             reshared[1].join();
             break; 
@@ -129,8 +132,8 @@ void NEW_funcReshare(DeviceBuffer<T> &c, RSSData<T> &reshared) {
         case PARTY_C:
             reshared[1].receive(PARTY_A);
             reshared[1].join();
-            c.transmit(PARTY_B);
-            c.join();
+            reshared[0].transmit(PARTY_B);
+            reshared[0].join();
             break;
     }
 }
@@ -152,8 +155,21 @@ void NEW_funcSelectShare(RSSData<T> &x, RSSData<T> &y, RSSData<U> &b,
     RSSData<U> cbits(size);
     cbits.zero();
 
+    /*
+    std::cout << "printing b before xor" << std::endl;
+    DeviceBuffer<U> rb(b.size());
+    NEW_funcReconstruct(b, rb);
+    std::vector<T> host_v(rb.size());
+    thrust::copy(rb.getData().begin(), rb.getData().end(), host_v.begin());
+    for (auto x : host_v) {
+        std::cout << x << " ";
+    }
+    std::cout << std::endl;
+    */
+
     // b XOR c, then open -> e
     b ^= cbits;
+
     DeviceBuffer<U> etemp(b.size());
     NEW_funcReconstruct(b, etemp);
 
@@ -161,7 +177,7 @@ void NEW_funcSelectShare(RSSData<T> &x, RSSData<T> &y, RSSData<U> &b,
     // etemp (uint8_t) -> e (uint32_t)
     DeviceBuffer<T> e(etemp.size());
     e.copy(etemp);
-
+    
     // d = 1-c if e=1 else c -> d = (e)(1-c) + (1-e)(c)
     RSSData<T> d = ((T)1 - c) * e + c * ((T)1 - e);
      
@@ -249,9 +265,6 @@ void NEW_funcMatMul(RSSData<T> &a, RSSData<T> &b, RSSData<T> &c,
     NEW_funcReconstruct3out3(rawResult, reconstructedResult);
     reconstructedResult >>= (T)truncation;
     c = r + reconstructedResult;
-
-    // XXX not necessary? seems like we already have a 2of3 share without exposing the value
-    //NEW_funcReshare(r, c);
 }
 
 template void NEW_funcMatMul<uint32_t>(RSSData<uint32_t> &a, RSSData<uint32_t> &b,
@@ -288,9 +301,9 @@ void NEW_funcConvolution(RSSData<T> &im, RSSData<T> &filters, RSSData<T> &biases
     // add biases and transpose 
     for(int share = 0; share <= 1; share++) {
         gpu::elementVectorAdd(convolvedResult[share], biases[share],
-                true, Din * filterSize * filterSize, Dout);
+                true, widthKernels * heightKernels, Dout);
         gpu::transpose(convolvedResult[share], out[share],
-                Din * filterSize * filterSize, Dout);
+                widthKernels * heightKernels, Dout);
     }
 }
 
@@ -305,33 +318,198 @@ template void NEW_funcConvolution<uint8_t>(RSSData<uint8_t> &im,
         size_t Dout, size_t stride, size_t padding, size_t truncation);
 
 template<typename U>
+void printRSS(RSSData<U> &data, const char *name) {
+    DeviceBuffer<U> dataR(data.size());
+    NEW_funcReconstruct(data, dataR);
+    std::vector<U> buf(dataR.size());
+    thrust::copy(dataR.getData().begin(), dataR.getData().end(), buf.begin());
+    std::cout << name << ":" << std::endl;
+    for (int i = 0; i < buf.size(); i++) {
+        std::cout << (uint32_t) buf[i] << " "; 
+    }
+    std::cout << std::endl;
+}
+
+template void printRSS<uint8_t>(RSSData<uint8_t> &data, const char *name);
+template void printRSS<uint32_t>(RSSData<uint32_t> &data, const char *name);
+
+template<typename U>
+void printDB(DeviceBuffer<U> &data, const char *name) {
+    std::vector<U> buf(data.size());
+    thrust::copy(data.getData().begin(), data.getData().end(), buf.begin());
+    std::cout << name << ":" << std::endl;
+    for (int i = 0; i < buf.size(); i++) {
+        std::cout << (uint32_t) buf[i] << " "; 
+    }
+    std::cout << std::endl;
+}
+
+template void printDB<uint8_t>(DeviceBuffer<uint8_t> &db, const char *name);
+template void printDB<uint32_t>(DeviceBuffer<uint32_t> &db, const char *name);
+
+void preOpL2(RSSData<uint8_t> &pIn, RSSData<uint8_t> &gIn,
+        RSSData<uint8_t> &pOut, RSSData<uint8_t> &gOut) {
+    
+    //std::cout << std::endl << "k = " << pIn.size() << std::endl << std::endl;
+ 
+    if (pIn.size() > 1) {
+        RSSData<uint8_t> pInEven(pIn.size()/2), pInOdd(pIn.size()/2);
+        RSSData<uint8_t> gInEven(gIn.size()/2), gInOdd(gIn.size()/2);
+        pIn.unzip(pInEven, pInOdd);
+        gIn.unzip(gInEven, gInOdd);
+
+        RSSData<uint8_t> pNext = pInEven & pInOdd;
+        RSSData<uint8_t> gNext = gInOdd ^ (pInOdd & gInEven);
+
+        //printRSS(pNext, "u(p)");
+        //printRSS(gNext, "u(g)");
+
+        RSSData<uint8_t> pOutOdd(pOut.size()/2), gOutOdd(gOut.size()/2);
+        preOpL2(pNext, gNext, pOutOdd, gOutOdd);
+
+        //printRSS(pOutOdd, "v(p)");
+        //printRSS(gOutOdd, "v(g)");
+
+        // we need to perform carry operator at an offset since the resulting
+        // p/gOut[0] is already known
+        RSSData<uint8_t> pOutOddOffset = pOutOdd;
+        pOutOddOffset[0].getData().insert(pOutOddOffset[0].getData().begin(), 0);
+        pOutOddOffset[1].getData().insert(pOutOddOffset[1].getData().begin(), 0);
+
+        RSSData<uint8_t> gOutOddOffset = gOutOdd;
+        gOutOddOffset[0].getData().insert(gOutOddOffset[0].getData().begin(), 0);
+        gOutOddOffset[1].getData().insert(gOutOddOffset[1].getData().begin(), 0);
+
+        RSSData<uint8_t> pOutEven = pOutOddOffset & pInEven;
+        pOut.zip(pOutEven, pOutOdd);
+
+        RSSData<uint8_t> gOutEven = gInEven ^ (pInEven & gOutOddOffset);
+        gOut.zip(gOutEven, gOutOdd);
+    }
+
+    // set shares out[0] <- in[0]
+    pOut[0].getData()[0] = pIn[0].getData()[0];
+    pOut[1].getData()[0] = pIn[1].getData()[0];
+    gOut[0].getData()[0] = gIn[0].getData()[0];
+    gOut[1].getData()[0] = gIn[1].getData()[0];
+
+    //printRSS(pOut, "p(p)");
+    //printRSS(gOut, "p(g)");
+}
+
+void preOpL2(RSSData<uint32_t> &pIn, RSSData<uint32_t> &gIn,
+        RSSData<uint32_t> &pOut, RSSData<uint32_t> &gOut) {
+
+    //std::cout << std::endl << "k = " << pIn.size() << std::endl << std::endl;
+ 
+    if (pIn.size() > 1) {
+        RSSData<uint32_t> pInEven(pIn.size()/2), pInOdd(pIn.size()/2);
+        RSSData<uint32_t> gInEven(gIn.size()/2), gInOdd(gIn.size()/2);
+        pIn.unzip(pInEven, pInOdd);
+        gIn.unzip(gInEven, gInOdd);
+
+        RSSData<uint32_t> pNext = pInEven & pInOdd;
+        RSSData<uint32_t> gNext = gInOdd ^ (pInOdd & gInEven);
+
+        //printRSS(pNext, "u(p)");
+        //printRSS(gNext, "u(g)");
+
+        RSSData<uint32_t> pOutOdd(pOut.size()/2), gOutOdd(gOut.size()/2);
+        preOpL2(pNext, gNext, pOutOdd, gOutOdd);
+
+        //printRSS(pOutOdd, "v(p)");
+        //printRSS(gOutOdd, "v(g)");
+
+        // we need to perform carry operator at an offset since the resulting
+        // p/gOut[0] is already known
+        RSSData<uint32_t> pOutOddOffset = pOutOdd;
+        pOutOddOffset[0].getData().insert(pOutOddOffset[0].getData().begin(), 0);
+        pOutOddOffset[1].getData().insert(pOutOddOffset[1].getData().begin(), 0);
+
+        RSSData<uint32_t> gOutOddOffset = gOutOdd;
+        gOutOddOffset[0].getData().insert(gOutOddOffset[0].getData().begin(), 0);
+        gOutOddOffset[1].getData().insert(gOutOddOffset[1].getData().begin(), 0);
+
+        RSSData<uint32_t> pOutEven = pOutOddOffset & pInEven;
+        pOut.zip(pOutEven, pOutOdd);
+
+        RSSData<uint32_t> gOutEven = gInEven ^ (pInEven & gOutOddOffset);
+        gOut.zip(gOutEven, gOutOdd);
+    }
+
+    // set shares out[0] <- in[0]
+    pOut[0].getData()[0] = pIn[0].getData()[0];
+    pOut[1].getData()[0] = pIn[1].getData()[0];
+    gOut[0].getData()[0] = gIn[0].getData()[0];
+    gOut[1].getData()[0] = gIn[1].getData()[0];
+
+    //printRSS(pOut, "p(p)");
+    //printRSS(gOut, "p(g)");
+}
+
+template<typename U>
+void addBitwise(DeviceBuffer<U> &a, RSSData<U> &b, RSSData<U> &out) {
+
+    //printDB(a, "a");
+    //printRSS(b, "b");
+
+    // (p, g) <- (a + b - 2ab, ab)
+    RSSData<U> p = b ^ a;
+    RSSData<U> g = b & a;
+    //printRSS(p, "P");
+    //printRSS(g, "G");
+
+    RSSData<U> resultP(p.size()), resultG(g.size());
+    preOpL2(p, g, resultP, resultG);
+
+    //printRSS(resultG, "c");
+
+    // shift everything over by 1 so we get resultG[i-1] for i: 0->k-1 at the
+    // same index
+    resultG[0].getData().insert(resultG[0].getData().begin(), (U)0);
+    resultG[1].getData().insert(resultG[1].getData().begin(), (U)0);
+
+    // s_i <- a_i + b_i + c_i-1 + 2*c_i (0)
+    out ^= a;
+    out ^= b;
+    out ^= resultG;
+
+    //printRSS(out, "ADD OUTPUT");
+}
+
+template void addBitwise<uint8_t>(DeviceBuffer<uint8_t> &a,
+    RSSData<uint8_t> &b, RSSData<uint8_t> &out);
+template void addBitwise<uint32_t>(DeviceBuffer<uint32_t> &a,
+    RSSData<uint32_t> &b, RSSData<uint32_t> &out);
+
+template<typename U>
 void carryOut(RSSData<U> &p, RSSData<U> &g, int k, RSSData<U> &out) {
-    // Split bits in alternating indexes
-    RSSData<U> pEven(p.size() / 2), pOdd(p.size() / 2);
-    RSSData<U> gEven(g.size() / 2), gOdd(g.size() / 2);
+
+    RSSData<U> pEven(p.size()/2), pOdd(p.size()/2);
+    RSSData<U> gEven(g.size()/2), gOdd(g.size()/2);
 
     p.unzip(pEven, pOdd);
     g.unzip(gEven, gOdd);
 
-    while (k > 1) {
-        (pOdd * pEven).unzip(pEven, pOdd);
-        (gEven + (pEven * gOdd)).unzip(gEven, gOdd);
+    while(k > 1) {
 
-        // XXX looks weird
-        pEven.resize(pEven.size() / 2);
-        pOdd.resize(pOdd.size() / 2);
-        gEven.resize(gEven.size() / 2);
-        gOdd.resize(gOdd.size() / 2);
+        // (pOdd, gOdd) circle-dot (pEven, gEven)
+        // p = pEven & pOdd
+        // g = gOdd ^ (pOdd & gEven)
+        auto gTemp = pOdd & gEven;
+        (pOdd & pEven).unzip(pEven, pOdd);
+        (gOdd ^ gTemp).unzip(gEven, gOdd);
+
+        pEven.resize(pEven.size()/2);
+        pOdd.resize(pOdd.size()/2);
+        gEven.resize(gEven.size()/2);
+        gOdd.resize(gOdd.size()/2);
 
         k /= 2;
     }
 
-    // final g bits are the desired output
     out.zip(gEven, gOdd);
 }
-
-template void carryOut<uint8_t>(RSSData<uint8_t> &p, RSSData<uint8_t> &g, 
-        int k, RSSData<uint8_t> &out);
 
 /*
  * DReLU comparison. Consumes value of `r` and `rbits` (which is r.size() *
@@ -341,26 +519,73 @@ template<typename T, typename U>
 void NEW_funcDRELU(RSSData<T> &input, RSSData<T> &r, RSSData<U> &rbits,
         RSSData<U> &result) {
 
+    func_profiler.start();
     DeviceBuffer<T> a(input.size());
     r += input;
     NEW_funcReconstruct(r, a);
+    // a += (1 << FLOAT_PRECISION);
     a += 1;
 
     rbits = (U)1 - rbits; // element-wise subtract bits
 
     DeviceBuffer<U> abits(rbits.size());
-    gpu::bitexpand<T, U>(a, abits, true); // and fix MSB to 1
+    gpu::bitexpand<T, U>(a, abits);
+
+    //printDB(abits, "abits");
+    //printRSS(rbits, "rbits");
 
     int numBits = sizeof(T) * 8;
-    for (int i = 0; i < input.size(); i++) { // fix MSB to 0
-        rbits[0].getData()[(i * numBits) + (numBits - 1)] = 0;
-        rbits[1].getData()[(i * numBits) + (numBits - 1)] = 0;
+
+    // fix MSB to 0 (rbits) and 1 (abits), save MSBs
+    // TODO generic parallelization kernel
+    RSSData<U> msb(result.size());
+    for(int i = 0; i < input.size(); i++) { 
+        int bitIndex = (i * numBits) + (numBits - 1);
+
+        // TODO clean up
+        msb[0].getData()[i] = rbits[0].getData()[bitIndex];
+        msb[1].getData()[i] = rbits[1].getData()[bitIndex];
+        rbits[0].getData()[bitIndex] = 0;
+
+        if (partyNum == PARTY_A) {
+            msb[0].getData()[i] ^= abits.getData()[bitIndex];
+        } else if (partyNum == PARTY_C) {
+            msb[1].getData()[i] ^= abits.getData()[bitIndex];
+        }
+        abits.getData()[bitIndex] = 1;
     }
+    
+    //printDB(abits, "abits after msb set");
+    //printRSS(rbits, "rbits after msb set");
 
     // (p, g) <- (a + b - 2ab, ab)
-    RSSData<U> g = rbits * abits;
-    RSSData<U> p = rbits + abits;
-    carryOut(p, g, numBits, result);
+    RSSData<U> g = rbits & abits;
+    RSSData<U> p = rbits ^ abits;
+
+    RSSData<U> carryBits(result.size());
+    carryOut(p, g, numBits, carryBits);
+
+    //printRSS(msb, "MSB");
+    //printRSS(carryBits, "Carry bits");
+    
+    result = (U)1 - (msb ^ carryBits);
+
+    /*
+    int bitLength = sizeof(T) * 8;
+    for (int i = 0; i < input.size(); i++) {
+        DeviceBuffer<U> a(bitLength);
+        RSSData<U> b(bitLength), sum(bitLength);
+        thrust::copy(abits.getData().begin() + (i * bitLength), abits.getData().begin() + ((i+1) * bitLength), a.getData().begin());
+        thrust::copy(rbits[0].getData().begin() + (i * bitLength), rbits[0].getData().begin() + ((i+1) * bitLength), b[0].getData().begin());
+        thrust::copy(rbits[1].getData().begin() + (i * bitLength), rbits[1].getData().begin() + ((i+1) * bitLength), b[1].getData().begin());
+
+        addBitwise(a, b, sum);
+        result[0].getData()[i] = sum[0].getData()[bitLength-1];
+        result[1].getData()[i] = sum[1].getData()[bitLength-1];
+    }
+
+    result = (U)1 - result;
+    */
 }
 
 template void NEW_funcDRELU<uint32_t, uint8_t>(RSSData<uint32_t> &input,
@@ -369,6 +594,9 @@ template void NEW_funcDRELU<uint32_t, uint8_t>(RSSData<uint32_t> &input,
 template void NEW_funcDRELU<uint8_t, uint8_t>(RSSData<uint8_t> &input,
         RSSData<uint8_t> &r, RSSData<uint8_t> &rbits,
         RSSData<uint8_t> &result);
+template void NEW_funcDRELU<uint32_t, uint32_t>(RSSData<uint32_t> &input,
+        RSSData<uint32_t> &r, RSSData<uint32_t> &rbits,
+        RSSData<uint32_t> &result);
 
 template<typename T, typename U> 
 void NEW_funcRELU(RSSData<T> &input, RSSData<T> &result, RSSData<U> &dresult) {
@@ -379,18 +607,25 @@ void NEW_funcRELU(RSSData<T> &input, RSSData<T> &result, RSSData<U> &dresult) {
     RSSData<U> rbits(input.size() * sizeof(T) * 8);
     rbits.zero();
 
+    func_profiler.start();
     NEW_funcDRELU<T, U>(input, r, rbits, dresult);
+    func_profiler.accumulate("relu-drelu");
 
     // TODO XXX randomness use XXX TODO
     RSSData<T> zeros(input.size());
     zeros.zero();
-    NEW_funcSelectShare(input, zeros, dresult, result);
+
+    func_profiler.start();
+    NEW_funcSelectShare(zeros, input, dresult, result);
+    func_profiler.accumulate("relu-selectshare");
 }
 
 template void NEW_funcRELU<uint32_t, uint8_t>(RSSData<uint32_t> &input,
         RSSData<uint32_t> &result, RSSData<uint8_t> &dresult);
 template void NEW_funcRELU<uint8_t, uint8_t>(RSSData<uint8_t> &input,
         RSSData<uint8_t> &result, RSSData<uint8_t> &dresult);
+template void NEW_funcRELU<uint32_t, uint32_t>(RSSData<uint32_t> &input,
+        RSSData<uint32_t> &result, RSSData<uint32_t> &dresult);
 
 template<typename T>
 void expandCompare(RSSData<T> &b, RSSData<T> &expanded) {

@@ -1,16 +1,23 @@
 
 #include <gtest/gtest.h>
 #include <iostream>
+#include <random>
 #include <vector>
 
 #include "bitwise.cuh"
 #include "convolution.cuh"
+#include "FCConfig.h"
+#include "FCLayer.h"
 #include "Functionalities.h"
 #include "matrix.cuh"
+#include "Profiler.h"
+#include "ReLUConfig.h"
+#include "ReLULayer.h"
 #include "RSSData.h"
 #include "DeviceBuffer.h"
 
 extern int partyNum;
+extern Profiler func_profiler;
 
 namespace test {
 
@@ -74,8 +81,7 @@ void assertDeviceBuffer(DeviceBuffer<T> &b, std::vector<float> &expected, bool c
 
     /*
     std::cout << "dev_buffer" << " (" << host_b.size() << "): " << std::endl;
-    for(auto x : host_b) {
-        std::cout << (uint32_t)x << " ";
+    for(auto x : host_b) { std::cout << (uint32_t)x << " ";
     }
     std::cout << std::endl;
     */
@@ -87,14 +93,16 @@ void assertDeviceBuffer(DeviceBuffer<T> &b, std::vector<float> &expected, bool c
         std::copy(host_b.begin(), host_b.end(), result.begin());
     }
 
+    /*
     std::cout << "result" << " (" << host_b.size() << "): " << std::endl;
     for(auto x : result) {
         std::cout << (uint32_t)x << " ";
     }
     std::cout << std::endl;
+    */
 
     for(int i = 0; i < result.size(); i++) {
-        std::cout << "checking index " << i << std::endl;
+        //std::cout << "checking index " << i << std::endl;
         ASSERT_EQ(result[i], expected[i]);
     }
 }
@@ -178,7 +186,7 @@ TEST(GPUTest, BitExpand) {
     DeviceBuffer<uint32_t> a = {2, 3, 1};
 
     DeviceBuffer<uint8_t> abits(a.size() * 32);
-    gpu::bitexpand(a, abits, false);
+    gpu::bitexpand(a, abits);
     cudaDeviceSynchronize();
 
     std::vector<float> expected = {
@@ -187,17 +195,6 @@ TEST(GPUTest, BitExpand) {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     };
     assertDeviceBuffer(abits, expected, false);
-
-    DeviceBuffer<uint8_t> abitsMSB(a.size() * 32);
-    gpu::bitexpand(a, abitsMSB, true);
-    cudaDeviceSynchronize();
-
-    expected = {
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    };
-    assertDeviceBuffer(abitsMSB, expected, false);
 }
 
 TEST(GPUTest, Unzip) {
@@ -248,20 +245,13 @@ TEST(GPUTest, Im2Row) {
     cudaDeviceSynchronize();
 
     std::vector<float> expected = {
-        // im 0 filter windows
-        0, 0, 0, 0, 1, 2, 0, 2, 1,
-        0, 0, 0, 1, 2, 1, 2, 1, 2,
-        0, 0, 0, 2, 1, 0, 1, 2, 0,
-        0, 1, 2, 0, 2, 1, 0, 0, 0,
-        1, 2, 1, 2, 1, 2, 0, 0, 0,
-        2, 1, 0, 1, 2, 0, 0, 0, 0,
-        // im 1 filter windows
-        0, 0, 0, 0, 1, 2, 0, 2, 0,
-        0, 0, 0, 1, 2, 3, 2, 0, 1,
-        0, 0, 0, 2, 3, 0, 0, 1, 0,
-        0, 1, 2, 0, 2, 0, 0, 0, 0,
-        1, 2, 3, 2, 0, 1, 0, 0, 0,
-        2, 3, 0, 0, 1, 0, 0, 0, 0
+        // im 0  im 1 filter windows
+        0, 0, 0, 0, 1, 2, 0, 2, 1,  0, 0, 0, 0, 1, 2, 0, 2, 0,
+        0, 0, 0, 1, 2, 1, 2, 1, 2,  0, 0, 0, 1, 2, 3, 2, 0, 1,
+        0, 0, 0, 2, 1, 0, 1, 2, 0,  0, 0, 0, 2, 3, 0, 0, 1, 0,
+        0, 1, 2, 0, 2, 1, 0, 0, 0,  0, 1, 2, 0, 2, 0, 0, 0, 0,
+        1, 2, 1, 2, 1, 2, 0, 0, 0,  1, 2, 3, 2, 0, 1, 0, 0, 0,
+        2, 1, 0, 1, 2, 0, 0, 0, 0,  2, 3, 0, 0, 1, 0, 0, 0, 0
     };
     assertDeviceBuffer(out, expected);
 }
@@ -311,6 +301,248 @@ TEST(FuncTest, MatMul) {
 
     std::vector<float> expected = {1, 1, 1, 0, 1, 1, 1, 0};
     assertDeviceBuffer(r, expected);
+}
+
+TEST(FuncTest, Reshare) {
+    
+    DeviceBuffer<uint32_t> *a;
+    if (partyNum == PARTY_A) {
+        a = new DeviceBuffer<uint32_t>({1, 2, 3, 4});
+    } else {
+        a = new DeviceBuffer<uint32_t>(4);
+        a->zero();
+    } 
+       
+    RSSData<uint32_t> reshared(a->size());
+    NEW_funcReshare(*a, reshared);
+
+    DeviceBuffer<uint32_t> r(a->size());
+    NEW_funcReconstruct(reshared, r);
+
+    std::vector<float> expected = {1, 2, 3, 4};
+    assertDeviceBuffer(r, expected);
+}
+
+TEST(FuncTest, SelectShare) {
+
+    RSSData<uint32_t> x = {1, 2};
+    RSSData<uint32_t> y = {4, 5};
+    RSSData<uint32_t> b = {0, 1};
+    b[0] >>= FLOAT_PRECISION;
+    b[1] >>= FLOAT_PRECISION;
+
+    RSSData<uint32_t> z(x.size());
+    NEW_funcSelectShare(x, y, b, z);
+
+    DeviceBuffer<uint32_t> r(z.size());
+    NEW_funcReconstruct(z, r);
+
+    std::vector<float> expected = {1, 5};
+    assertDeviceBuffer(r, expected);
+}
+
+TEST(FuncTest, Truncate) {
+
+    RSSData<uint32_t> a = {1 << 3, 2 << 3, 3 << 3};
+    NEW_funcTruncate(a, 3);
+
+    DeviceBuffer<uint32_t> r(a.size());
+    NEW_funcReconstruct(a, r);
+
+    std::vector<float> expected = {1, 2, 3};
+    assertDeviceBuffer(r, expected);
+}
+
+TEST(FuncTest, Convolution) {
+
+    // 2x3, Din=2
+    RSSData<uint32_t> im = {
+        1, 2, 1,
+        2, 1, 2,
+        1, 2, 3,
+        2, 0, 1
+    };
+
+    // 2 3x3 filters, Dout=1
+    RSSData<uint32_t> filters = {
+        1, 1, 1,
+        1, 1, 1,
+        1, 1, 1,
+        1, 0, 0,
+        0, 1, 0,
+        0, 0, 1
+    };
+
+    // 1xDout, duplicated for each row in the convolved output
+    RSSData<uint32_t> biases = {
+        1
+    };
+
+    // imageW - filterSize + (2*padding) / stride + 1
+    size_t wKernels = ((3 - 3 + (2 * 1))/1)+1;
+    // imageH - filterSize + (2*padding) / stride + 1
+    size_t hKernels = ((2 - 3 + (2 * 1))/1)+1;
+    RSSData<uint32_t> out(wKernels * hKernels * 1); // Dout = 1
+
+    NEW_funcConvolution(im, filters, biases, out,
+            3, 2, 3, 2, 1, 1, 1, FLOAT_PRECISION);
+
+    DeviceBuffer<uint32_t> r(out.size());
+    NEW_funcReconstruct(out, r);
+
+    std::vector<float> expected = {
+        8, 13, 10, 9, 11, 10
+    };
+    assertDeviceBuffer(r, expected);
+}
+
+TEST(FuncTest, DRELU) {
+    
+    RSSData<uint32_t> input = {-1, 2};
+    RSSData<uint32_t> r = {3, 2};
+    RSSData<uint32_t> rbits = {
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    };
+    rbits[0] >>= FLOAT_PRECISION;
+    rbits[1] >>= FLOAT_PRECISION;
+
+    RSSData<uint32_t> result(input.size());
+    NEW_funcDRELU(input, r, rbits, result);
+
+    DeviceBuffer<uint32_t> reconstructed(result.size());
+    NEW_funcReconstruct(result, reconstructed);
+
+    std::vector<float> expected = {
+        0, 1, 0
+    };
+    assertDeviceBuffer(reconstructed, expected, false);
+}
+
+TEST(FuncTest, RELU) {
+
+    RSSData<uint32_t> input = {-1, 2, -3};
+
+    RSSData<uint32_t> result(input.size());
+    RSSData<uint32_t> dresult(input.size());
+    NEW_funcRELU(input, result, dresult);
+
+    DeviceBuffer<uint32_t> reconstructedResult(result.size());
+    NEW_funcReconstruct(result, reconstructedResult);
+
+    DeviceBuffer<uint32_t> reconstructedDResult(dresult.size());
+    NEW_funcReconstruct(dresult, reconstructedDResult);
+
+    std::vector<float> expected = {
+        0, 2, 0
+    };
+    assertDeviceBuffer(reconstructedResult, expected);
+
+    std::vector<float> dexpected = {
+        0, 1, 0
+    };
+    assertDeviceBuffer(reconstructedDResult, dexpected, false);
+}
+
+TEST(PerfTest, LargeMatMul) {
+
+    int rows = 8;
+    int shared = 784; // 786
+    int cols = 128; // 128
+
+    RSSData<uint32_t> a(rows * shared);
+    RSSData<uint32_t> b(shared *  cols);
+    RSSData<uint32_t> c(rows * cols);
+
+    std::cout << "generating inputs" << std::endl;
+
+    /*
+    std::default_random_engine generator;
+
+    std::uniform_int_distribution<uint32_t> distribution(0,255);
+    std::vector<uint32_t> randomInput(rows * shared);
+    for (int i = 0; i < randomInput.size(); i++) {
+        randomInput.push_back(distribution(generator));
+    }
+    if (partyNum == PARTY_A) {
+        thrust::copy(randomInput.begin(), randomInput.end(), a[0].getData().begin());
+    } else if (partyNum == PARTY_C) {
+        thrust::copy(randomInput.begin(), randomInput.end(), a[1].getData().begin());
+    }
+    */
+
+    std::cout << "generating weights" << std::endl;
+
+    /*
+    std::uniform_int_distribution<uint32_t> bit_distribution(0,1);
+    std::vector<uint32_t> randomWeights(shared * cols);
+    for (int i = 0; i < randomWeights.size(); i++) {
+        randomInput.push_back(bit_distribution(generator));
+    }
+    if (partyNum == PARTY_A) {
+        thrust::copy(randomWeights.begin(), randomWeights.end(), b[0].getData().begin());
+    } else if (partyNum == PARTY_C) {
+        thrust::copy(randomWeights.begin(), randomWeights.end(), b[1].getData().begin());
+    }
+    */
+
+    std::cout << "starting matmul" << std::endl;
+
+    Profiler p;
+    p.start();
+    NEW_funcMatMul(a, b, c, rows, shared, cols, false, false, FLOAT_PRECISION);
+    p.accumulate("matmul");
+
+    std::cout << "end matmul" << std::endl;
+
+    p.dump_all();
+}
+
+TEST(PerfTest, FCLayer) {
+
+    int inputDim = 784;
+    int batchSize = 8;
+    int outputDim = 128;
+
+    /*
+    std::default_random_engine generator;
+
+    std::uniform_int_distribution<uint32_t> distribution(0,255);
+    std::vector<uint32_t> randomVals(batchSize * inputDim);
+    for (int i = 0; i < randomVals.size(); i++) {
+        randomVals.push_back(distribution(generator));
+    }*/
+
+    RSSData<uint32_t> input(batchSize * inputDim);
+    /*
+    if (partyNum == PARTY_A) {
+        thrust::copy(randomVals.begin(), randomVals.end(), input[0].getData().begin());
+    } else if (partyNum == PARTY_C) {
+        thrust::copy(randomVals.begin(), randomVals.end(), input[1].getData().begin());
+    }
+    */
+
+    FCConfig *lconfig = new FCConfig(inputDim, batchSize, outputDim);
+    FCLayer<uint32_t> layer(lconfig, 0); 
+
+    layer.forward(input);
+    layer.layer_profiler.dump_all();
+}
+
+TEST(PerfTest, ReLULayer) {
+
+    int inputDim = 16;
+    int batchSize = 8;
+
+    RSSData<uint32_t> input(batchSize * inputDim);
+
+    ReLUConfig *lconfig = new ReLUConfig(inputDim, batchSize);
+    ReLULayer<uint32_t> layer(lconfig, 0); 
+
+    layer.forward(input);
+
+    layer.layer_profiler.dump_all();
+    func_profiler.dump_all();
 }
 
 } // namespace test

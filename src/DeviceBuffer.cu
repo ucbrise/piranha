@@ -207,18 +207,6 @@ struct scalar_divide_functor{
 };
 
 template<typename T>
-struct scalar_or_functor{
-    const T a;
-
-    scalar_or_functor(T _a) : a(_a) {}
-
-    __host__ __device__
-    T operator()(const T &x) const {
-        return x | a;
-    }
-};
-
-template<typename T>
 struct scalar_arith_rshift_functor{
     const T a;
 
@@ -227,6 +215,7 @@ struct scalar_arith_rshift_functor{
     __host__ __device__
     T operator()(const T &x) const {
         return ((x >> ((sizeof(T) * 8) - 1)) * (~((1 << ((sizeof(T) * 8) - a)) - 1))) | (x >> a);
+        // ((int32_t)x) >> a;
     }
 };
 
@@ -259,14 +248,6 @@ DeviceBuffer<T> &DeviceBuffer<T>::operator/=(const T rhs) {
     thrust::transform(this->data.begin(), this->data.end(),
                       this->data.begin(),
                       scalar_divide_functor<T>(rhs));
-    return *this;
-}
-
-template<typename T>
-DeviceBuffer<T> &DeviceBuffer<T>::operator|=(const T rhs) {
-    thrust::transform(this->data.begin(), this->data.end(),
-                      this->data.begin(),
-                      scalar_or_functor<T>(rhs)); 
     return *this;
 }
 
@@ -377,6 +358,15 @@ DeviceBuffer<T> &DeviceBuffer<T>::operator^=(const DeviceBuffer<T>& rhs) {
 }
 
 template<typename T>
+DeviceBuffer<T> &DeviceBuffer<T>::operator&=(const DeviceBuffer<T>& rhs) {
+    thrust::transform(this->data.begin(), this->data.end(),
+                      rhs.data.begin(),
+                      this->data.begin(),
+                      thrust::bit_and<T>());
+    return *this;
+}
+
+template<typename T>
 DeviceBuffer<T> operator+(DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs) {
     lhs += rhs;
     return lhs;    
@@ -420,6 +410,15 @@ DeviceBuffer<T> operator^(DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs) {
 
 template DeviceBuffer<uint32_t> operator^<uint32_t>(DeviceBuffer<uint32_t> lhs, const DeviceBuffer<uint32_t> &rhs);
 template DeviceBuffer<uint8_t> operator^<uint8_t>(DeviceBuffer<uint8_t> lhs, const DeviceBuffer<uint8_t> &rhs);
+
+template<typename T>
+DeviceBuffer<T> operator&(DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs) {
+    lhs &= rhs;
+    return lhs;
+}
+
+template DeviceBuffer<uint32_t> operator&<uint32_t>(DeviceBuffer<uint32_t> lhs, const DeviceBuffer<uint32_t> &rhs);
+template DeviceBuffer<uint8_t> operator&<uint8_t>(DeviceBuffer<uint8_t> lhs, const DeviceBuffer<uint8_t> &rhs);
 
 template class DeviceBuffer<uint32_t>;
 template class DeviceBuffer<uint8_t>;

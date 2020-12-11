@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
     int returnCode = 0;
 
 	// TEST
-    returnCode = runTests(argc, argv);
+    //returnCode = runTests(argc, argv);
 
 	// Run forward/backward for single layers
 	//  1. what {F, D, U}
@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
 	runOnly(net, l, what, network);
     */
 
-	//start_m();
+	start_m();
 
     // TRAIN
     /*
@@ -74,21 +74,19 @@ int main(int argc, char** argv) {
     */
 
     // INFERENCE
-    /*
 	network += " test";
 	test(net);
-    */
 
-	//end_m(network);
+	end_m(network);
     
     // STATS
-    /*
 	cout << "----------------------------------------------" << endl;  	
 	cout << "Run details: " << NUM_OF_PARTIES << "PC (P" << partyNum 
 		 << "), " << NUM_ITERATIONS << " iterations, batch size " << MINI_BATCH_SIZE << endl 
 		 << "Running " << security << " " << network << " on " << dataset << " dataset" << endl;
 	cout << "----------------------------------------------" << endl << endl;  
 
+    /*
     double total_measured_runtime = 0.0;
     for (int l = 0; l < net->layers.size(); l++) {
         net->layers[l]->printLayer();
@@ -118,7 +116,6 @@ int main(int argc, char** argv) {
 	deleteObjects();
 
     // wait a bit for the prints to flush
-    std::cout << "~~~~~ done ~~~~~" << std::endl;
     std::cout << std::flush;
     for(int i = 0; i < 100000000; i++);
    

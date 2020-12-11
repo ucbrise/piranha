@@ -21,10 +21,13 @@ template<typename T> RSSData<T> operator*(RSSData<T> lhs, const T rhs);
 template<typename T> RSSData<T> operator+(RSSData<T> lhs, const DeviceBuffer<T> &rhs);
 template<typename T> RSSData<T> operator-(RSSData<T> lhs, const DeviceBuffer<T> &rhs);
 template<typename T> RSSData<T> operator*(RSSData<T> lhs, const DeviceBuffer<T> &rhs);
+template<typename T> RSSData<T> operator^(RSSData<T> lhs, const DeviceBuffer<T> &rhs);
+template<typename T> RSSData<T> operator&(RSSData<T> lhs, const DeviceBuffer<T> &rhs);
 template<typename T> RSSData<T> operator+(RSSData<T> lhs, const RSSData<T> &rhs);
 template<typename T> RSSData<T> operator-(RSSData<T> lhs, const RSSData<T> &rhs);
 template<typename T> RSSData<T> operator*(RSSData<T> lhs, const RSSData<T> &rhs);
 template<typename T> RSSData<T> operator^(RSSData<T> lhs, const RSSData<T> &rhs);
+template<typename T> RSSData<T> operator&(RSSData<T> lhs, const RSSData<T> &rhs);
 
 template <typename T>
 class RSSData {
@@ -57,18 +60,24 @@ class RSSData {
         RSSData<T> &operator+=(const DeviceBuffer<T> &rhs);
         RSSData<T> &operator-=(const DeviceBuffer<T> &rhs);
         RSSData<T> &operator*=(const DeviceBuffer<T> &rhs);
+        RSSData<T> &operator^=(const DeviceBuffer<T> &rhs);
+        RSSData<T> &operator&=(const DeviceBuffer<T> &rhs);
         friend RSSData<T> operator+ <> (RSSData<T> lhs, const DeviceBuffer<T> &rhs);
         friend RSSData<T> operator- <> (RSSData<T> lhs, const DeviceBuffer<T> &rhs);
         friend RSSData<T> operator* <> (RSSData<T> lhs, const DeviceBuffer<T> &rhs);
+        friend RSSData<T> operator^ <> (RSSData<T> lhs, const DeviceBuffer<T> &rhs);
+        friend RSSData<T> operator& <> (RSSData<T> lhs, const DeviceBuffer<T> &rhs);
 
         RSSData<T> &operator+=(const RSSData<T> &rhs);
         RSSData<T> &operator-=(const RSSData<T> &rhs);
         RSSData<T> &operator*=(const RSSData<T> &rhs);
         RSSData<T> &operator^=(const RSSData<T> &rhs);
+        RSSData<T> &operator&=(const RSSData<T> &rhs);
         friend RSSData<T> operator+ <> (RSSData<T> lhs, const RSSData<T> &rhs);
         friend RSSData<T> operator- <> (RSSData<T> lhs, const RSSData<T> &rhs);
         friend RSSData<T> operator* <> (RSSData<T> lhs, const RSSData<T> &rhs);
         friend RSSData<T> operator^ <> (RSSData<T> lhs, const RSSData<T> &rhs);
+        friend RSSData<T> operator& <> (RSSData<T> lhs, const RSSData<T> &rhs);
 
     private:
 

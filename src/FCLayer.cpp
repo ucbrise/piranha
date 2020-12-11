@@ -4,14 +4,13 @@
 #include "matrix.cuh"
 
 template<typename T>
-FCLayer<T>::FCLayer(FCConfig* conf, int _layerNum)
-:Layer<T>(_layerNum),
- conf(conf->inputDim, conf->batchSize, conf->outputDim),
- activations(conf->batchSize * conf->outputDim), 
- deltas(conf->batchSize * conf->outputDim),
- weights(conf->inputDim * conf->outputDim),
- biases(conf->outputDim)
-{
+FCLayer<T>::FCLayer(FCConfig* conf, int _layerNum) :
+        Layer<T>(_layerNum),
+        conf(conf->inputDim, conf->batchSize, conf->outputDim),
+        activations(conf->batchSize * conf->outputDim), 
+        deltas(conf->batchSize * conf->outputDim),
+        weights(conf->inputDim * conf->outputDim),
+        biases(conf->outputDim) {
 	initialize();
 }
 
@@ -60,7 +59,7 @@ void FCLayer<T>::forward(RSSData<T> &inputActivation)
 	size_t common_dim = conf.inputDim;
 	size_t size = rows*columns;
 
-    //this->layer_profiler.start();
+    this->layer_profiler.start();
 	NEW_funcMatMul(inputActivation, weights, activations,
             rows, common_dim, columns, false, false, FLOAT_PRECISION);
 
@@ -69,7 +68,7 @@ void FCLayer<T>::forward(RSSData<T> &inputActivation)
         gpu::elementVectorAdd(activations[share], biases[share], false, rows, columns);
     }
 
-    //this->layer_profiler.accumulate("fc-forward");
+    this->layer_profiler.accumulate("fc-forward");
 }
 
 template<typename T>

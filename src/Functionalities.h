@@ -20,6 +20,9 @@ void NEW_funcReconstruct3out3(DeviceBuffer<T> &a, DeviceBuffer<T> &reconstructed
 template<typename T>
 void NEW_funcReshare(DeviceBuffer<T> &c, RSSData<T> &reshared);
 
+template<typename T, typename U>
+void NEW_funcSelectShare(RSSData<T> &x, RSSData<T> &y, RSSData<U> &b, RSSData<T> &z);
+
 template<typename T>
 void NEW_funcTruncate(RSSData<T> &a, size_t power);
 
@@ -27,6 +30,10 @@ template<typename T>
 void NEW_funcMatMul(RSSData<T> &a, RSSData<T> &b, RSSData<T> &c,
                     size_t rows, size_t common_dim, size_t columns,
                     bool transpose_a, bool transpose_b, size_t truncation);
+
+template<typename T, typename U> 
+void NEW_funcDRELU(RSSData<T> &input, RSSData<T> &r, RSSData<U> &rbits,
+        RSSData<U> &result);
 
 template<typename T, typename U> 
 void NEW_funcRELU(RSSData<T> &input, RSSData<T> &result, RSSData<U> &dresult);
