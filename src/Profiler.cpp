@@ -1,7 +1,7 @@
 #include "Profiler.h"
 #include <iostream>
 
-Profiler::Profiler() : running(false) {
+Profiler::Profiler() : running(false), total(0) {
     // nothing else to do
 }
 

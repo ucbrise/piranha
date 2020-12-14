@@ -3,6 +3,8 @@
 #include "Functionalities.h"
 #include "matrix.cuh"
 
+Profiler matmul_profiler;
+
 template<typename T>
 FCLayer<T>::FCLayer(FCConfig* conf, int _layerNum) :
         Layer<T>(_layerNum),
@@ -60,8 +62,10 @@ void FCLayer<T>::forward(RSSData<T> &inputActivation)
 	size_t size = rows*columns;
 
     this->layer_profiler.start();
+    matmul_profiler.start();
 	NEW_funcMatMul(inputActivation, weights, activations,
             rows, common_dim, columns, false, false, FLOAT_PRECISION);
+    matmul_profiler.accumulate("fc-matmul");
 
     // add biases to each column
     for (int share = 0; share <= 1; share++) {
@@ -90,6 +94,8 @@ void FCLayer<T>::updateEquations(const RSSData<T> &prevActivations)
 {
 	log_print("FC.updateEquations");
 
+    //this->layer_profiler.start();
+
     /*
     RSSData<uint32_t> db(conf.outputDim);
     // TODO
@@ -104,7 +110,7 @@ void FCLayer<T>::updateEquations(const RSSData<T> &prevActivations)
     weights -= dW;
     */
     
-    this->layer_profiler.accumulate("fc-update");
+    //this->layer_profiler.accumulate("fc-update");
 }
 
 template class FCLayer<uint32_t>;

@@ -17,6 +17,9 @@ AESObject* aes_next;
 AESObject* aes_prev;
 Precompute PrecomputeObject;
 
+extern Profiler matmul_profiler;
+//extern Profiler func_profiler;
+
 int main(int argc, char** argv) {
 
 /****************************** PREPROCESSING ******************************/ 
@@ -54,7 +57,7 @@ int main(int argc, char** argv) {
     int returnCode = 0;
 
 	// TEST
-    //returnCode = runTests(argc, argv);
+    returnCode = runTests(argc, argv);
 
 	// Run forward/backward for single layers
 	//  1. what {F, D, U}
@@ -65,7 +68,7 @@ int main(int argc, char** argv) {
 	runOnly(net, l, what, network);
     */
 
-	start_m();
+	//start_m();
 
     // TRAIN
     /*
@@ -74,19 +77,19 @@ int main(int argc, char** argv) {
     */
 
     // INFERENCE
-	network += " test";
-	test(net);
+	//network += " test";
+	//test(net);
 
-	end_m(network);
+	//end_m(network);
     
     // STATS
+    /*
 	cout << "----------------------------------------------" << endl;  	
 	cout << "Run details: " << NUM_OF_PARTIES << "PC (P" << partyNum 
 		 << "), " << NUM_ITERATIONS << " iterations, batch size " << MINI_BATCH_SIZE << endl 
 		 << "Running " << security << " " << network << " on " << dataset << " dataset" << endl;
 	cout << "----------------------------------------------" << endl << endl;  
 
-    /*
     double total_measured_runtime = 0.0;
     for (int l = 0; l < net->layers.size(); l++) {
         net->layers[l]->printLayer();
@@ -98,10 +101,13 @@ int main(int argc, char** argv) {
     matmul_profiler.dump_all();
 
     cout << "-- Total ReLU --" << endl; 
-    ReLULayer::relu_profiler.dump_all();
+    ReLULayer<uint32_t>::relu_profiler.dump_all();
 
     cout << "-- Total Maxpool --" << endl; 
-    MaxpoolLayer::maxpool_profiler.dump_all();
+    MaxpoolLayer<uint32_t>::maxpool_profiler.dump_all();
+
+    //cout << "-- Total Functionalities --" << endl; 
+    //func_profiler.dump_all();
 
     cout << "-- Total runtime accounted for: " << total_measured_runtime/1000.0 << " s --" << endl;
 	//printNetwork(net);

@@ -347,141 +347,6 @@ void printDB(DeviceBuffer<U> &data, const char *name) {
 template void printDB<uint8_t>(DeviceBuffer<uint8_t> &db, const char *name);
 template void printDB<uint32_t>(DeviceBuffer<uint32_t> &db, const char *name);
 
-void preOpL2(RSSData<uint8_t> &pIn, RSSData<uint8_t> &gIn,
-        RSSData<uint8_t> &pOut, RSSData<uint8_t> &gOut) {
-    
-    //std::cout << std::endl << "k = " << pIn.size() << std::endl << std::endl;
- 
-    if (pIn.size() > 1) {
-        RSSData<uint8_t> pInEven(pIn.size()/2), pInOdd(pIn.size()/2);
-        RSSData<uint8_t> gInEven(gIn.size()/2), gInOdd(gIn.size()/2);
-        pIn.unzip(pInEven, pInOdd);
-        gIn.unzip(gInEven, gInOdd);
-
-        RSSData<uint8_t> pNext = pInEven & pInOdd;
-        RSSData<uint8_t> gNext = gInOdd ^ (pInOdd & gInEven);
-
-        //printRSS(pNext, "u(p)");
-        //printRSS(gNext, "u(g)");
-
-        RSSData<uint8_t> pOutOdd(pOut.size()/2), gOutOdd(gOut.size()/2);
-        preOpL2(pNext, gNext, pOutOdd, gOutOdd);
-
-        //printRSS(pOutOdd, "v(p)");
-        //printRSS(gOutOdd, "v(g)");
-
-        // we need to perform carry operator at an offset since the resulting
-        // p/gOut[0] is already known
-        RSSData<uint8_t> pOutOddOffset = pOutOdd;
-        pOutOddOffset[0].getData().insert(pOutOddOffset[0].getData().begin(), 0);
-        pOutOddOffset[1].getData().insert(pOutOddOffset[1].getData().begin(), 0);
-
-        RSSData<uint8_t> gOutOddOffset = gOutOdd;
-        gOutOddOffset[0].getData().insert(gOutOddOffset[0].getData().begin(), 0);
-        gOutOddOffset[1].getData().insert(gOutOddOffset[1].getData().begin(), 0);
-
-        RSSData<uint8_t> pOutEven = pOutOddOffset & pInEven;
-        pOut.zip(pOutEven, pOutOdd);
-
-        RSSData<uint8_t> gOutEven = gInEven ^ (pInEven & gOutOddOffset);
-        gOut.zip(gOutEven, gOutOdd);
-    }
-
-    // set shares out[0] <- in[0]
-    pOut[0].getData()[0] = pIn[0].getData()[0];
-    pOut[1].getData()[0] = pIn[1].getData()[0];
-    gOut[0].getData()[0] = gIn[0].getData()[0];
-    gOut[1].getData()[0] = gIn[1].getData()[0];
-
-    //printRSS(pOut, "p(p)");
-    //printRSS(gOut, "p(g)");
-}
-
-void preOpL2(RSSData<uint32_t> &pIn, RSSData<uint32_t> &gIn,
-        RSSData<uint32_t> &pOut, RSSData<uint32_t> &gOut) {
-
-    //std::cout << std::endl << "k = " << pIn.size() << std::endl << std::endl;
- 
-    if (pIn.size() > 1) {
-        RSSData<uint32_t> pInEven(pIn.size()/2), pInOdd(pIn.size()/2);
-        RSSData<uint32_t> gInEven(gIn.size()/2), gInOdd(gIn.size()/2);
-        pIn.unzip(pInEven, pInOdd);
-        gIn.unzip(gInEven, gInOdd);
-
-        RSSData<uint32_t> pNext = pInEven & pInOdd;
-        RSSData<uint32_t> gNext = gInOdd ^ (pInOdd & gInEven);
-
-        //printRSS(pNext, "u(p)");
-        //printRSS(gNext, "u(g)");
-
-        RSSData<uint32_t> pOutOdd(pOut.size()/2), gOutOdd(gOut.size()/2);
-        preOpL2(pNext, gNext, pOutOdd, gOutOdd);
-
-        //printRSS(pOutOdd, "v(p)");
-        //printRSS(gOutOdd, "v(g)");
-
-        // we need to perform carry operator at an offset since the resulting
-        // p/gOut[0] is already known
-        RSSData<uint32_t> pOutOddOffset = pOutOdd;
-        pOutOddOffset[0].getData().insert(pOutOddOffset[0].getData().begin(), 0);
-        pOutOddOffset[1].getData().insert(pOutOddOffset[1].getData().begin(), 0);
-
-        RSSData<uint32_t> gOutOddOffset = gOutOdd;
-        gOutOddOffset[0].getData().insert(gOutOddOffset[0].getData().begin(), 0);
-        gOutOddOffset[1].getData().insert(gOutOddOffset[1].getData().begin(), 0);
-
-        RSSData<uint32_t> pOutEven = pOutOddOffset & pInEven;
-        pOut.zip(pOutEven, pOutOdd);
-
-        RSSData<uint32_t> gOutEven = gInEven ^ (pInEven & gOutOddOffset);
-        gOut.zip(gOutEven, gOutOdd);
-    }
-
-    // set shares out[0] <- in[0]
-    pOut[0].getData()[0] = pIn[0].getData()[0];
-    pOut[1].getData()[0] = pIn[1].getData()[0];
-    gOut[0].getData()[0] = gIn[0].getData()[0];
-    gOut[1].getData()[0] = gIn[1].getData()[0];
-
-    //printRSS(pOut, "p(p)");
-    //printRSS(gOut, "p(g)");
-}
-
-template<typename U>
-void addBitwise(DeviceBuffer<U> &a, RSSData<U> &b, RSSData<U> &out) {
-
-    //printDB(a, "a");
-    //printRSS(b, "b");
-
-    // (p, g) <- (a + b - 2ab, ab)
-    RSSData<U> p = b ^ a;
-    RSSData<U> g = b & a;
-    //printRSS(p, "P");
-    //printRSS(g, "G");
-
-    RSSData<U> resultP(p.size()), resultG(g.size());
-    preOpL2(p, g, resultP, resultG);
-
-    //printRSS(resultG, "c");
-
-    // shift everything over by 1 so we get resultG[i-1] for i: 0->k-1 at the
-    // same index
-    resultG[0].getData().insert(resultG[0].getData().begin(), (U)0);
-    resultG[1].getData().insert(resultG[1].getData().begin(), (U)0);
-
-    // s_i <- a_i + b_i + c_i-1 + 2*c_i (0)
-    out ^= a;
-    out ^= b;
-    out ^= resultG;
-
-    //printRSS(out, "ADD OUTPUT");
-}
-
-template void addBitwise<uint8_t>(DeviceBuffer<uint8_t> &a,
-    RSSData<uint8_t> &b, RSSData<uint8_t> &out);
-template void addBitwise<uint32_t>(DeviceBuffer<uint32_t> &a,
-    RSSData<uint32_t> &b, RSSData<uint32_t> &out);
-
 template<typename U>
 void carryOut(RSSData<U> &p, RSSData<U> &g, int k, RSSData<U> &out) {
 
@@ -493,11 +358,8 @@ void carryOut(RSSData<U> &p, RSSData<U> &g, int k, RSSData<U> &out) {
 
     while(k > 1) {
 
-        // (pOdd, gOdd) circle-dot (pEven, gEven)
-        // p = pEven & pOdd
-        // g = gOdd ^ (pOdd & gEven)
-        auto gTemp = pOdd & gEven;
-        (pOdd & pEven).unzip(pEven, pOdd);
+        RSSData<U> gTemp = pOdd & gEven;
+        (pEven & pOdd).unzip(pEven, pOdd);
         (gOdd ^ gTemp).unzip(gEven, gOdd);
 
         pEven.resize(pEven.size()/2);
@@ -507,8 +369,6 @@ void carryOut(RSSData<U> &p, RSSData<U> &g, int k, RSSData<U> &out) {
 
         k /= 2;
     }
-
-    out.zip(gEven, gOdd);
 }
 
 /*
@@ -531,61 +391,36 @@ void NEW_funcDRELU(RSSData<T> &input, RSSData<T> &r, RSSData<U> &rbits,
     DeviceBuffer<U> abits(rbits.size());
     gpu::bitexpand<T, U>(a, abits);
 
-    //printDB(abits, "abits");
-    //printRSS(rbits, "rbits");
+    // set MSBs
+    int bitWidth = sizeof(T) * 8;
+    RSSData<U> msbs(input.size());
+    for(int i = 0; i < input.size(); i++) {
+        int bitIndex = (i * bitWidth) + (bitWidth - 1);
 
-    int numBits = sizeof(T) * 8;
-
-    // fix MSB to 0 (rbits) and 1 (abits), save MSBs
-    // TODO generic parallelization kernel
-    RSSData<U> msb(result.size());
-    for(int i = 0; i < input.size(); i++) { 
-        int bitIndex = (i * numBits) + (numBits - 1);
-
-        // TODO clean up
-        msb[0].getData()[i] = rbits[0].getData()[bitIndex];
-        msb[1].getData()[i] = rbits[1].getData()[bitIndex];
-        rbits[0].getData()[bitIndex] = 0;
-
+        // save old MSBs
+        msbs[0].getData()[i] = rbits[0].getData()[bitIndex];
+        msbs[1].getData()[i] = rbits[1].getData()[bitIndex];
         if (partyNum == PARTY_A) {
-            msb[0].getData()[i] ^= abits.getData()[bitIndex];
+            msbs[0].getData()[i] ^= abits.getData()[bitIndex];
         } else if (partyNum == PARTY_C) {
-            msb[1].getData()[i] ^= abits.getData()[bitIndex];
+            msbs[1].getData()[i] ^= abits.getData()[bitIndex];
         }
-        abits.getData()[bitIndex] = 1;
-    }
-    
-    //printDB(abits, "abits after msb set");
-    //printRSS(rbits, "rbits after msb set");
 
-    // (p, g) <- (a + b - 2ab, ab)
+        // set MSBs
+        abits.getData()[bitIndex] = 1;
+        rbits[0].getData()[bitIndex] = 0;
+        rbits[1].getData()[bitIndex] = 0;
+    } 
+
+    //printRSS(rbits, "rbits");
+    //printRSS(msbs, "xor'd msbs");
+    
     RSSData<U> g = rbits & abits;
     RSSData<U> p = rbits ^ abits;
+    carryOut(p, g, bitWidth, result);
 
-    RSSData<U> carryBits(result.size());
-    carryOut(p, g, numBits, carryBits);
-
-    //printRSS(msb, "MSB");
-    //printRSS(carryBits, "Carry bits");
-    
-    result = (U)1 - (msb ^ carryBits);
-
-    /*
-    int bitLength = sizeof(T) * 8;
-    for (int i = 0; i < input.size(); i++) {
-        DeviceBuffer<U> a(bitLength);
-        RSSData<U> b(bitLength), sum(bitLength);
-        thrust::copy(abits.getData().begin() + (i * bitLength), abits.getData().begin() + ((i+1) * bitLength), a.getData().begin());
-        thrust::copy(rbits[0].getData().begin() + (i * bitLength), rbits[0].getData().begin() + ((i+1) * bitLength), b[0].getData().begin());
-        thrust::copy(rbits[1].getData().begin() + (i * bitLength), rbits[1].getData().begin() + ((i+1) * bitLength), b[1].getData().begin());
-
-        addBitwise(a, b, sum);
-        result[0].getData()[i] = sum[0].getData()[bitLength-1];
-        result[1].getData()[i] = sum[1].getData()[bitLength-1];
-    }
-
+    result ^= msbs;
     result = (U)1 - result;
-    */
 }
 
 template void NEW_funcDRELU<uint32_t, uint8_t>(RSSData<uint32_t> &input,

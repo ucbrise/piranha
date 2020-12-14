@@ -53,13 +53,13 @@ void NeuralNetwork<T>::forward()
 	log_print("NN.forward");
 
 	layers[0]->forward(inputData);
-	//if (LARGE_NETWORK)
+	if (LARGE_NETWORK)
 		cout << "Forward \t" << layers[0]->layerNum << " completed..." << endl;
 
 	for (size_t i = 1; i < NUM_LAYERS; ++i)
 	{
 		layers[i]->forward(*(layers[i-1]->getActivation()));
-		//if (LARGE_NETWORK)
+		if (LARGE_NETWORK)
 			cout << "Forward \t" << layers[i]->layerNum << " completed..." << endl;
 	}
 }

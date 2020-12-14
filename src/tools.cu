@@ -376,28 +376,6 @@ void print_linear(myType var, string type)
 	}
 }
 
-/*
-Profiler matmul_profiler;
-
-template<typename T>
-void matrixMultRSS(const RSSData<T> &a, const RSSData<T> &b,
-                   DeviceBuffer<T> &result,
-				   size_t rows, size_t common_dim, size_t columns,
-				   bool transpose_a, bool transpose_b)
-{
-    matmul_profiler.start();
-
-    gpu::matrixMultiplication<T>(a[0], b[0], result, transpose_a, transpose_b,
-            rows, common_dim, columns);
-    gpu::matrixMultiplication<T>(a[0], b[1], result, transpose_a, transpose_b,
-            rows, common_dim, columns);
-    gpu::matrixMultiplication<T>(a[1], b[0], result, transpose_a, transpose_b,
-            rows, common_dim, columns);
-
-    matmul_profiler.accumulate("gpu-mult");
-}
-*/
-
 myType dividePlain(myType a, int b)
 {
 	assert((b != 0) && "Cannot divide by 0");

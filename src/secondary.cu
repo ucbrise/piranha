@@ -86,7 +86,7 @@ void test(NeuralNetwork<T> *net)
 
 	for (int i = 0; i < NUM_ITERATIONS; ++i)
 	{
-		readMiniBatch(net, "TESTING");
+		//readMiniBatch(net, "TESTING");
         std::cout << "starting forward pass" << std::endl;
 		net->forward();
         std::cout << "ending forward pass" << std::endl;
