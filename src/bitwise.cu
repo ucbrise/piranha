@@ -4,8 +4,10 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include "matrix.cuh"
+#include "bitwise.cuh"
 #include "globals.h"
+
+extern int partyNum;
 
 namespace kernel {
 
@@ -59,6 +61,36 @@ template __global__ void zip<uint32_t>(uint32_t *out, uint32_t *even,
         uint32_t *odd, size_t n);
 template __global__ void zip<uint8_t>(uint8_t *out, uint8_t *even,
         uint8_t *odd, size_t n);
+
+template<typename T>
+__global__ void setCarryOutMSB(T *rbits_0, T *rbits_1,
+        T *abits, T *msb_0, T *msb_1, size_t n, int partyNum) {
+
+    int IDX = blockIdx.x*blockDim.x+threadIdx.x;
+    if (IDX < n) {
+        int bitWidth = sizeof(T) * 8;
+        int bitIdx = (IDX * bitWidth) + (bitWidth - 1);
+
+        msb_0[IDX] = rbits_0[bitIdx];
+        msb_1[IDX] = rbits_1[bitIdx];
+
+        if (partyNum == PARTY_A) {
+            msb_0[IDX] ^= abits[bitIdx]; 
+        } else if (partyNum == PARTY_C) {
+            msb_1[IDX] ^= abits[bitIdx]; 
+        }
+
+        abits[bitIdx] = 1;
+        rbits_0[bitIdx] = 0;
+        rbits_1[bitIdx] = 0;
+    }
+}
+
+template __global__ void setCarryOutMSB<uint32_t>(uint32_t *rbits_0,
+        uint32_t *rbits_1, uint32_t *abits, uint32_t *msb_0, uint32_t *msb_1, size_t n, int partyNum);
+
+template __global__ void setCarryOutMSB<uint8_t>(uint8_t *rbits_0,
+        uint8_t *rbits_1, uint8_t *abits, uint8_t *msb_0, uint8_t *msb_1, size_t n, int partyNum);
 
 } // namespace kernel
 
@@ -160,6 +192,41 @@ template void zip<uint32_t>(DeviceBuffer<uint32_t> &in,
         DeviceBuffer<uint32_t> &even, DeviceBuffer<uint32_t> &odd);
 template void zip<uint8_t>(DeviceBuffer<uint8_t> &in,
         DeviceBuffer<uint8_t> &even, DeviceBuffer<uint8_t> &odd);
+
+template<typename T>
+void setCarryOutMSB(RSSData<T> &rbits, DeviceBuffer<T> &abits, RSSData<T> &msb) {
+
+    int cols = msb.size();
+    int rows = 1;
+
+    dim3 threadsPerBlock(cols, rows);
+    dim3 blocksPerGrid(1, 1);
+
+    if (cols > MAX_THREADS_PER_BLOCK) {
+        threadsPerBlock.x = MAX_THREADS_PER_BLOCK;
+        blocksPerGrid.x = ceil(double(cols)/double(threadsPerBlock.x));
+    }
+    
+    if (rows > MAX_THREADS_PER_BLOCK) {
+        threadsPerBlock.y = MAX_THREADS_PER_BLOCK;
+        blocksPerGrid.y = ceil(double(rows)/double(threadsPerBlock.y));
+    }
+
+    kernel::setCarryOutMSB<T><<<blocksPerGrid,threadsPerBlock>>>(
+        thrust::raw_pointer_cast(rbits[0].getData().data()),
+        thrust::raw_pointer_cast(rbits[1].getData().data()),
+        thrust::raw_pointer_cast(abits.getData().data()),
+        thrust::raw_pointer_cast(msb[0].getData().data()),
+        thrust::raw_pointer_cast(msb[1].getData().data()),
+        msb.size(),
+        partyNum
+    );
+}
+
+template void setCarryOutMSB<uint32_t>(RSSData<uint32_t> &rbits,
+        DeviceBuffer<uint32_t> &abits, RSSData<uint32_t> &msb);
+template void setCarryOutMSB<uint8_t>(RSSData<uint8_t> &rbits,
+        DeviceBuffer<uint8_t> &abits, RSSData<uint8_t> &msb);
 
 } // namespace gpu
 

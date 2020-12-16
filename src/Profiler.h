@@ -10,6 +10,7 @@ public:
     Profiler();
 
     void start();
+    void clear();
     void accumulate(std::string tag);
     double get_elapsed(std::string tag);
     double get_elapsed_all();

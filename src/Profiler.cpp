@@ -10,6 +10,12 @@ void Profiler::start() {
     start_time = std::chrono::system_clock::now();
 }
 
+void Profiler::clear() {
+    running = false;
+    total = 0;
+    accumulators.clear();
+}
+
 void Profiler::accumulate(std::string tag) {
     if (running) {
         running = false;

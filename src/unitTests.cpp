@@ -6,6 +6,7 @@
 
 #include "bitwise.cuh"
 #include "convolution.cuh"
+#include "DeviceBuffer.h"
 #include "FCConfig.h"
 #include "FCLayer.h"
 #include "Functionalities.h"
@@ -14,12 +15,12 @@
 #include "ReLUConfig.h"
 #include "ReLULayer.h"
 #include "RSSData.h"
-#include "DeviceBuffer.h"
+#include "secondary.h"
 
 extern int partyNum;
 extern Profiler func_profiler;
 
-namespace test {
+namespace testing {
 
 void leftShift(std::vector<uint32_t> &v, int bits) {
     for (int i = 0; i < v.size(); i++) {
@@ -59,7 +60,7 @@ void printRSS(RSSData<U> &data, const char *name) {
     thrust::copy(dataR.getData().begin(), dataR.getData().end(), buf.begin());
     std::cout << name << ":" << std::endl;
     for (int i = 0; i < buf.size(); i++) {
-        std::cout << (uint32_t) buf[i] << " "; 
+        std::cout << unsigned(buf[i]) << " "; 
     }
     std::cout << std::endl;
 }
@@ -73,7 +74,7 @@ void printDB(DeviceBuffer<U> &data, const char *name) {
     thrust::copy(data.getData().begin(), data.getData().end(), buf.begin());
     std::cout << name << ":" << std::endl;
     for (int i = 0; i < buf.size(); i++) {
-        std::cout << (uint32_t) buf[i] << " "; 
+        printf("%d ", buf[i]);
     }
     std::cout << std::endl;
 }
@@ -407,14 +408,14 @@ TEST(FuncTest, Convolution) {
 TEST(FuncTest, DRELU) {
     
     //RSSData<uint32_t> input = {-1, 2, -2, -3};
-    RSSData<uint32_t> input = {2, -2};
+    RSSData<uint32_t> input = {-1, 2, -2, -3};
     //RSSData<uint32_t> r = {3, 2, 4, 0};
-    RSSData<uint32_t> r = {2, 4};
+    RSSData<uint32_t> r = {3, 2, 4, 0};
     RSSData<uint32_t> rbits = {
-        //0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        //0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     };
     rbits[0] >>= FLOAT_PRECISION;
     rbits[1] >>= FLOAT_PRECISION;
@@ -425,13 +426,10 @@ TEST(FuncTest, DRELU) {
     DeviceBuffer<uint32_t> reconstructed(result.size());
     NEW_funcReconstruct(result, reconstructed);
 
-    printDB(reconstructed, "DRELU output");
-
     std::vector<float> expected = {
-        //0, 1, 0, 0
-        1, 0
+        0, 1, 0, 0
     };
-    //assertDeviceBuffer(reconstructed, expected, false);
+    assertDeviceBuffer(reconstructed, expected, false);
 }
 
 TEST(FuncTest, RELU) {
@@ -461,7 +459,6 @@ TEST(FuncTest, RELU) {
 
 TEST(PerfTest, LargeMatMul) {
 
-    return;
     int rows = 8;
     int shared = 784; // 786
     int cols = 128; // 128
@@ -470,7 +467,7 @@ TEST(PerfTest, LargeMatMul) {
     RSSData<uint32_t> b(shared *  cols);
     RSSData<uint32_t> c(rows * cols);
 
-    std::cout << "generating inputs" << std::endl;
+    //std::cout << "generating inputs" << std::endl;
 
     /*
     std::default_random_engine generator;
@@ -487,7 +484,7 @@ TEST(PerfTest, LargeMatMul) {
     }
     */
 
-    std::cout << "generating weights" << std::endl;
+    //std::cout << "generating weights" << std::endl;
 
     /*
     std::uniform_int_distribution<uint32_t> bit_distribution(0,1);
@@ -502,21 +499,16 @@ TEST(PerfTest, LargeMatMul) {
     }
     */
 
-    std::cout << "starting matmul" << std::endl;
-
     Profiler p;
     p.start();
     NEW_funcMatMul(a, b, c, rows, shared, cols, false, false, FLOAT_PRECISION);
     p.accumulate("matmul");
-
-    std::cout << "end matmul" << std::endl;
 
     p.dump_all();
 }
 
 TEST(PerfTest, FCLayer) {
 
-    return;
     int inputDim = 784;
     int batchSize = 8;
     int outputDim = 128;
@@ -548,15 +540,26 @@ TEST(PerfTest, FCLayer) {
 
 TEST(PerfTest, ReLULayer) {
 
-    int inputDim = 16;
-    int batchSize = 8;
+    func_profiler.clear();
+
+    int inputDim = 1000000;
+    int batchSize = 1;
 
     RSSData<uint32_t> input(batchSize * inputDim);
 
     ReLUConfig *lconfig = new ReLUConfig(inputDim, batchSize);
     ReLULayer<uint32_t> layer(lconfig, 0); 
 
+    start_m();
+
     layer.forward(input);
+
+    end_m("relu-test");
+
+	cout << "----------------------------------------------" << endl;  	
+	cout << "Run details: " << NUM_OF_PARTIES << "PC (P" << partyNum 
+		 << "), " << NUM_ITERATIONS << " iterations, batch size " << MINI_BATCH_SIZE << endl ;
+	cout << "----------------------------------------------" << endl << endl;  
 
     layer.layer_profiler.dump_all();
     func_profiler.dump_all();

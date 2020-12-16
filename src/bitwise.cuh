@@ -4,6 +4,7 @@
 #include <thrust/device_vector.h>
 
 #include "DeviceBuffer.h"
+#include "RSSData.h"
 
 namespace kernel {
 
@@ -32,5 +33,8 @@ void zip(DeviceBuffer<T> &out, DeviceBuffer<T> &even, DeviceBuffer<T> &odd);
 
 template<typename T>
 void unzip(DeviceBuffer<T> &in, DeviceBuffer<T> &even, DeviceBuffer<T> &odd);
+
+template<typename T>
+void setCarryOutMSB(RSSData<T> &rbits, DeviceBuffer<T> &abits, RSSData<T> &msb);
 
 }

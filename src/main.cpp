@@ -18,7 +18,7 @@ AESObject* aes_prev;
 Precompute PrecomputeObject;
 
 extern Profiler matmul_profiler;
-//extern Profiler func_profiler;
+extern Profiler func_profiler;
 
 int main(int argc, char** argv) {
 
@@ -77,13 +77,14 @@ int main(int argc, char** argv) {
     */
 
     // INFERENCE
-	//network += " test";
-	//test(net);
+    /*
+	network += " test";
+	test(net);
 
-	//end_m(network);
+	end_m(network);
     
     // STATS
-    /*
+    
 	cout << "----------------------------------------------" << endl;  	
 	cout << "Run details: " << NUM_OF_PARTIES << "PC (P" << partyNum 
 		 << "), " << NUM_ITERATIONS << " iterations, batch size " << MINI_BATCH_SIZE << endl 
@@ -106,8 +107,8 @@ int main(int argc, char** argv) {
     cout << "-- Total Maxpool --" << endl; 
     MaxpoolLayer<uint32_t>::maxpool_profiler.dump_all();
 
-    //cout << "-- Total Functionalities --" << endl; 
-    //func_profiler.dump_all();
+    cout << "-- Total Functionalities --" << endl; 
+    func_profiler.dump_all();
 
     cout << "-- Total runtime accounted for: " << total_measured_runtime/1000.0 << " s --" << endl;
 	//printNetwork(net);

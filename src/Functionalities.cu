@@ -9,6 +9,8 @@
 #include <stdexcept>
 #include <thread>
 
+// test comment
+
 #include "bitwise.cuh"
 #include "convolution.cuh"
 #include "Functionalities.h"
@@ -358,6 +360,18 @@ void carryOut(RSSData<U> &p, RSSData<U> &g, int k, RSSData<U> &out) {
 
     while(k > 1) {
 
+        /*
+        printf("-> k=%d\n", k);
+
+        RSSData<U> pCombined(pEven.size() + pOdd.size());
+        pCombined.zip(pEven, pOdd);
+        printRSS(pCombined, "  p");
+
+        RSSData<U> gCombined(gEven.size() + gOdd.size());
+        gCombined.zip(gEven, gOdd);
+        printRSS(gCombined, "  g");
+        */
+
         RSSData<U> gTemp = pOdd & gEven;
         (pEven & pOdd).unzip(pEven, pOdd);
         (gOdd ^ gTemp).unzip(gEven, gOdd);
@@ -369,6 +383,8 @@ void carryOut(RSSData<U> &p, RSSData<U> &g, int k, RSSData<U> &out) {
 
         k /= 2;
     }
+
+    out.zip(gEven, gOdd);
 }
 
 /*
@@ -383,16 +399,21 @@ void NEW_funcDRELU(RSSData<T> &input, RSSData<T> &r, RSSData<U> &rbits,
     DeviceBuffer<T> a(input.size());
     r += input;
     NEW_funcReconstruct(r, a);
+    func_profiler.accumulate("drelu-reconstruct");
     // a += (1 << FLOAT_PRECISION);
     a += 1;
 
     rbits = (U)1 - rbits; // element-wise subtract bits
 
     DeviceBuffer<U> abits(rbits.size());
+    func_profiler.start();
     gpu::bitexpand<T, U>(a, abits);
+    func_profiler.accumulate("drelu-bitexpand");
 
     // set MSBs
+    func_profiler.start();
     int bitWidth = sizeof(T) * 8;
+    /*
     RSSData<U> msbs(input.size());
     for(int i = 0; i < input.size(); i++) {
         int bitIndex = (i * bitWidth) + (bitWidth - 1);
@@ -411,16 +432,27 @@ void NEW_funcDRELU(RSSData<T> &input, RSSData<T> &r, RSSData<U> &rbits,
         rbits[0].getData()[bitIndex] = 0;
         rbits[1].getData()[bitIndex] = 0;
     } 
+    */
+    RSSData<U> msb(input.size());
+    gpu::setCarryOutMSB(rbits, abits, msb);
+    func_profiler.accumulate("drelu-msb");
 
+    //printDB(abits, "abits");
     //printRSS(rbits, "rbits");
-    //printRSS(msbs, "xor'd msbs");
+    //printRSS(msb, "xor'd msbs");
     
     RSSData<U> g = rbits & abits;
     RSSData<U> p = rbits ^ abits;
+    func_profiler.start();
     carryOut(p, g, bitWidth, result);
+    func_profiler.accumulate("drelu-carryout");
 
-    result ^= msbs;
+    //printRSS(result, "carryout result");
+
+    result ^= msb;
+    //printRSS(result, "after xor with msb");
     result = (U)1 - result;
+    //printRSS(result, "after complement");
 }
 
 template void NEW_funcDRELU<uint32_t, uint8_t>(RSSData<uint32_t> &input,
