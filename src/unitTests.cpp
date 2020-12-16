@@ -449,12 +449,37 @@ TEST(FuncTest, RELU) {
     std::vector<float> expected = {
         0, 2, 0
     };
-    //assertDeviceBuffer(reconstructedResult, expected);
+    assertDeviceBuffer(reconstructedResult, expected);
 
     std::vector<float> dexpected = {
         0, 1, 0
     };
-    //assertDeviceBuffer(reconstructedDResult, dexpected, false);
+    assertDeviceBuffer(reconstructedDResult, dexpected, false);
+}
+
+TEST(FuncTest, Maxpool) {
+
+    RSSData<uint32_t> input = {1, 3, 4, 3};
+    RSSData<uint32_t> result(input.size());
+    RSSData<uint32_t> dresult(input.size());
+
+    NEW_funcMaxpool(input, result, dresult);
+
+    DeviceBuffer<uint32_t> reconstructedResult(result.size());
+    NEW_funcReconstruct(result, reconstructedResult);
+
+    DeviceBuffer<uint32_t> reconstructedDResult(dresult.size());
+    NEW_funcReconstruct(dresult, reconstructedDResult);
+
+    std::vector<float> expected = {
+        0, 0, 4, 0
+    };
+    assertDeviceBuffer(reconstructedResult, expected);
+
+    std::vector<float> dexpected = {
+        0, 0, 1, 0
+    };
+    assertDeviceBuffer(reconstructedDResult, dexpected, false);
 }
 
 TEST(PerfTest, LargeMatMul) {

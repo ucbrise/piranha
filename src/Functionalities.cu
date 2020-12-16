@@ -521,13 +521,14 @@ void NEW_funcMaxpool(RSSData<T> &input, RSSData<T> &result, RSSData<U> &dresult)
 
     // TODO support non-powers of 2
     RSSData<T> even(input.size() / 2), odd(input.size() / 2);
+
     input.unzip(even, odd);
 
     RSSData<T> zeros(dresult.size());
     zeros.zero();
     dresult.fillKnown(1);
 
-    int k = sizeof(T) * 8;
+    int k = input.size();
     while (k > 1) {
              
         // TODO XXX use precomputation randomness XXX TODO
@@ -555,6 +556,8 @@ void NEW_funcMaxpool(RSSData<T> &input, RSSData<T> &result, RSSData<U> &dresult)
          
         k /= 2;
     }
+
+    //NEW_funcSelectShare(input, zeros, dresult, result);
 
     result.zip(even, odd);
 }
