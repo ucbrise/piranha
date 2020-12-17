@@ -392,8 +392,13 @@ void carryOut(RSSData<U> &p, RSSData<U> &g, int k, RSSData<U> &out) {
  * sizeof(T) values).
  */
 template<typename T, typename U> 
-void NEW_funcDRELU(RSSData<T> &input, RSSData<T> &r, RSSData<U> &rbits,
-        RSSData<U> &result) {
+void NEW_funcDRELU(RSSData<T> &input, RSSData<U> &result) {
+
+    // TODO move most code to pre-processing 
+    RSSData<T> r(input.size());
+    r.zero();
+    RSSData<U> rbits(input.size() * sizeof(T) * 8);
+    rbits.zero();
 
     func_profiler.start();
     DeviceBuffer<T> a(input.size());
@@ -455,27 +460,15 @@ void NEW_funcDRELU(RSSData<T> &input, RSSData<T> &r, RSSData<U> &rbits,
     //printRSS(result, "after complement");
 }
 
-template void NEW_funcDRELU<uint32_t, uint8_t>(RSSData<uint32_t> &input,
-        RSSData<uint32_t> &r, RSSData<uint8_t> &rbits,
-        RSSData<uint8_t> &result);
-template void NEW_funcDRELU<uint8_t, uint8_t>(RSSData<uint8_t> &input,
-        RSSData<uint8_t> &r, RSSData<uint8_t> &rbits,
-        RSSData<uint8_t> &result);
-template void NEW_funcDRELU<uint32_t, uint32_t>(RSSData<uint32_t> &input,
-        RSSData<uint32_t> &r, RSSData<uint32_t> &rbits,
-        RSSData<uint32_t> &result);
+template void NEW_funcDRELU<uint32_t, uint8_t>(RSSData<uint32_t> &input, RSSData<uint8_t> &result);
+template void NEW_funcDRELU<uint8_t, uint8_t>(RSSData<uint8_t> &input, RSSData<uint8_t> &result);
+template void NEW_funcDRELU<uint32_t, uint32_t>(RSSData<uint32_t> &input, RSSData<uint32_t> &result);
 
 template<typename T, typename U> 
 void NEW_funcRELU(RSSData<T> &input, RSSData<T> &result, RSSData<U> &dresult) {
 
-    // TODO XXX use precomputation randomness XXX TODO
-    RSSData<T> r(input.size());
-    r.zero();
-    RSSData<U> rbits(input.size() * sizeof(T) * 8);
-    rbits.zero();
-
     func_profiler.start();
-    NEW_funcDRELU<T, U>(input, r, rbits, dresult);
+    NEW_funcDRELU<T, U>(input, dresult);
     func_profiler.accumulate("relu-drelu");
 
     // TODO XXX randomness use XXX TODO
@@ -517,30 +510,23 @@ void expandCompare(RSSData<T> &b, RSSData<T> &expanded) {
 //template void expandCompare<uint8_t>(RSSData<uint8_t> &b, RSSData<uint8_t> &expanded);
 
 template<typename T, typename U> 
-void NEW_funcMaxpool(RSSData<T> &input, RSSData<T> &result, RSSData<U> &dresult) {
+void NEW_funcMaxpool(RSSData<T> &input, RSSData<T> &result, RSSData<U> &dresult, int k) {
 
+    // Maxpool setup
     // TODO support non-powers of 2
     RSSData<T> even(input.size() / 2), odd(input.size() / 2);
-
     input.unzip(even, odd);
 
-    RSSData<T> zeros(dresult.size());
-    zeros.zero();
+    // d(Maxpool) setup
     dresult.fillKnown(1);
 
-    int k = input.size();
-    while (k > 1) {
-             
-        // TODO XXX use precomputation randomness XXX TODO
-        RSSData<T> r(input.size());
-        r.zero();
-        RSSData<U> rbits(input.size() * sizeof(T) * 8);
-        rbits.zero();
-
+    while (k > 2) {
+        // Maxpool
         RSSData<T> diff = even - odd;
+
         // TODO fix templating to get rid of this
         RSSData<U> bTemp(even.size());
-        NEW_funcDRELU(diff, r, rbits, bTemp);
+        NEW_funcDRELU(diff, bTemp);
 
         RSSData<T> b(bTemp.size());
         b.copy(bTemp);
@@ -549,20 +535,30 @@ void NEW_funcMaxpool(RSSData<T> &input, RSSData<T> &result, RSSData<U> &dresult)
         even.resize(even.size() / 2);
         odd.resize(odd.size() / 2);
 
+        // d(Maxpool)
         RSSData<T> expandedB(dresult.size());
         expandCompare(b, expandedB);
-
-        NEW_funcSelectShare(dresult, zeros, expandedB, dresult);
+        dresult &= expandedB;
          
         k /= 2;
     }
 
-    //NEW_funcSelectShare(input, zeros, dresult, result);
+    // Fencepost - don't unzip the final results after the last comparison and finish
+    // calculating derivative.
+    RSSData<T> diff = even - odd;
+    RSSData<U> bTemp(even.size());
+    NEW_funcDRELU(diff, bTemp);
+    RSSData<T> b(bTemp.size());
+    b.copy(bTemp);
 
-    result.zip(even, odd);
+    result = ((b * even) + (((T)1 - b) * odd));
+
+    RSSData<T> expandedB(dresult.size());
+    expandCompare(b, expandedB);
+    dresult &= expandedB;
 }
 
-//template void NEW_funcMaxpool<uint32_t, uint8_t>(RSSData<uint32_t> &input, RSSData<uint32_t> &result, RSSData<uint8_t> &dresult);
-//template void NEW_funcMaxpool<uint8_t, uint8_t>(RSSData<uint8_t> &input, RSSData<uint8_t> &result, RSSData<uint8_t> &dresult);
-template void NEW_funcMaxpool<uint32_t, uint32_t>(RSSData<uint32_t> &input, RSSData<uint32_t> &result, RSSData<uint32_t> &dresult);
+//template void NEW_funcMaxpool<uint32_t, uint8_t>(RSSData<uint32_t> &input, RSSData<uint32_t> &result, RSSData<uint8_t> &dresult, int k);
+//template void NEW_funcMaxpool<uint8_t, uint8_t>(RSSData<uint8_t> &input, RSSData<uint8_t> &result, RSSData<uint8_t> &dresult, int k);
+template void NEW_funcMaxpool<uint32_t, uint32_t>(RSSData<uint32_t> &input, RSSData<uint32_t> &result, RSSData<uint32_t> &dresult, int k);
 

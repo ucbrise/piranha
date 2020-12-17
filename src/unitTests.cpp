@@ -407,21 +407,10 @@ TEST(FuncTest, Convolution) {
 
 TEST(FuncTest, DRELU) {
     
-    //RSSData<uint32_t> input = {-1, 2, -2, -3};
     RSSData<uint32_t> input = {-1, 2, -2, -3};
-    //RSSData<uint32_t> r = {3, 2, 4, 0};
-    RSSData<uint32_t> r = {3, 2, 4, 0};
-    RSSData<uint32_t> rbits = {
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    };
-    rbits[0] >>= FLOAT_PRECISION;
-    rbits[1] >>= FLOAT_PRECISION;
 
     RSSData<uint32_t> result(input.size());
-    NEW_funcDRELU(input, r, rbits, result);
+    NEW_funcDRELU(input, result);
 
     DeviceBuffer<uint32_t> reconstructed(result.size());
     NEW_funcReconstruct(result, reconstructed);
@@ -459,11 +448,11 @@ TEST(FuncTest, RELU) {
 
 TEST(FuncTest, Maxpool) {
 
-    RSSData<uint32_t> input = {1, 3, 4, 3};
-    RSSData<uint32_t> result(input.size());
+    RSSData<uint32_t> input = {1, 3, 4, 3, 7, 1, 2, 10};
+    RSSData<uint32_t> result(input.size() / 4);
     RSSData<uint32_t> dresult(input.size());
 
-    NEW_funcMaxpool(input, result, dresult);
+    NEW_funcMaxpool(input, result, dresult, 4);
 
     DeviceBuffer<uint32_t> reconstructedResult(result.size());
     NEW_funcReconstruct(result, reconstructedResult);
@@ -472,17 +461,17 @@ TEST(FuncTest, Maxpool) {
     NEW_funcReconstruct(dresult, reconstructedDResult);
 
     std::vector<float> expected = {
-        0, 0, 4, 0
+        4, 10
     };
     assertDeviceBuffer(reconstructedResult, expected);
 
     std::vector<float> dexpected = {
-        0, 0, 1, 0
+        0, 0, 1, 0, 0, 0, 0, 1
     };
     assertDeviceBuffer(reconstructedDResult, dexpected, false);
 }
 
-TEST(PerfTest, LargeMatMul) {
+TEST(PerfTest, DISABLED_LargeMatMul) {
 
     int rows = 8;
     int shared = 784; // 786
@@ -532,7 +521,7 @@ TEST(PerfTest, LargeMatMul) {
     p.dump_all();
 }
 
-TEST(PerfTest, FCLayer) {
+TEST(PerfTest, DISABLED_FCLayer) {
 
     int inputDim = 784;
     int batchSize = 8;
@@ -563,7 +552,7 @@ TEST(PerfTest, FCLayer) {
     layer.layer_profiler.dump_all();
 }
 
-TEST(PerfTest, ReLULayer) {
+TEST(PerfTest, DISABLED_ReLULayer) {
 
     func_profiler.clear();
 

@@ -49,7 +49,7 @@ void MaxpoolLayer<T>::forward(RSSData<T>& inputActivation)
     //this->layer_profiler.start();
     //maxpool_profiler.start();
     
-    NEW_funcMaxpool(inputActivation, activations, maxPrime);
+    //NEW_funcMaxpool(inputActivation, activations, maxPrime);
 
     //this->layer_profiler.accumulate("maxpool-forward-temp1");
     //maxpool_profiler.accumulate("maxpool-forward-temp1");

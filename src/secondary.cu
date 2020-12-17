@@ -655,7 +655,7 @@ template<typename T>
 void runOnly(NeuralNetwork<T> *net, size_t l, string what, string& network)
 {
 	size_t total_layers = net->layers.size();
-	assert((l >= 0 and l < total_layers) && "Incorrect layer number for runOnly"); 
+	assert((l < total_layers) && "Incorrect layer number for runOnly"); 
 	network = network + " L" + std::to_string(l) + " " + what;
 
 	if (what.compare("F") == 0)

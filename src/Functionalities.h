@@ -32,8 +32,7 @@ void NEW_funcMatMul(RSSData<T> &a, RSSData<T> &b, RSSData<T> &c,
                     bool transpose_a, bool transpose_b, size_t truncation);
 
 template<typename T, typename U> 
-void NEW_funcDRELU(RSSData<T> &input, RSSData<T> &r, RSSData<U> &rbits,
-        RSSData<U> &result);
+void NEW_funcDRELU(RSSData<T> &input, RSSData<U> &result);
 
 template<typename T, typename U> 
 void NEW_funcRELU(RSSData<T> &input, RSSData<T> &result, RSSData<U> &dresult);
@@ -45,5 +44,5 @@ void NEW_funcConvolution(RSSData<T> &im, RSSData<T> &filters, RSSData<T> &out,
         size_t Din, size_t Dout, size_t stride, size_t padding, size_t truncation);
 
 template<typename T, typename U> 
-void NEW_funcMaxpool(RSSData<T> &input, RSSData<T> &result, RSSData<U> &dresult);
+void NEW_funcMaxpool(RSSData<T> &input, RSSData<T> &result, RSSData<U> &dresult, int k);
 
