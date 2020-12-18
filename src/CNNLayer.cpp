@@ -93,8 +93,7 @@ void CNNLayer<T>::forward(RSSData<T> &inputActivation)
 }
 
 template<typename T>
-void CNNLayer<T>::computeDelta(RSSData<T> &prevDelta)
-{
+RSSData<T> &CNNLayer<T>::backward(RSSData<T> &incomingDelta, RSSData<T> &inputActivation) {
     throw std::runtime_error(
         "[CNNLayer::computeDelta] GPU implementation not yet completed"
     );
@@ -204,109 +203,4 @@ void CNNLayer<T>::computeDelta(RSSData<T> &prevDelta)
     */
 }
 
-template<typename T>
-void CNNLayer<T>::updateEquations(const RSSData<T> &prevActivations)
-{
-    throw std::runtime_error(
-        "[CNNLayer::computeDelta] GPU implementation not yet completed"
-    );
-
-    /*
-	log_print("CNN.updateEquations");
-
-	size_t B 	= conf.batchSize;
-	size_t iw 	= conf.imageWidth;
-	size_t ih 	= conf.imageHeight;
-	size_t f 	= conf.filterSize;
-	size_t Din 	= conf.inputFeatures;
-	size_t Dout = conf.filters;
-	size_t P 	= conf.padding;
-	size_t S 	= conf.stride;
-	size_t ow 	= (((iw-f+2*P)/S)+1);
-	size_t oh	= (((ih-f+2*P)/S)+1);
-
-    this->layer_profiler.start();
-	// ********************* Bias update **********************
-	//Bias update
-	RSSVectorMyType temp1(Dout, make_pair(0,0));
-	{
-		size_t sizeY 		= ow;
-		size_t sizeD 		= sizeY*oh;
-		size_t sizeB 		= sizeD*Dout;
-		for (int d = 0; d < Dout; ++d)
-			for (size_t b = 0; b < B; ++b)
-				for (size_t y = 0; y < oh; ++y) 
-					for (size_t x = 0; x < ow; ++x)
-						temp1[d] = temp1[d] + deltas[b*sizeB + d*sizeD + y*sizeY + x];
-	}
-    // TODO
-	//funcTruncate(temp1, LOG_MINI_BATCH + LOG_LEARNING_RATE, Dout);
-	subtractVectors<RSSMyType>(biases, temp1, biases, Dout);
-    this->layer_profiler.accumulate("cnn-update-bias");
-
-    this->layer_profiler.start();
-	// ********************** Weights update **********************
-	//Reshape activations
-	RSSVectorMyType temp3((f*f*Din) * (ow*oh*B));
-	{
-		size_t sizeY 		= ow;
-		size_t sizeB 		= sizeY*oh;
-		size_t sizeP 		= sizeB*B; 
-		size_t sizeQ 		= sizeP*f; 
-		size_t sizeR 		= sizeQ*f; 
-
-		size_t actSizeBeta	= iw;
-		size_t actSizeR		= actSizeBeta*ih;
-		size_t actSizeB		= actSizeR*Din;
-	
-		for (size_t r = 0; r < Din; ++r)
-			for (size_t p = 0; p < f; ++p) 
-				for (size_t q = 0; q < f; ++q)
-					for (int b = 0; b < B; ++b)
-						for (int y = 0; y < oh; ++y)
-							for (int x = 0; x < ow; ++x)
-								if ((x*S - P + p) >= 0 and (x*S - P + p) < iw and 
-									(y*S - P + q) >= 0 and (y*S - P + q) < ih )
-								{
-									temp3[r*sizeR + q*sizeQ + p*sizeP +
-										  b*sizeB + y*sizeY + x] = 
-									prevActivations[b*actSizeB + r*actSizeR + 
-										(y*S - P + q)*actSizeBeta + (x*S - P + p)];
-								}
-	}
-
-	//Reshape delta
-	RSSVectorMyType temp2((Dout) * (ow*oh*B));
-	{
-		size_t sizeY 		= ow;
-		size_t sizeD 		= sizeY*oh;
-		size_t sizeB 		= sizeD*Dout; 
-		size_t counter 		= 0;
-
-		for (size_t d = 0; d < Dout; ++d)
-			for (int b = 0; b < B; ++b)
-				for (int y = 0; y < oh; ++y)
-					for (int x = 0; x < ow; ++x)
-						temp2[counter++] = deltas[b*sizeB + d*sizeD + y*sizeY + x]; 
-	}
-    this->layer_profiler.accumulate("cnn-update-reshape");
-
-	//Compute product, truncate and subtract
-    this->layer_profiler.start();
-	RSSVectorMyType temp4((Dout) * (f*f*Din));
-    // TODO
-    / *
-	if (FUNCTION_TIME)
-		cout << "funcMatMul: " << funcTime(funcMatMul, temp2, temp3, temp4, (Dout), (ow*oh*B), (f*f*Din), 0, 1, FLOAT_PRECISION + LOG_MINI_BATCH + LOG_LEARNING_RATE) << endl;
-	else
-		funcMatMul(temp2, temp3, temp4, (Dout), (ow*oh*B), (f*f*Din), 0, 1, 
-					FLOAT_PRECISION + LOG_MINI_BATCH + LOG_LEARNING_RATE);
-    * /
-    this->layer_profiler.accumulate("cnn-update-matmul");
-	
-	subtractVectors<RSSMyType>(weights, temp4, weights, f*f*Din*Dout);
-    */
-}
-
 template class CNNLayer<uint32_t>;
-

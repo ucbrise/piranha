@@ -215,4 +215,3 @@ void NeuralNetwork<T>::getAccuracy(const RSSData<T> &maxIndex, vector<size_t> &c
 }
 
 template class NeuralNetwork<uint32_t>;
-

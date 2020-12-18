@@ -57,12 +57,21 @@ void MaxpoolLayer<T>::forward(RSSData<T>& inputActivation)
 }
 
 template<typename T>
-void MaxpoolLayer<T>::computeDelta(RSSData<T> &prevDelta)
-{
-    //TODO
-    /*
+RSSData<T> &MaxpoolLayer<T>::backward(RSSData<T> &incomingDelta, RSSData<T> &inputActivation) {
+
 	log_print("Maxpool.computeDelta");
 
+    this->layer_profiler.start();
+    maxpool_profiler.start();
+
+    // (1) Compute backwards gradient for previous layer
+
+
+
+    // (2) Compute gradients w.r.t. layer params and update
+    // nothing for maxpool
+
+    /*
 	size_t B 	= conf.batchSize;
 	size_t iw 	= conf.imageWidth;
 	size_t ih 	= conf.imageHeight;
@@ -71,9 +80,6 @@ void MaxpoolLayer<T>::computeDelta(RSSData<T> &prevDelta)
 	size_t S 	= conf.stride;
 	size_t ow 	= (((iw-f)/S)+1);
 	size_t oh	= (((ih-f)/S)+1);
-
-    this->layer_profiler.start();
-    maxpool_profiler.start();
 
 	RSSVectorSmallType temp1(iw*ih*Din*B);	//Contains maxPrime reordered
 	RSSVectorMyType temp2(iw*ih*Din*B);		//Contains Delta reordered
@@ -111,17 +117,10 @@ void MaxpoolLayer<T>::computeDelta(RSSData<T> &prevDelta)
     this->layer_profiler.start();
     maxpool_profiler.start();
 	funcSelectShares(temp2, temp1, prevDelta, iw*ih*Din*B);
+	*/
 
-    this->layer_profiler.accumulate("maxpool-delta-selectshares");
-    maxpool_profiler.accumulate("maxpool-delta-selectshares");
-    */
-}
-
-template<typename T>
-void MaxpoolLayer<T>::updateEquations(const RSSData<T> &prevActivations)
-{
-	log_print("Maxpool.updateEquations");
+    maxpool_profiler.accumulate("maxpool-backward");
+    this->layer_profiler.accumulate("maxpool-backward");
 }
 
 template class MaxpoolLayer<uint32_t>;
-

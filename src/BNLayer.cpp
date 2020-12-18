@@ -103,8 +103,7 @@ void BNLayer<T>::forward(RSSData<T> &inputActivation)
 
 //https://kevinzakka.github.io/2016/09/14/batch_normalization/
 template<typename T>
-void BNLayer<T>::computeDelta(RSSData<T> &prevDelta)
-{
+RSSData<T> &BNLayer<T>::backward(RSSData<T> &incomingDelta, RSSData<T> &inputActivation) {
     // TODO
     /*
 	log_print("BN.computeDelta");
@@ -167,38 +166,4 @@ void BNLayer<T>::computeDelta(RSSData<T> &prevDelta)
     */
 }
 
-template<typename T>
-void BNLayer<T>::updateEquations(const RSSData<T>& prevActivations)
-{
-    //TODO
-    /*
-	log_print("BN.updateEquations");
-
-	size_t B = conf.numBatches;
-	size_t m = conf.inputSize;
-
-    this->layer_profiler.start();
-	//Update beta
-	RSSVectorMyType temp1(B, make_pair(0,0));
-	for (int i = 0; i < B; ++i)
-		for (int j = 0; j < m; ++j)
-			temp1[i] = temp1[i] + deltas[i*m + j];
-
-	subtractVectors<RSSMyType>(beta, temp1, beta, B);
-
-
-	//Update gamma
-	RSSVectorMyType temp2(B*m, make_pair(0,0)), temp3(B, make_pair(0,0));
-    // TODO
-	//funcDotProduct(xhat, deltas, temp2, B*m, true, FLOAT_PRECISION);
-	for (int i = 0; i < B; ++i)
-		for (int j = 0; j < m; ++j)
-			temp3[i] = temp3[i] + temp2[i*m + j];
-
-	subtractVectors<RSSMyType>(gamma, temp3, gamma, B);
-    this->layer_profiler.accumulate("bn-update");
-    */
-}
-
 template class BNLayer<uint32_t>;
-

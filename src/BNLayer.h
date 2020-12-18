@@ -27,8 +27,7 @@ class BNLayer : public Layer<T> {
         //Functions
         void printLayer() override;
         void forward(RSSData<T> &inputActivation) override;
-        void computeDelta(RSSData<T> &prevDelta) override;
-        void updateEquations(const RSSData<T> &prevActivations) override;
+        RSSData<T> &backward(RSSData<T> &incomingDelta, RSSData<T> &inputActivation) override;
 
         //Getters
         RSSData<T> *getActivation() {return &activations;};

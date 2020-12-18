@@ -54,7 +54,6 @@ void FCLayer<T>::forward(RSSData<T> &inputActivation)
 	size_t common_dim = conf.inputDim;
 	size_t size = rows*columns;
 
-
     matmul_profiler.start();
 	NEW_funcMatMul(inputActivation, weights, activations,
             rows, common_dim, columns, false, false, FLOAT_PRECISION);
@@ -69,42 +68,36 @@ void FCLayer<T>::forward(RSSData<T> &inputActivation)
 }
 
 template<typename T>
-void FCLayer<T>::computeDelta(RSSData<T> &prevDelta)
-{
-	log_print("FC.computeDelta");
-
-    //this->layer_profiler.start();
+RSSData<T> &FCLayer<T>::backward(RSSData<T> &incomingDelta, RSSData<T> &inputActivation) {
     
-    // prevDelta = deltas * W.T
-    NEW_funcMatMul(deltas, weights, prevDelta,
+	log_print("FC.backward");
+    this->layer_profiler.start();
+
+    // (1) Compute backwards gradient for previous layer
+    // deltas = incomingDelta * W.T
+    NEW_funcMatMul(incomingDelta, weights, deltas,
             conf.batchSize, conf.outputDim, conf.inputDim, false, true, FLOAT_PRECISION);
 
-    //this->layer_profiler.accumulate("fc-delta");
-}
-
-template<typename T>
-void FCLayer<T>::updateEquations(const RSSData<T> &prevActivations)
-{
-	log_print("FC.updateEquations");
-
-    //this->layer_profiler.start();
-
+    // (2) Compute gradients w.r.t. weights and biases and update
+    RSSData<T> db(conf.outputDim);
+    // TODO some sort of sumRows(deltas, db);
     /*
-    RSSData<uint32_t> db(conf.outputDim);
-    // TODO
-    // some sort of sumRows(deltas, db)
-    biases -= db;
-     
-    RSSData<uint32_t> dW(conf.outputDim * conf.inputDim);
-    NEW_funcMatMul(deltas, prevActivations, dW,
-            conf.outputDim, conf.batchSize, conf.inputDim, true, false, FLOAT_PRECISION);
-    // XXX transpose goes the other way?
-    // XXX truncation -> FLOAT_PRECISION + LOG_LEARNING_RATE + LOG_MINI_BATCH?
-    weights -= dW;
+    for (size_t i = 0; i < rows; ++i)
+        for (size_t j = 0; j < columns; ++j)
+            temp[j] = temp[j] + deltas[i*columns + j];
+
+    funcTruncate(temp, LOG_MINI_BATCH + LOG_LEARNING_RATE, columns);
+    subtractVectors<RSSMyType>(biases, temp, biases, columns)
     */
-    
-    //this->layer_profiler.accumulate("fc-update");
+
+    RSSData<T> dW(conf.outputDim * conf.inputDim);
+    NEW_funcMatMul(deltas, inputActivation, dW,
+            conf.outputDim, conf.batchSize, conf.inputDim, true, false,
+            FLOAT_PRECISION + LOG_LEARNING_RATE + LOG_MINI_BATCH);
+    weights -= dW;
+
+    this->layer_profiler.accumulate("fc-backward");
+    return deltas;
 }
 
 template class FCLayer<uint32_t>;
-

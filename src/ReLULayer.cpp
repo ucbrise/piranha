@@ -48,30 +48,25 @@ void ReLULayer<T>::forward(RSSData<T> &inputActivation)
 }
 
 template<typename T>
-void ReLULayer<T>::computeDelta(RSSData<T> &prevDelta)
-{
-    // TODO
-    /*
-	log_print("ReLU.computeDelta");
+RSSData<T> &ReLULayer<T>::backward(RSSData<T> &incomingDelta, RSSData<T> &inputActivation) {
 
-	//Back Propagate	
-	size_t rows = conf.batchSize;
-	size_t columns = conf.inputDim;
-	size_t size = rows*columns;
+	log_print("ReLU.backward");
 
-    this->layer_profiler.start();
-    relu_profiler.start();
-	funcSelectShares(deltas, reluPrime, prevDelta, size);
-    this->layer_profiler.accumulate("relu-delta");
-    relu_profiler.accumulate("relu-delta");
-    */
-}
+	relu_profiler.start();
+	this->layer_profiler.start();
 
-template<typename T>
-void ReLULayer<T>::updateEquations(const RSSData<T> &prevActivations)
-{
-	log_print("ReLU.updateEquations");
+	// (1) Compute backwards gradient for previous layer
+	RSSData<T> zeros(incomingDelta.size());
+	zeros.zero();
+    NEW_funcSelectShare(incomingDelta, zeros, reluPrime, deltas);
+
+    // (2) Compute gradients w.r.t. layer params and update
+    // nothing for ReLU
+
+    relu_profiler.accumulate("relu-backward");
+    this->layer_profiler.accumulate("relu-backward");
+
+    return deltas;
 }
 
 template class ReLULayer<uint32_t>;
-
