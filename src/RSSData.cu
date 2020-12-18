@@ -23,7 +23,7 @@ RSSData<T>::RSSData(size_t n) : shareA(n), shareB(n) {
 
 /*
  * Test initializer. Assumes Party A's share is the given values and all other
- * shares are zero
+ * shares are zero.
  */
 template<typename T>
 RSSData<T>::RSSData(std::initializer_list<float> il) : shareA(il), shareB(il) {
@@ -73,6 +73,25 @@ template<typename T>
 void RSSData<T>::fillKnown(T val) {
     shareA.fill(partyNum == PARTY_A ? val : 0);
     shareB.fill(0);
+}
+
+/*
+ * Test setter that allows pre-calculated vector. Assumes Party A's share is
+ * the given values and all other shares are zero.
+ */
+template<typename T>
+void RSSData<T>::setKnown(std::vector<float> &v) {
+    shareA.zero();
+    shareB.zero();
+
+    switch (partyNum) {
+        case PARTY_A:
+            shareA.set(v);
+            break;
+        case PARTY_C:
+            shareB.set(v);
+            break;
+    }
 }
 
 template<typename T>

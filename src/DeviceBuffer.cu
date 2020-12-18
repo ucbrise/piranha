@@ -61,6 +61,15 @@ void DeviceBuffer<T>::fill(T val) {
 }
 
 template<typename T>
+void DeviceBuffer<T>::set(std::vector<float> &v) {
+    std::vector<T> fixedPointRepr;
+    for (float f : v) {
+        fixedPointRepr.push_back((T)(f * (1 << FLOAT_PRECISION)));
+    }
+    thrust::copy(fixedPointRepr.begin(), fixedPointRepr.end(), data.begin());
+}
+
+template<typename T>
 void DeviceBuffer<T>::zero() {
     fill(0);
 }

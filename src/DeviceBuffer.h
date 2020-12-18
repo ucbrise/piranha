@@ -46,6 +46,7 @@ class DeviceBuffer
         void resize(size_t n);
         void zero();
         void fill(T val);
+        void set(std::vector<float> &v);
         template<typename U> void copy(DeviceBuffer<U> &src);
         thrust::device_vector<T> &getData();
 

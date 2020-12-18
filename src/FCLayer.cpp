@@ -24,22 +24,13 @@ void FCLayer<T>::initialize()
 	size_t lower = 30;
 	size_t higher = 50;
 	size_t decimation = 10000;
-	size_t size = weights.size();
 
-	// RSSVectorMyType temp(size);
-	// for (size_t i = 0; i < size; ++i)
-	// 	temp[i] = floatToMyType((float)(rand() % (higher - lower) + lower)/decimation);
+    std::vector<float> weight_vals(weights.size());
+    for (int i = 0; i < weight_vals.size(); i++) {
+        weight_vals[i] = ((float)(rand() % (higher - lower) + lower)) / decimation;
+    }
 
-	// if (partyNum == PARTY_S)
-	// 	for (size_t i = 0; i < size; ++i)
-	// 		weights[i] = temp[i];
-	// else if (partyNum == PARTY_A or partyNum == PARTY_D)
-	// 	for (size_t i = 0; i < size; ++i)
-	// 		weights[i] = temp[i];
-	// else if (partyNum == PARTY_B or partyNum == PARTY_C)		
-	// 	for (size_t i = 0; i < size; ++i)
-	// 		weights[i] = 0;
-		
+    weights.setKnown(weight_vals);
     biases.zero();	
 }
 

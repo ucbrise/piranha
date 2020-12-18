@@ -1,7 +1,6 @@
 
 #include <gtest/gtest.h>
 #include <iostream>
-#include <random>
 #include <vector>
 
 #include "bitwise.cuh"
@@ -21,6 +20,30 @@ extern int partyNum;
 extern Profiler func_profiler;
 
 namespace testing {
+
+// Just for testing, not for anything serious.
+// https://en.wikipedia.org/wiki/Permuted_congruential_generator
+static uint64_t state = 0x4d595df4d0f33173;
+static uint64_t const multiplier = 6364136223846793005u;
+static uint64_t const increment = 1442695040888963407u;
+
+static uint32_t rotr32(uint32_t x, unsigned r) {
+    return x >> r | x << (-r & 31);
+}
+
+uint32_t pcg32() {
+    uint64_t x = state;
+    unsigned count = (unsigned)(x >> 59);
+
+    state = x * multiplier + increment;
+    x ^= x >> 18;
+    return rotr32((uint32_t)(x >> 27), count);
+}
+
+void pcg32_init(uint64_t seed) {
+    state = seed + increment;
+    pcg32();
+}
 
 void leftShift(std::vector<uint32_t> &v, int bits) {
     for (int i = 0; i < v.size(); i++) {
@@ -118,6 +141,38 @@ void assertDeviceBuffer(DeviceBuffer<T> &b, std::vector<float> &expected, bool c
 
 template void assertDeviceBuffer<uint32_t>(DeviceBuffer<uint32_t> &b, std::vector<float> &expected, bool convertFixed);
 template void assertDeviceBuffer<uint8_t>(DeviceBuffer<uint8_t> &b, std::vector<float> &expected, bool convertFixed);
+
+template<typename T>
+void assertRSS(RSSData<T> *result, RSSData<T> *expected, bool convertFixed=true) {
+
+    ASSERT_EQ(result->size(), expected->size());
+
+    DeviceBuffer<T> reconstructedResult(result->size());
+    DeviceBuffer<T> reconstructedExpected(expected->size()); 
+
+    NEW_funcReconstruct(*result, reconstructedResult);
+    NEW_funcReconstruct(*expected, reconstructedExpected);
+
+    std::vector<T> host_r(reconstructedResult.size());
+    std::vector<T> host_e(reconstructedExpected.size());
+    thrust::copy(reconstructedResult.getData().begin(), reconstructedResult.getData().end(),
+        host_r.begin());
+    thrust::copy(reconstructedExpected.getData().begin(), reconstructedExpected.getData().end(),
+        host_e.begin());
+
+    std::vector<float> convertedResult(host_r.size()), convertedExpected(host_e.size());
+    if (convertFixed) {
+        fromFixed(host_r, convertedResult);
+        fromFixed(host_e, convertedExpected);
+    } else {
+        std::copy(host_r.begin(), host_r.end(), convertedResult.begin());
+        std::copy(host_e.begin(), host_e.end(), convertedExpected.begin());
+    }
+
+    for(int i = 0; i < convertedResult.size(); i++) {
+        ASSERT_EQ(convertedResult[i], convertedExpected[i]);
+    }
+}
 
 TEST(GPUTest, FixedPointMatMul) {
     DeviceBuffer<uint32_t> a = {1, 2, 1, 2, 1, 2};  // 2 x 3
@@ -469,6 +524,32 @@ TEST(FuncTest, Maxpool) {
         0, 0, 1, 0, 0, 0, 0, 1
     };
     assertDeviceBuffer(reconstructedDResult, dexpected, false);
+}
+
+TEST(LayerTest, FCForward) {
+
+    int inputDim = 4;
+    int batchSize = 4;
+    int outputDim = 3;
+
+    srand(0xdeadbeef);
+
+    RSSData<uint32_t> input {
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+    };
+
+    FCConfig *lconfig = new FCConfig(inputDim, batchSize, outputDim);
+    FCLayer<uint32_t> layer(lconfig, 0); 
+
+    layer.forward(input);
+
+    RSSData<uint32_t> *activations = layer.getActivation();
+    RSSData<uint32_t> *weights = layer.getWeights();
+
+    assertRSS(activations, weights);
 }
 
 TEST(PerfTest, DISABLED_LargeMatMul) {

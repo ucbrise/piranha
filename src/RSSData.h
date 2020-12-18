@@ -42,6 +42,7 @@ class RSSData {
         size_t size() const;
         void zero();
         void fillKnown(T val);
+        void setKnown(std::vector<float> &v);
         void resize(size_t n);
         void unzip(RSSData<T> &even, RSSData<T> &odd);
         void zip(RSSData<T> &even, RSSData<T> &odd);

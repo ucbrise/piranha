@@ -19,7 +19,6 @@ class FCLayer : public Layer<T> {
         RSSData<T> weights;
         RSSData<T> biases;
 
-
     public:
         //Constructor and initializer
         FCLayer(FCConfig* conf, int _layerNum);
@@ -33,5 +32,7 @@ class FCLayer : public Layer<T> {
 
         //Getters
         RSSData<T>* getActivation() {return &activations;};
+        RSSData<T>* getWeights() {return &weights;};
+        RSSData<T>* getBiases() {return &biases;};
         RSSData<T>* getDelta() {return &deltas;};
 };
