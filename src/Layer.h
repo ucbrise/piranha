@@ -21,5 +21,7 @@ class Layer
 
     //Getters
         virtual RSSData<T> *getActivation() {};
+        virtual RSSData<T> *getWeights() {};
+        virtual RSSData<T> *getBiases() {};
         virtual RSSData<T> *getDelta() {};
 };

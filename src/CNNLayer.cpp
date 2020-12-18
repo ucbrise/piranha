@@ -1,29 +1,28 @@
 #pragma once
 
 #include <stdexcept>
+#include <thrust/copy.h>
+#include <thrust/device_vector.h>
+#include <thrust/transform.h>
 
 #include "CNNLayer.h"
 #include "Functionalities.h"
 
-using namespace std;
-
 extern bool LARGE_NETWORK;
 
 template<typename T>
-CNNLayer<T>::CNNLayer(CNNConfig* conf, int _layerNum)
-:Layer<T>(_layerNum),
- conf(conf->imageHeight, conf->imageWidth, conf->inputFeatures, 
-	  conf->filters, conf->filterSize, conf->stride, 
-	  conf->padding, conf->batchSize),
- weights(conf->filterSize * conf->filterSize * conf->inputFeatures * conf->filters),
- biases(conf->filters),
- activations(conf->batchSize * conf->filters * 
-		    (((conf->imageWidth - conf->filterSize + 2*conf->padding)/conf->stride) + 1) * 
- 		    (((conf->imageHeight - conf->filterSize + 2*conf->padding)/conf->stride) + 1)),
- deltas(conf->batchSize * conf->filters * 
+CNNLayer<T>::CNNLayer(CNNConfig* conf, int _layerNum) : Layer<T>(_layerNum),
+	conf(conf->imageHeight, conf->imageWidth, conf->inputFeatures, 
+	 	conf->filters, conf->filterSize, conf->stride, 
+		conf->padding, conf->batchSize),
+ 	weights(conf->filterSize * conf->filterSize * conf->inputFeatures * conf->filters),
+ 	biases(conf->filters),
+ 	activations(conf->batchSize * conf->filters * 
+		(((conf->imageWidth - conf->filterSize + 2*conf->padding)/conf->stride) + 1) * 
+ 		(((conf->imageHeight - conf->filterSize + 2*conf->padding)/conf->stride) + 1)),
+ 	deltas(conf->batchSize * conf->filters * 
 	    (((conf->imageWidth - conf->filterSize + 2*conf->padding)/conf->stride) + 1) * 
-	    (((conf->imageHeight - conf->filterSize + 2*conf->padding)/conf->stride) + 1))
-{
+	    (((conf->imageHeight - conf->filterSize + 2*conf->padding)/conf->stride) + 1)) {
 	initialize();
 };
 
@@ -36,7 +35,13 @@ void CNNLayer<T>::initialize()
 	size_t higher = 50;
 	size_t decimation = 10000;
 	size_t size = weights.size();
-	
+
+    std::vector<float> weight_vals(weights.size());
+    for (int i = 0; i < weight_vals.size(); i++) {
+        weight_vals[i] = ((float)(rand() % (higher - lower) + lower)) / decimation;
+    }
+
+    weights.setKnown(weight_vals);
     biases.zero();
 }
 
@@ -59,23 +64,32 @@ void CNNLayer<T>::forward(RSSData<T> &inputActivation)
 {
 	log_print("CNN.forward");
 
-	size_t B 	= conf.batchSize;
-	size_t iw 	= conf.imageWidth;
-	size_t ih 	= conf.imageHeight;
-	size_t f 	= conf.filterSize;
-	size_t Din 	= conf.inputFeatures;
-	size_t Dout = conf.filters;
-	size_t P 	= conf.padding;
-	size_t S 	= conf.stride;
-	size_t ow 	= (((iw-f+2*P)/S)+1);
-	size_t oh	= (((ih-f+2*P)/S)+1);
+    this->layer_profiler.start();
 
-    //this->layer_profiler.start();
+    for (int k = 0; k < conf.batchSize; k++) {
+    	// TODO this is terri-bad 
+    	int imSize = inputActivation.size() / conf.batchSize;
+    	RSSData<T> im(imSize);
+    	cudaMemcpy(
+    		thrust::raw_pointer_cast(im[0].getData().data()),
+    		thrust::raw_pointer_cast(inputActivation[0].getData().data()) + (k * imSize),
+    		imSize * sizeof(T),
+    		cudaMemcpyDefault
+    	);
+		cudaMemcpy(
+    		thrust::raw_pointer_cast(im[1].getData().data()),
+    		thrust::raw_pointer_cast(inputActivation[1].getData().data()) + (k * imSize),
+    		imSize * sizeof(T),
+    		cudaMemcpyDefault
+    	);
 
-    NEW_funcConvolution(inputActivation, weights, biases, activations,
-            iw, ih, f, Din, Dout, S, P, FLOAT_PRECISION); 
+		NEW_funcConvolution(im, weights, biases, activations,
+		    	conf.imageWidth, conf.imageHeight,
+		    	conf.filterSize, conf.inputFeatures, conf.filters,
+		    	conf.stride, conf.padding, FLOAT_PRECISION);
+    }
 
-    //this->layer_profiler.accumulate("cnn-forward-gpu");
+    this->layer_profiler.accumulate("cnn-forward");
 }
 
 template<typename T>

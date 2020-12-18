@@ -47,12 +47,14 @@ void FCLayer<T>::forward(RSSData<T> &inputActivation)
 {
 	log_print("FC.forward");
 
+    this->layer_profiler.start();
+    
 	size_t rows = conf.batchSize;
 	size_t columns = conf.outputDim;
 	size_t common_dim = conf.inputDim;
 	size_t size = rows*columns;
 
-    this->layer_profiler.start();
+
     matmul_profiler.start();
 	NEW_funcMatMul(inputActivation, weights, activations,
             rows, common_dim, columns, false, false, FLOAT_PRECISION);

@@ -1,11 +1,11 @@
 
 #pragma once
+
 #include "CNNConfig.h"
 #include "Layer.h"
 #include "tools.h"
 #include "connect.h"
 #include "globals.h"
-using namespace std;
 
 template<typename T>
 class CNNLayer : public Layer<T> {
@@ -30,6 +30,8 @@ class CNNLayer : public Layer<T> {
 
         //Getters
         RSSData<T> *getActivation() {return &activations;};
+        RSSData<T> *getWeights() {return &weights;};
+        RSSData<T> *getBiases() {return &biases;};
         RSSData<T> *getDelta() {return &deltas;};
 };
 
