@@ -30,6 +30,8 @@ class ReLULayer : public Layer<T> {
 
         //Getters
         RSSData<T> *getActivation() {return &activations;};
+        RSSData<T> *getWeights() {return nullptr;};
+        RSSData<T> *getBiases() {return nullptr;};
         RSSData<T> *getDelta() {return &deltas;};
 
         static Profiler relu_profiler;

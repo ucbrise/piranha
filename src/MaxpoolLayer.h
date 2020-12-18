@@ -14,7 +14,7 @@ class MaxpoolLayer : public Layer<T> {
         MaxpoolConfig conf;
         RSSData<T> activations;
         RSSData<T> deltas;
-        //RSSData<uint8_t> maxPrime;
+        // TODO RSSData<uint8_t> maxPrime;
         RSSData<T> maxPrime;
 
     public:
@@ -29,8 +29,9 @@ class MaxpoolLayer : public Layer<T> {
 
         //Getters
         RSSData<T> *getActivation() {return &activations;};
+        RSSData<T> *getWeights() {return nullptr;}
+        RSSData<T> *getBiases() {return nullptr;}
         RSSData<T> *getDelta() {return &deltas;};
 
         static Profiler maxpool_profiler;
 };
-

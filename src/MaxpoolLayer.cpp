@@ -1,4 +1,5 @@
 
+#include "convolution.cuh"
 #include "MaxpoolLayer.h"
 #include "Functionalities.h"
 
@@ -6,20 +7,20 @@ template<typename T>
 Profiler MaxpoolLayer<T>::maxpool_profiler;
 
 template<typename T>
-MaxpoolLayer<T>::MaxpoolLayer(MaxpoolConfig* conf, int _layerNum)
-:Layer<T>(_layerNum),
- conf(conf->imageHeight, conf->imageWidth, conf->features, 
-	  conf->poolSize, conf->stride, conf->batchSize),
- activations(conf->batchSize * conf->features * 
-		    (((conf->imageWidth - conf->poolSize)/conf->stride) + 1) * 
+MaxpoolLayer<T>::MaxpoolLayer(MaxpoolConfig* conf, int _layerNum) : Layer<T>(_layerNum),
+ 	conf(conf->imageHeight, conf->imageWidth, conf->features, 
+	  		conf->poolSize, conf->stride, conf->batchSize),
+ 	activations(conf->batchSize * conf->features * 
+			(((conf->imageWidth - conf->poolSize)/conf->stride) + 1) * 
  		    (((conf->imageHeight - conf->poolSize)/conf->stride) + 1)),
- deltas(conf->batchSize * conf->features * 
-	   (((conf->imageWidth - conf->poolSize)/conf->stride) + 1) * 
-	   (((conf->imageHeight - conf->poolSize)/conf->stride) + 1)),
- maxPrime((((conf->imageWidth - conf->poolSize)/conf->stride) + 1) * 
-		 (((conf->imageHeight - conf->poolSize)/conf->stride) + 1) * 
-		 conf->features * conf->batchSize * conf->poolSize * conf->poolSize)
-{};
+ 	deltas(conf->batchSize * conf->features * 
+	   		(((conf->imageWidth - conf->poolSize)/conf->stride) + 1) * 
+	   		(((conf->imageHeight - conf->poolSize)/conf->stride) + 1)),
+ 	maxPrime((((conf->imageWidth - conf->poolSize)/conf->stride) + 1) * 
+		 	(((conf->imageHeight - conf->poolSize)/conf->stride) + 1) * 
+		 	conf->features * conf->batchSize * conf->poolSize * conf->poolSize) {
+	// nothing
+};
 
 template<typename T>
 void MaxpoolLayer<T>::printLayer()
@@ -37,22 +38,22 @@ void MaxpoolLayer<T>::forward(RSSData<T>& inputActivation)
 {
 	log_print("Maxpool.forward");
 
-	size_t B 	= conf.batchSize;
-	size_t iw 	= conf.imageWidth;
-	size_t ih 	= conf.imageHeight;
-	size_t f 	= conf.poolSize;
-	size_t Din 	= conf.features;
-	size_t S 	= conf.stride;
-	size_t ow 	= (((iw-f)/S)+1);
-	size_t oh	= (((ih-f)/S)+1);
+    this->layer_profiler.start();
+    maxpool_profiler.start();
 
-    //this->layer_profiler.start();
-    //maxpool_profiler.start();
+    int nPools = ((conf.imageHeight - conf.poolSize)/conf.stride + 1) *
+    			 ((conf.imageWidth - conf.poolSize)/conf.stride + 1);
+   	RSSData<T> pools(nPools * conf.features * conf.batchSize * (conf.poolSize * conf.poolSize));
+   	for(int share = 0; share <= 1; share++) {
+	   	gpu::im2row(inputActivation[share], pools[share],
+	   			conf.imageWidth, conf.imageHeight, conf.poolSize, conf.features * conf.batchSize,
+	   			conf.stride, 0);
+   	}
     
-    //NEW_funcMaxpool(inputActivation, activations, maxPrime);
+    NEW_funcMaxpool(pools, activations, maxPrime, conf.poolSize * conf.poolSize);
 
-    //this->layer_profiler.accumulate("maxpool-forward-temp1");
-    //maxpool_profiler.accumulate("maxpool-forward-temp1");
+    this->layer_profiler.accumulate("maxpool-forward");
+    maxpool_profiler.accumulate("maxpool-forward");
 }
 
 template<typename T>

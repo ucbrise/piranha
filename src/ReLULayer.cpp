@@ -9,13 +9,16 @@ template<typename T>
 Profiler ReLULayer<T>::relu_profiler;
 
 template<typename T>
-ReLULayer<T>::ReLULayer(ReLUConfig* conf, int _layerNum)
-:Layer<T>(_layerNum),
- conf(conf->batchSize, conf->inputDim),
- activations(conf->batchSize * conf->inputDim), 
- deltas(conf->batchSize * conf->inputDim),
- reluPrime(conf->batchSize * conf->inputDim)
-{}
+ReLULayer<T>::ReLULayer(ReLUConfig* conf, int _layerNum) : Layer<T>(_layerNum),
+	conf(conf->batchSize, conf->inputDim),
+	activations(conf->batchSize * conf->inputDim), 
+	deltas(conf->batchSize * conf->inputDim),
+ 	reluPrime(conf->batchSize * conf->inputDim) {
+
+	activations.zero();
+	reluPrime.zero();
+	deltas.zero();	
+}
 
 template<typename T>
 void ReLULayer<T>::printLayer()
@@ -29,9 +32,11 @@ void ReLULayer<T>::forward(RSSData<T> &inputActivation)
 {
 	log_print("ReLU.forward");
 
-	size_t rows = conf.batchSize;
+	/*
+	size_t rows = conf.batchSize; // ???
 	size_t columns = conf.inputDim;
 	size_t size = rows*columns;
+	*/
 
     this->layer_profiler.start();
     relu_profiler.start();

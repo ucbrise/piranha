@@ -12,6 +12,8 @@
 #include "FCLayer.h"
 #include "Functionalities.h"
 #include "matrix.cuh"
+#include "MaxpoolConfig.h"
+#include "MaxpoolLayer.h"
 #include "Profiler.h"
 #include "ReLUConfig.h"
 #include "ReLULayer.h"
@@ -434,19 +436,21 @@ TEST(FuncTest, DRELU) {
 
 TEST(FuncTest, RELU) {
 
-    RSSData<uint32_t> input = {-1, 2, -3};
+    RSSData<uint32_t> input = {
+        -2, -3, 4, 3, 3.5, 1, -1.5, -1
+    };
 
     RSSData<uint32_t> result(input.size());
     RSSData<uint32_t> dresult(input.size());
     NEW_funcRELU(input, result, dresult);
 
     std::vector<float> expected = {
-        0, 2, 0
+        0, 0, 4, 3, 3.5, 1, 0, 0
     };
     assertRSS(&result, expected);
 
     std::vector<float> dexpected = {
-        0, 1, 0
+        0, 0, 1, 1, 1, 1, 0, 0
     };
     assertRSS(&dresult, dexpected, false);
 }
@@ -539,49 +543,58 @@ TEST(LayerTest, CNNForward) {
 
 TEST(LayerTest, RELUForward) {
 
-    // TODO
-
-    /*
-    // 2x2, Din=3
-    RSSData<uint32_t> im = {
-        1, 0,
-        0, 0,
-        0, 1,
-        0, 0,
-        0, 0,
-        0, 1,
+    RSSData<uint32_t> input = {
+        -2, -3, 4, 3, 3.5, 1, -1.5, -1
     };
 
-    // weights: 2 2x2 filters, Dout=2 -> 4 2x2 filters
-    // biases: 1xDout, duplicated for each row in the convolved output
-    //              -> 1x2 biases
-    CNNConfig *lconfig = new CNNConfig(
-        2, 2, // image width x image height
-        3, // input features
-        2, 2, // filters, filter size
-        2, 1, // stride, padding
-        1 // batch size
+    ReLUConfig *lconfig = new ReLUConfig(
+        input.size(),
+        1 // batch size? 
     );
-    CNNLayer<uint32_t> layer(lconfig, 0); 
-    layer.forward(im);
-
-    // construct expected results based on randomized layer weights 
-    std::vector<float> host_weights(2*2*3*2); // 24
-    copyToHost(*layer.getWeights(), host_weights);
+    ReLULayer<uint32_t> layer(lconfig, 0);
+    layer.forward(input);
 
     std::vector<float> expected = {
-        host_weights[3],
-        host_weights[6],
-        0,
-        host_weights[8],
-        host_weights[15],
-        host_weights[18],
-        0,
-        host_weights[20]
+        0, 0, 4, 3, 3.5, 1, 0, 0
+    };
+    assertRSS(layer.getActivation(), expected);
+}
+
+TEST(LayerTest, MaxpoolForward) {
+    // imageWidth x imageHeight = 2 x 2
+    // features = 3
+    // batchSize = 2
+    RSSData<uint32_t> inputImage = {
+        // im 1
+         1,  3,
+        -3,  0,
+        -1, -2,
+         2,  1,
+         3,  0,
+         1, -1,
+        // im 2
+         2, -2,
+         0, -1,
+        -1, -3,
+         0,  3,
+        -2, -3,
+         0, -2
     };
 
+    MaxpoolConfig *lconfig = new MaxpoolConfig(
+        2, 2, // imageWidth x imageHeight
+        3, // features
+        2, // poolSize
+        1, // stride
+        2 // batchSize
+    );
+    MaxpoolLayer<uint32_t> layer(lconfig, 0);
+    layer.forward(inputImage);
+
+    std::vector<float> expected = {
+        3, 2, 3, 2, 3, 0    
+    };
     assertRSS(layer.getActivation(), expected);
-    */
 }
 
 TEST(PerfTest, DISABLED_LargeMatMul) {
