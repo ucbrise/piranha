@@ -80,15 +80,11 @@ RSSData<T> &FCLayer<T>::backward(RSSData<T> &incomingDelta, RSSData<T> &inputAct
 
     // (2) Compute gradients w.r.t. weights and biases and update
     RSSData<T> db(conf.outputDim);
-    // TODO some sort of sumRows(deltas, db);
-    /*
-    for (size_t i = 0; i < rows; ++i)
-        for (size_t j = 0; j < columns; ++j)
-            temp[j] = temp[j] + deltas[i*columns + j];
-
-    funcTruncate(temp, LOG_MINI_BATCH + LOG_LEARNING_RATE, columns);
-    subtractVectors<RSSMyType>(biases, temp, biases, columns)
-    */
+    for (int share = 0; share <= 1; share++) {
+        gpu::reduceSum(incomingDelta[share], db[share], true, conf.batchSize, conf.outputDim);
+    }
+    NEW_funcTruncate(db, LOG_MINI_BATCH + LOG_LEARNING_RATE);
+    biases -= db;
 
     RSSData<T> dW(conf.outputDim * conf.inputDim);
     NEW_funcMatMul(deltas, inputActivation, dW,

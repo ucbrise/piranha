@@ -37,4 +37,8 @@ template<typename T>
 void elementVectorAdd(DeviceBuffer<T> &a, DeviceBuffer<T> &b,
         bool rowwise, size_t rows, size_t cols);
 
+template<typename T> 
+void reduceSum(DeviceBuffer<T> &a, DeviceBuffer<T> &b,
+        bool reduceRows, size_t rows, size_t cols);
+
 }

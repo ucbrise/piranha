@@ -77,6 +77,22 @@ template __global__ void elementVectorAdd<uint32_t>(uint32_t *a, uint32_t *b,
 template __global__ void elementVectorAdd<uint8_t>(uint8_t *a, uint8_t *b,
         bool rowwise, int rows, int cols);
 
+// add vector b to every row/col in a
+template<typename T>
+__global__ void reduceSum(T* a, T* b, bool reduceRows, int rows, int cols) {
+
+    int ROW = blockIdx.y*blockDim.y+threadIdx.y;
+    int COL = blockIdx.x*blockDim.x+threadIdx.x;
+
+    if (ROW < rows && COL < cols) {
+        b[reduceRows ? COL : ROW] += a[ROW * cols + COL];
+    }
+}
+
+template __global__ void reduceSum<uint32_t>(uint32_t *a, uint32_t *b,
+        bool reduceRows, int rows, int cols);
+template __global__ void reduceSum<uint8_t>(uint8_t *a, uint8_t *b,
+        bool reduceRows, int rows, int cols);
 
 } // namespace kernel
 
@@ -180,6 +196,35 @@ template void elementVectorAdd<uint32_t>(DeviceBuffer<uint32_t> &a,
         DeviceBuffer<uint32_t> &b, bool rowwise, size_t rows, size_t cols);
 template void elementVectorAdd<uint8_t>(DeviceBuffer<uint8_t> &a,
         DeviceBuffer<uint8_t> &b, bool rowwise, size_t rows, size_t cols);
+
+template<typename T> 
+void reduceSum(DeviceBuffer<T> &a, DeviceBuffer<T> &b,
+        bool reduceRows, size_t rows, size_t cols) {
+        
+    dim3 threadsPerBlock(cols, rows);
+    dim3 blocksPerGrid(1, 1);
+
+    if (cols > MAX_THREADS_PER_BLOCK) {
+        threadsPerBlock.x = MAX_THREADS_PER_BLOCK;
+        blocksPerGrid.x = ceil(double(cols)/double(threadsPerBlock.x));
+    }
+    
+    if (rows > MAX_THREADS_PER_BLOCK) {
+        threadsPerBlock.y = MAX_THREADS_PER_BLOCK;
+        blocksPerGrid.y = ceil(double(rows)/double(threadsPerBlock.y));
+    }
+
+    kernel::reduceSum<T><<<blocksPerGrid,threadsPerBlock>>>(
+        thrust::raw_pointer_cast(a.getData().data()),
+        thrust::raw_pointer_cast(b.getData().data()),
+        reduceRows, rows, cols
+    );
+}
+
+template void reduceSum<uint32_t>(DeviceBuffer<uint32_t> &a,
+        DeviceBuffer<uint32_t> &b, bool reduceRows, size_t rows, size_t cols);
+template void reduceSum<uint8_t>(DeviceBuffer<uint8_t> &a,
+        DeviceBuffer<uint8_t> &b, bool reduceRows, size_t rows, size_t cols);
 
 } // namespace gpu
 
