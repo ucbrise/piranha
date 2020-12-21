@@ -431,12 +431,15 @@ void NEW_funcDRELU(RSSData<T> &input, RSSData<U> &result) {
     func_profiler.start();
     int bitWidth = sizeof(T) * 8;
 
+    //printRSS(rbits, "rbits");
+    //printDB(abits, "abits");
+
     RSSData<U> msb(input.size());
     gpu::setCarryOutMSB(rbits, abits, msb);
     func_profiler.accumulate("drelu-msb");
 
-    //printRSS(rbits, "drelu-457");
-    //printDB(abits, "drelu-458");
+    //printRSS(msb, "msb");
+
     //printRSS(msb, "drelu-459");
 
     //printDB(abits, "abits");

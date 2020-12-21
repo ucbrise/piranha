@@ -1,11 +1,11 @@
 
 #pragma once
+
 #include "ReLUConfig.h"
 #include "Layer.h"
 #include "tools.h"
 #include "connect.h"
 #include "globals.h"
-using namespace std;
 
 extern int partyNum;
 
@@ -16,7 +16,7 @@ class ReLULayer : public Layer<T> {
         ReLUConfig conf;
         RSSData<T> activations;
         RSSData<T> deltas;
-        RSSData<uint8_t> reluPrime;
+        RSSData<uint32_t> reluPrime;
 
     public:
         //Constructor and initializer

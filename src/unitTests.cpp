@@ -547,10 +547,7 @@ TEST(LayerTest, RELUForward) {
         -2, -3, 4, 3, 3.5, 1, -1.5, -1
     };
 
-    ReLUConfig *lconfig = new ReLUConfig(
-        input.size(),
-        1 // batch size? 
-    );
+    ReLUConfig *lconfig = new ReLUConfig(input.size(), 1);
     ReLULayer<uint32_t> layer(lconfig, 0);
     layer.forward(input);
 
