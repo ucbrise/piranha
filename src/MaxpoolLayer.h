@@ -12,10 +12,12 @@ class MaxpoolLayer : public Layer<T> {
 
     private:
         MaxpoolConfig conf;
-        RSSData<T> activations;
-        RSSData<T> deltas;
+
         // TODO RSSData<uint8_t> maxPrime;
         RSSData<T> maxPrime;
+
+        RSSData<T> activations;
+        RSSData<T> deltas;
 
     public:
         //Constructor and initializer
@@ -23,8 +25,8 @@ class MaxpoolLayer : public Layer<T> {
 
         //Functions
         void printLayer() override;
-        void forward(RSSData<T>& inputActivation) override;
-        RSSData<T> &backward(RSSData<T>& incomingDelta, RSSData<T> &inputActivation) override;
+        void forward(RSSData<T>& input) override;
+        void backward(RSSData<T>& delta, RSSData<T> &forwardInput) override;
 
         //Getters
         RSSData<T> *getActivation() {return &activations;};

@@ -43,7 +43,7 @@ void FCLayer<T>::printLayer()
 }
 
 template<typename T>
-void FCLayer<T>::forward(RSSData<T> &inputActivation)
+void FCLayer<T>::forward(RSSData<T> &input)
 {
 	log_print("FC.forward");
 
@@ -55,7 +55,7 @@ void FCLayer<T>::forward(RSSData<T> &inputActivation)
 	size_t size = rows*columns;
 
     matmul_profiler.start();
-	NEW_funcMatMul(inputActivation, weights, activations,
+	NEW_funcMatMul(input, weights, activations,
             rows, common_dim, columns, false, false, FLOAT_PRECISION);
     matmul_profiler.accumulate("fc-matmul");
 
@@ -68,32 +68,31 @@ void FCLayer<T>::forward(RSSData<T> &inputActivation)
 }
 
 template<typename T>
-RSSData<T> &FCLayer<T>::backward(RSSData<T> &incomingDelta, RSSData<T> &inputActivation) {
+void FCLayer<T>::backward(RSSData<T> &delta, RSSData<T> &forwardInput) {
     
 	log_print("FC.backward");
     this->layer_profiler.start();
 
     // (1) Compute backwards gradient for previous layer
     // deltas = incomingDelta * W.T
-    NEW_funcMatMul(incomingDelta, weights, deltas,
+    NEW_funcMatMul(delta, weights, this->deltas,
             conf.batchSize, conf.outputDim, conf.inputDim, false, true, FLOAT_PRECISION);
 
     // (2) Compute gradients w.r.t. weights and biases and update
     RSSData<T> db(conf.outputDim);
     for (int share = 0; share <= 1; share++) {
-        gpu::reduceSum(incomingDelta[share], db[share], true, conf.batchSize, conf.outputDim);
+        gpu::reduceSum(delta[share], db[share], true, conf.batchSize, conf.outputDim);
     }
     NEW_funcTruncate(db, LOG_MINI_BATCH + LOG_LEARNING_RATE);
     biases -= db;
 
     RSSData<T> dW(conf.outputDim * conf.inputDim);
-    NEW_funcMatMul(deltas, inputActivation, dW,
+    NEW_funcMatMul(this->deltas, forwardInput, dW,
             conf.outputDim, conf.batchSize, conf.inputDim, true, false,
             FLOAT_PRECISION + LOG_LEARNING_RATE + LOG_MINI_BATCH);
     weights -= dW;
 
     this->layer_profiler.accumulate("fc-backward");
-    return deltas;
 }
 
 template class FCLayer<uint32_t>;

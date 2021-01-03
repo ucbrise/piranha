@@ -1,7 +1,7 @@
 #pragma once
+
 #include "BNLayer.h"
 #include "Functionalities.h"
-using namespace std;
 
 template<typename T>
 BNLayer<T>::BNLayer(BNConfig* conf, int _layerNum) : Layer<T>(_layerNum),
@@ -26,7 +26,7 @@ void BNLayer<T>::printLayer()
 }
 
 template<typename T>
-void BNLayer<T>::forward(RSSData<T> &inputActivation)
+void BNLayer<T>::forward(RSSData<T> &input)
 {
     //TODO
     /*
@@ -103,7 +103,7 @@ void BNLayer<T>::forward(RSSData<T> &inputActivation)
 
 //https://kevinzakka.github.io/2016/09/14/batch_normalization/
 template<typename T>
-RSSData<T> &BNLayer<T>::backward(RSSData<T> &incomingDelta, RSSData<T> &inputActivation) {
+void BNLayer<T>::backward(RSSData<T> &delta, RSSData<T> &forwardInput) {
     // TODO
     /*
 	log_print("BN.computeDelta");

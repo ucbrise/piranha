@@ -60,7 +60,7 @@ void CNNLayer<T>::printLayer()
 }
 
 template<typename T>
-void CNNLayer<T>::forward(RSSData<T> &inputActivation)
+void CNNLayer<T>::forward(RSSData<T> &input)
 {
 	log_print("CNN.forward");
 
@@ -68,17 +68,17 @@ void CNNLayer<T>::forward(RSSData<T> &inputActivation)
 
     for (int k = 0; k < conf.batchSize; k++) {
     	// TODO this is terri-bad 
-    	int imSize = inputActivation.size() / conf.batchSize;
+    	int imSize = input.size() / conf.batchSize;
     	RSSData<T> im(imSize);
     	cudaMemcpy(
     		thrust::raw_pointer_cast(im[0].getData().data()),
-    		thrust::raw_pointer_cast(inputActivation[0].getData().data()) + (k * imSize),
+    		thrust::raw_pointer_cast(input[0].getData().data()) + (k * imSize),
     		imSize * sizeof(T),
     		cudaMemcpyDefault
     	);
 		cudaMemcpy(
     		thrust::raw_pointer_cast(im[1].getData().data()),
-    		thrust::raw_pointer_cast(inputActivation[1].getData().data()) + (k * imSize),
+    		thrust::raw_pointer_cast(input[1].getData().data()) + (k * imSize),
     		imSize * sizeof(T),
     		cudaMemcpyDefault
     	);
@@ -93,7 +93,7 @@ void CNNLayer<T>::forward(RSSData<T> &inputActivation)
 }
 
 template<typename T>
-RSSData<T> &CNNLayer<T>::backward(RSSData<T> &incomingDelta, RSSData<T> &inputActivation) {
+void CNNLayer<T>::backward(RSSData<T> &delta, RSSData<T> &forwardInput) {
     throw std::runtime_error(
         "[CNNLayer::computeDelta] GPU implementation not yet completed"
     );

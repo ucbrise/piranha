@@ -12,10 +12,12 @@ class CNNLayer : public Layer<T> {
 
     private:
         CNNConfig conf;
-        RSSData<T> activations;
-        RSSData<T> deltas;
+
         RSSData<T> weights;
         RSSData<T> biases;
+
+        RSSData<T> activations;
+        RSSData<T> deltas;
 
     public:
         //Constructor and initializer
@@ -24,8 +26,8 @@ class CNNLayer : public Layer<T> {
 
         //Functions
         void printLayer() override;
-        void forward(RSSData<T> &inputActivation) override;
-        RSSData<T> &backward(RSSData<T> &incomingDelta, RSSData<T> &inputActivation) override;
+        void forward(RSSData<T> &input) override;
+        void backward(RSSData<T> &delta, RSSData<T> &forwardInput) override;
 
         //Getters
         RSSData<T> *getActivation() {return &activations;};

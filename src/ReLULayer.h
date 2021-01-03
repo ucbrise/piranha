@@ -14,9 +14,11 @@ class ReLULayer : public Layer<T> {
 
     private:
         ReLUConfig conf;
+
+        RSSData<uint32_t> reluPrime;
+
         RSSData<T> activations;
         RSSData<T> deltas;
-        RSSData<uint32_t> reluPrime;
 
     public:
         //Constructor and initializer
@@ -24,8 +26,8 @@ class ReLULayer : public Layer<T> {
 
         //Functions
         void printLayer() override;
-        void forward(RSSData<T>& inputActivation) override;
-        RSSData<T> &backward(RSSData<T> &incomingDelta, RSSData<T> &inputActivation) override;
+        void forward(RSSData<T>& input) override;
+        void backward(RSSData<T> &delta, RSSData<T> &forwardInput) override;
 
         //Getters
         RSSData<T> *getActivation() {return &activations;};

@@ -34,7 +34,7 @@ void MaxpoolLayer<T>::printLayer()
 }
 
 template<typename T>
-void MaxpoolLayer<T>::forward(RSSData<T>& inputActivation)
+void MaxpoolLayer<T>::forward(RSSData<T>& input)
 {
 	log_print("Maxpool.forward");
 
@@ -45,7 +45,7 @@ void MaxpoolLayer<T>::forward(RSSData<T>& inputActivation)
     			 ((conf.imageWidth - conf.poolSize)/conf.stride + 1);
    	RSSData<T> pools(nPools * conf.features * conf.batchSize * (conf.poolSize * conf.poolSize));
    	for(int share = 0; share <= 1; share++) {
-	   	gpu::im2row(inputActivation[share], pools[share],
+	   	gpu::im2row(input[share], pools[share],
 	   			conf.imageWidth, conf.imageHeight, conf.poolSize, conf.features * conf.batchSize,
 	   			conf.stride, 0);
    	}
@@ -57,7 +57,7 @@ void MaxpoolLayer<T>::forward(RSSData<T>& inputActivation)
 }
 
 template<typename T>
-RSSData<T> &MaxpoolLayer<T>::backward(RSSData<T> &incomingDelta, RSSData<T> &inputActivation) {
+void MaxpoolLayer<T>::backward(RSSData<T> &delta, RSSData<T> &forwardInput) {
 
 	log_print("Maxpool.computeDelta");
 

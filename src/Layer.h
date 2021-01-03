@@ -15,8 +15,8 @@ class Layer
 
     //Virtual functions	
         virtual void printLayer() {};
-        virtual void forward(RSSData<T> &inputActivation) {};
-        virtual RSSData<T> &backward(RSSData<T> &incomingDelta, RSSData<T> &inputActivation) {};
+        virtual void forward(RSSData<T> &input) {};
+        virtual void backward(RSSData<T> &delta, RSSData<T> &forwardInput) {};
 
     //Getters
         virtual RSSData<T> *getActivation() {};

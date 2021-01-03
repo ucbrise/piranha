@@ -2,7 +2,6 @@
 
 A framework for efficient secure 3-party protocols tailored for neural networks with malicious security. This work builds off [SecureNN](), [ABY3]() and other prior works.  
 
-
 ### Table of Contents
 
 - [Requirements](#requirements)
