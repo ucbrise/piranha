@@ -36,8 +36,8 @@ int main(int argc, char** argv) {
         dataset = argv[7];
         security = argv[8];
     } else {
-		network = "VGG16";
-		dataset = "ImageNet";
+		network = "SecureML";
+		dataset = "MNIST";
 		security = "Semi-honest";
 	}
 	selectNetwork(network, dataset, security, config);
