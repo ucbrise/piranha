@@ -396,6 +396,7 @@ void NEW_funcDRELU(RSSData<T> &input, RSSData<U> &result) {
 
     //printRSS(input, "drelu-argument:input");
     //printRSS(result, "drelu-argument:result");
+    std::cout << "drelu start" << std::endl;
 
     // TODO move most code to pre-processing 
     RSSData<T> r(input.size());
@@ -405,6 +406,7 @@ void NEW_funcDRELU(RSSData<T> &input, RSSData<U> &result) {
 
     //printRSS(r, "drelu-406");
     //printRSS(rbits, "drelu-407");
+    std::cout << "drelu 406" << std::endl;
 
     func_profiler.start();
     DeviceBuffer<T> a(input.size());
@@ -415,10 +417,12 @@ void NEW_funcDRELU(RSSData<T> &input, RSSData<U> &result) {
     a += 1;
 
     //printDB(a, "drelu-417");
+    std::cout << "drelu 417" << std::endl;
 
     rbits = (U)1 - rbits; // element-wise subtract bits
 
     //printRSS(rbits, "drelu-421");
+    std::cout << "drelu 421" << std::endl;
 
     DeviceBuffer<U> abits(rbits.size());
     func_profiler.start();
@@ -426,6 +430,7 @@ void NEW_funcDRELU(RSSData<T> &input, RSSData<U> &result) {
     func_profiler.accumulate("drelu-bitexpand");
 
     //printDB(abits, "drelu-428");
+    std::cout << "drelu 428" << std::endl;
 
     // set MSBs
     func_profiler.start();
@@ -433,14 +438,18 @@ void NEW_funcDRELU(RSSData<T> &input, RSSData<U> &result) {
 
     //printRSS(rbits, "rbits");
     //printDB(abits, "abits");
+    std::cout << "drelu 439" << std::endl;
 
+    std::cout << "input size " << input.size() << std::endl;
     RSSData<U> msb(input.size());
+    std::cout << "msb size " << msb.size() << std::endl;
     gpu::setCarryOutMSB(rbits, abits, msb);
     func_profiler.accumulate("drelu-msb");
 
     //printRSS(msb, "msb");
 
     //printRSS(msb, "drelu-459");
+    std::cout << "drelu 459" << std::endl;
 
     //printDB(abits, "abits");
     //printRSS(rbits, "rbits");
@@ -452,11 +461,14 @@ void NEW_funcDRELU(RSSData<T> &input, RSSData<U> &result) {
     //printRSS(g, "drelu-468");
     //printRSS(p, "drelu-469");
 
+    std::cout << "drelu before carryout" << std::endl;
+
     func_profiler.start();
     carryOut(p, g, bitWidth, result);
     func_profiler.accumulate("drelu-carryout");
 
     //printRSS(result, "carryout result");
+    std::cout << "drelu carryout result" << std::endl;
 
     result ^= msb;
     //printRSS(result, "after xor with msb");
@@ -464,6 +476,7 @@ void NEW_funcDRELU(RSSData<T> &input, RSSData<U> &result) {
     //printRSS(result, "after complement");
 
     //printRSS(result, "drelu-result");
+    std::cout << "drelu end" << std::endl;
 }
 
 template void NEW_funcDRELU<uint32_t, uint8_t>(RSSData<uint32_t> &input, RSSData<uint8_t> &result);
@@ -473,17 +486,25 @@ template void NEW_funcDRELU<uint32_t, uint32_t>(RSSData<uint32_t> &input, RSSDat
 template<typename T, typename U> 
 void NEW_funcRELU(RSSData<T> &input, RSSData<T> &result, RSSData<U> &dresult) {
 
+    std::cout << "relu start" << std::endl;
+
     func_profiler.start();
     NEW_funcDRELU<T, U>(input, dresult);
     func_profiler.accumulate("relu-drelu");
+
+    std::cout << "after drelu" << std::endl;
 
     // TODO XXX randomness use XXX TODO
     RSSData<T> zeros(input.size());
     zeros.zero();
 
+    std::cout << "before selectshare" << std::endl;
+
     func_profiler.start();
     NEW_funcSelectShare(zeros, input, dresult, result);
     func_profiler.accumulate("relu-selectshare");
+
+    std::cout << "end of relu" << std::endl;
 }
 
 template void NEW_funcRELU<uint32_t, uint8_t>(RSSData<uint32_t> &input,
