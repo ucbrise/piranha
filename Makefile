@@ -18,7 +18,7 @@ OBJ_INCLUDES += -I '$(CONDA_BASE)/include' -I '/usr/local/cuda-10.2/include'
 BMR_INCLUDES := $(OBJ_INCLUDES), -L./ -L$(CONDA_BASE)/lib -L/usr/local/cuda-10.2/lib64
 
 #########################################################################################
-RUN_TYPE := LAN# RUN_TYPE {localhost, LAN or WAN} 
+RUN_TYPE := localhost# RUN_TYPE {localhost, LAN or WAN} 
 NETWORK := SecureML# NETWORK {SecureML, Sarda, MiniONN, LeNet, AlexNet, and VGG16}
 DATASET	:= MNIST# Dataset {MNIST, CIFAR10, and ImageNet}
 SECURITY:= Semi-honest# Security {Semi-honest or Malicious} 
@@ -47,9 +47,9 @@ clean:
 
 ################################# Remote runs ##########################################
 terminal: BMRPassive.out
-	./BMRPassive.out 2 files/IP_$(RUN_TYPE) files/keyC files/keyAC files/keyBC >/dev/null 2>&1 &
-	./BMRPassive.out 1 files/IP_$(RUN_TYPE) files/keyB files/keyBC files/keyAB >/dev/null 2>&1 &
-	./BMRPassive.out 0 files/IP_$(RUN_TYPE) files/keyA files/keyAB files/keyAC
+	./BMRPassive.out 2 files/IP_$(RUN_TYPE) files/keyC files/keyAC files/keyBC $(NETWORK) $(DATASET) $(SECURITY) >/dev/null 2>&1 &
+	./BMRPassive.out 1 files/IP_$(RUN_TYPE) files/keyB files/keyBC files/keyAB $(NETWORK) $(DATASET) $(SECURITY) >/dev/null 2>&1 &
+	./BMRPassive.out 0 files/IP_$(RUN_TYPE) files/keyA files/keyAB files/keyAC $(NETWORK) $(DATASET) $(SECURITY)
 	@echo "Execution completed"
 
 file: BMRPassive.out

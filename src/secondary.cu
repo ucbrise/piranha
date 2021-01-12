@@ -2,12 +2,14 @@
 #include "connect.h" 
 #include "secondary.h"
 
+void print_usage (const char * bin);
+
 extern CommunicationObject commObject;
 extern int partyNum;
-extern string * addrs;
+extern std::string * addrs;
 extern BmrNet ** communicationSenders;
 extern BmrNet ** communicationReceivers;
-extern void log_print(string str);
+extern void log_print(std::string str);
 #define NANOSECONDS_PER_SEC 1E9
 
 //For time measurements
@@ -23,8 +25,8 @@ extern smallType additionModPrime[PRIME_NUMBER][PRIME_NUMBER];
 extern smallType subtractModPrime[PRIME_NUMBER][PRIME_NUMBER];
 extern smallType multiplicationModPrime[PRIME_NUMBER][PRIME_NUMBER];
 
-RSSData<uint32_t> trainData, testData;
-RSSData<uint32_t> trainLabels, testLabels;
+//RSSData<uint32_t> trainData, testData;
+//RSSData<uint32_t> trainLabels, testLabels;
 
 size_t trainDataBatchCounter = 0;
 size_t trainLabelsBatchCounter = 0;
@@ -38,7 +40,7 @@ bool WITH_NORMALIZATION;
 bool LARGE_NETWORK;
 size_t TRAINING_DATA_SIZE;
 size_t TEST_DATA_SIZE;
-string SECURITY_TYPE;
+std::string SECURITY_TYPE;
 
 /******************* Main train and test functions *******************/
 void parseInputs(int argc, char* argv[])
@@ -48,6 +50,7 @@ void parseInputs(int argc, char* argv[])
 
 	partyNum = atoi(argv[1]);
 
+    /* TODO?
 	for (int i = 0; i < PRIME_NUMBER; ++i)
 		for (int j = 0; j < PRIME_NUMBER; ++j)
 		{
@@ -55,8 +58,10 @@ void parseInputs(int argc, char* argv[])
 			subtractModPrime[i][j] = ((PRIME_NUMBER + i - j) % PRIME_NUMBER);
 			multiplicationModPrime[i][j] = ((i * j) % PRIME_NUMBER); //How come you give the right answer multiplying in 8-bits??
 		}
+    */
 }
 
+/*
 template<typename T>
 void train(NeuralNetwork<T> *net, NeuralNetConfig *config)
 {
@@ -79,10 +84,10 @@ void test(NeuralNetwork<T> *net)
 	log_print("test");
 
 	// counter[0]: Correct samples, counter[1]: total samples
-    /* XXX
+    / * XXX
 	vector<size_t> counter(2,0);
 	RSSData<T> maxIndex(MINI_BATCH_SIZE);
-    */
+    * /
 
 	for (int i = 0; i < NUM_ITERATIONS; ++i)
 	{
@@ -680,9 +685,11 @@ void runOnly(NeuralNetwork<T> *net, size_t l, string what, string& network)
 	else
 		assert(false && "Only F,D or U allowed in runOnly");
 }
+*/
 
 /********************* COMMUNICATION AND HELPERS *********************/
 
+/*
 void start_m()
 {
 	// cout << endl;
@@ -787,23 +794,23 @@ void aggregateCommunication()
 		cout << "----------------------------------------------" << endl;
 	}
 }
+*/
 
-
-void print_usage (const char * bin) 
-{
-    cout << "Usage: ./" << bin << " PARTY_NUM IP_ADDR_FILE AES_SEED_INDEP AES_SEED_NEXT AES_SEED_PREV" << endl;
-    cout << endl;
-    cout << "Required Arguments:\n";
-    cout << "PARTY_NUM			Party Identifier (0,1, or 2)\n";
-    cout << "IP_ADDR_FILE		\tIP Address file (use makefile for automation)\n";
-    cout << "AES_SEED_INDEP		\tAES seed file independent\n";
-    cout << "AES_SEED_NEXT		\t \tAES seed file next\n";
-    cout << "AES_SEED_PREV		\t \tAES seed file previous\n";
-    cout << endl;
-    cout << "Report bugs to swagh@princeton.edu" << endl;
+void print_usage (const char * bin) {
+    std::cout << "Usage: ./" << bin << " PARTY_NUM IP_ADDR_FILE AES_SEED_INDEP AES_SEED_NEXT AES_SEED_PREV" << std::endl;
+    std::cout << std::endl;
+    std::cout << "Required Arguments:\n";
+    std::cout << "PARTY_NUM			Party Identifier (0,1, or 2)\n";
+    std::cout << "IP_ADDR_FILE		\tIP Address file (use makefile for automation)\n";
+    std::cout << "AES_SEED_INDEP		\tAES seed file independent\n";
+    std::cout << "AES_SEED_NEXT		\t \tAES seed file next\n";
+    std::cout << "AES_SEED_PREV		\t \tAES seed file previous\n";
+    std::cout << std::endl;
+    std::cout << "Report bugs to swagh@princeton.edu" << std::endl;
     exit(-1);
 }
 
+/*
 double diff(timespec start, timespec end)
 {
     timespec temp;
@@ -820,7 +827,7 @@ double diff(timespec start, timespec end)
     }
     return temp.tv_sec + (double)temp.tv_nsec/NANOSECONDS_PER_SEC;
 }
-
+*/
 
 void deleteObjects()
 {

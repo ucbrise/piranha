@@ -1,8 +1,6 @@
 /*
  * DeviceBuffer.h
  * ----
- * 
- * Manages a GPU secret share on-device.
  */
 
 #pragma once
@@ -14,82 +12,116 @@
 #include <thrust/device_vector.h>
 #include <vector>
 
-// Pre-declare class and friend operator templates
-template<typename T> class DeviceBuffer;
-template<typename T> bool operator==(const DeviceBuffer<T> &lhs, const DeviceBuffer<T> &rhs);
-template<typename T> bool operator!=(const DeviceBuffer<T> &lhs, const DeviceBuffer<T> &rhs);
-template<typename T> DeviceBuffer<T> operator+(DeviceBuffer<T> lhs, const T rhs);
-template<typename T> DeviceBuffer<T> operator-(DeviceBuffer<T> lhs, const T rhs);
-template<typename T> DeviceBuffer<T> operator-(const T &lhs, const DeviceBuffer<T> &rhs);
-template<typename T> DeviceBuffer<T> operator*(DeviceBuffer<T> lhs, const T rhs);
-template<typename T> DeviceBuffer<T> operator/(DeviceBuffer<T> lhs, const T rhs);
-template<typename T> DeviceBuffer<T> operator>>(DeviceBuffer<T> lhs, const T rhs);
-template<typename T> DeviceBuffer<T> operator+(DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs);
-template<typename T> DeviceBuffer<T> operator-(DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs);
-template<typename T> DeviceBuffer<T> operator*(DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs);
-template<typename T> DeviceBuffer<T> operator/(DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs);
-template<typename T> DeviceBuffer<T> operator^(DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs);
-template<typename T> DeviceBuffer<T> operator&(DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs);
+#include "DeviceData.h"
 
 template<typename T>
-class DeviceBuffer
-{
+using DeviceVectorIterator = thrust::detail::normal_iterator<thrust::device_ptr<T> >;
+template<typename T>
+using DeviceVectorConstIterator = thrust::detail::normal_iterator<thrust::device_ptr<const T> >;
+
+template<typename T>
+class DeviceBuffer : public DeviceData<T, DeviceVectorIterator<T>, DeviceVectorConstIterator<T> > {
+
     public:
 
-        DeviceBuffer();
-        DeviceBuffer(size_t n);
-        DeviceBuffer(std::initializer_list<float> il);
-        DeviceBuffer(const DeviceBuffer &b);
-        ~DeviceBuffer();
+        DeviceBuffer(size_t n) : data(n) {}
+        DeviceBuffer(std::initializer_list<T> il) : data(il.size()) {
+            thrust::copy(il.begin(), il.end(), data.begin());
+        }
 
-        size_t size() const;
-        void resize(size_t n);
-        void zero();
-        void fill(T val);
-        void set(std::vector<float> &v);
-        template<typename U> void copy(DeviceBuffer<U> &src);
-        thrust::device_vector<T> &getData();
+        DeviceVectorConstIterator<T> first() const {
+            return data.begin();        
+        }
+        DeviceVectorIterator<T> first() {
+            return data.begin();        
+        }
 
-        void transmit(size_t party);
-        void receive(size_t party);
-        void join();
+        DeviceVectorConstIterator<T> last() const {
+            return data.end();
+        }
 
-        DeviceBuffer<T> &operator =(const DeviceBuffer<T> &other);
-        friend bool operator== <> (const DeviceBuffer<T> &lhs, const DeviceBuffer<T> &rhs);
-        friend bool operator!= <> (const DeviceBuffer<T> &lhs, const DeviceBuffer<T> &rhs);
+        DeviceVectorIterator<T> last() {
+            return data.end();
+        }
 
+        void resize(size_t n) {
+            data.resize(n);
+        }
+
+        thrust::device_vector<T> &raw() {
+            return data;
+        }
+        
         // scalar overloads
-        friend DeviceBuffer<T> operator+ <> (DeviceBuffer<T> lhs, const T rhs);
-        friend DeviceBuffer<T> operator- <> (DeviceBuffer<T> lhs, const T rhs);
-        friend DeviceBuffer<T> operator- <> (const T &lhs, const DeviceBuffer<T> &rhs);
-        friend DeviceBuffer<T> operator* <> (DeviceBuffer<T> lhs, const T rhs);
-        friend DeviceBuffer<T> operator/ <> (DeviceBuffer<T> lhs, const T rhs);
-        friend DeviceBuffer<T> operator>> <> (DeviceBuffer<T> lhs, const T rhs);
-        DeviceBuffer<T> &operator+=(const T rhs);
-        DeviceBuffer<T> &operator-=(const T rhs);
-        DeviceBuffer<T> &operator*=(const T rhs);
-        DeviceBuffer<T> &operator/=(const T rhs);
-        DeviceBuffer<T> &operator>>=(const T rhs);
+        DeviceBuffer<T> &operator+=(const T rhs) {
+            thrust::transform(first(), last(), first(), scalar_plus_functor<T>(rhs));
+            return *this;
+        }
+
+        DeviceBuffer<T> &operator-=(const T rhs) {
+            thrust::transform(first(), last(), first(), scalar_minus_functor<T>(rhs));
+            return *this;
+        }
+
+        DeviceBuffer<T> &operator*=(const T rhs) {
+            thrust::transform(first(), last(), first(), scalar_mult_functor<T>(rhs));
+            return *this;
+        }
+        
+        DeviceBuffer<T> &operator/=(const T rhs) {
+            thrust::transform(first(), last(), first(), scalar_divide_functor<T>(rhs));
+            return *this;
+        }
+
+        DeviceBuffer<T> &operator>>=(const T rhs) {
+            thrust::transform(first(), last(), first(), scalar_arith_rshift_functor<T>(rhs));
+            return *this;
+        }
 
         // vector overloads
-        friend DeviceBuffer<T> operator+ <> (DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs);
-        friend DeviceBuffer<T> operator- <> (DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs);
-        friend DeviceBuffer<T> operator* <> (DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs);
-        friend DeviceBuffer<T> operator/ <> (DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs);
-        friend DeviceBuffer<T> operator^ <> (DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs);
-        friend DeviceBuffer<T> operator& <> (DeviceBuffer<T> lhs, const DeviceBuffer<T> &rhs);
-        DeviceBuffer<T> &operator+=(const DeviceBuffer<T>& rhs);
-        DeviceBuffer<T> &operator-=(const DeviceBuffer<T>& rhs);
-        DeviceBuffer<T> &operator*=(const DeviceBuffer<T>& rhs);
-        DeviceBuffer<T> &operator/=(const DeviceBuffer<T>& rhs);
-        DeviceBuffer<T> &operator^=(const DeviceBuffer<T>& rhs);
-        DeviceBuffer<T> &operator&=(const DeviceBuffer<T>& rhs);
+        template<typename Iterator, typename ConstIterator>
+        DeviceBuffer<T> &operator+=(const DeviceData<T, Iterator, ConstIterator> &rhs) {
+            thrust::transform(this->first(), this->last(), rhs.first(), this->first(), thrust::plus<T>());
+            return *this;
+        }
+
+        template<typename Iterator, typename ConstIterator>
+        DeviceBuffer<T> &operator-=(const DeviceData<T, Iterator, ConstIterator> &rhs) {
+            thrust::transform(this->first(), this->last(), rhs.first(), this->first(), thrust::minus<T>());
+            return *this;
+        }
+
+        template<typename Iterator, typename ConstIterator>
+        DeviceBuffer<T> &operator*=(const DeviceData<T, Iterator, ConstIterator> &rhs) {
+            thrust::transform(this->first(), this->last(), rhs.first(), this->first(), thrust::multiplies<T>());
+            return *this;
+        }
+
+        template<typename Iterator, typename ConstIterator>
+        DeviceBuffer<T> &operator/=(const DeviceData<T, Iterator, ConstIterator> &rhs) {
+            thrust::transform(this->first(), this->last(), rhs.first(), this->first(), thrust::divides<float>());
+            return *this;
+        }
+
+        template<typename Iterator, typename ConstIterator>
+        DeviceBuffer<T> &operator^=(const DeviceData<T, Iterator, ConstIterator> &rhs) {
+            thrust::transform(this->first(), this->last(), rhs.first(), this->first(), thrust::bit_xor<T>());
+            return *this;
+        }
+
+        template<typename Iterator, typename ConstIterator>
+        DeviceBuffer<T> &operator&=(const DeviceData<T, Iterator, ConstIterator> &rhs) {
+            thrust::transform(this->first(), this->last(), rhs.first(), this->first(), thrust::bit_and<T>());
+            return *this;
+        }
 
     private:
 
         thrust::device_vector<T> data;
-        bool transmitting;
-        std::vector<T> hostBuffer;
-        std::thread rtxThread;
+
+        // TODO
+        //bool transmitting;
+        //std::vector<T> hostBuffer;
+        //std::thread rtxThread;
 };
 

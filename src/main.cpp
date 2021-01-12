@@ -1,21 +1,21 @@
 #include <iostream>
 #include <string>
 #include "AESObject.h"
-#include "Precompute.h"
+//#include "Precompute.h"
 #include "secondary.h"
 #include "connect.h"
-#include "NeuralNetConfig.h"
-#include "NeuralNetwork.h"
+//#include "NeuralNetConfig.h"
+//#include "NeuralNetwork.h"
 #include "unitTests.h"
 #include "Profiler.h"
-#include "MaxpoolLayer.h"
-#include "ReLULayer.h"
+//#include "MaxpoolLayer.h"
+//#include "ReLULayer.h"
 
 int partyNum;
 AESObject* aes_indep;
 AESObject* aes_next;
 AESObject* aes_prev;
-Precompute PrecomputeObject;
+// TODO Precompute PrecomputeObject;
 
 extern Profiler matmul_profiler;
 extern Profiler func_profiler;
@@ -24,8 +24,8 @@ int main(int argc, char** argv) {
 
 /****************************** PREPROCESSING ******************************/ 
 	parseInputs(argc, argv);
-	NeuralNetConfig* config = new NeuralNetConfig(NUM_ITERATIONS);
-	string network, dataset, security;
+	//TODO NeuralNetConfig* config = new NeuralNetConfig(NUM_ITERATIONS);
+    std::string network, dataset, security;
 
 /****************************** SELECT NETWORK ******************************/ 
 	//Network {SecureML, Sarda, MiniONN, LeNet, AlexNet, and VGG16}
@@ -40,9 +40,10 @@ int main(int argc, char** argv) {
 		dataset = "MNIST";
 		security = "Semi-honest";
 	}
-	selectNetwork(network, dataset, security, config);
-	config->checkNetwork();
-	NeuralNetwork<uint32_t>* net = new NeuralNetwork<uint32_t>(config);
+    // TODO
+	//selectNetwork(network, dataset, security, config);
+	//config->checkNetwork();
+	//NeuralNetwork<uint32_t>* net = new NeuralNetwork<uint32_t>(config);
 
 /****************************** AES SETUP and SYNC ******************************/ 
 	aes_indep = new AESObject(argv[3]);
@@ -57,7 +58,7 @@ int main(int argc, char** argv) {
     int returnCode = 0;
 
 	// TEST
-    //returnCode = runTests(argc, argv);
+    returnCode = runTests(argc, argv);
 
 	// Run forward/backward for single layers
 	//  1. what {F, D, U}
@@ -78,12 +79,15 @@ int main(int argc, char** argv) {
     */
 
     // INFERENCE
+    /*
     start_m();
 	network += " test";
 	test(net);
     end_m(network);
+    */
 
     // STATS
+    /*
 	cout << "----------------------------------------------" << endl;  	
 	cout << "Run details: " << NUM_OF_PARTIES << "PC (P" << partyNum 
 		 << "), " << NUM_ITERATIONS << " iterations, batch size " << MINI_BATCH_SIZE << endl 
@@ -111,12 +115,13 @@ int main(int argc, char** argv) {
 
     cout << "-- Total runtime accounted for: " << total_measured_runtime/1000.0 << " s --" << endl;
 	//printNetwork(net);
+    */
 
 /****************************** CLEAN-UP ******************************/ 
 	delete aes_indep;
 	delete aes_next;
 	delete aes_prev;
-	delete config;
+	// TODO delete config;
 	//delete net;
 	deleteObjects();
 
