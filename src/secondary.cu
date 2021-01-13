@@ -40,7 +40,7 @@ bool WITH_NORMALIZATION;
 bool LARGE_NETWORK;
 size_t TRAINING_DATA_SIZE;
 size_t TEST_DATA_SIZE;
-std::string SECURITY_TYPE;
+std::string SECURITY_TYPE = "Semi-honest";
 
 /******************* Main train and test functions *******************/
 void parseInputs(int argc, char* argv[])

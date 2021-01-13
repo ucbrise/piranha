@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 #include "AESObject.h"
-//#include "Precompute.h"
+#include "Precompute.h"
 #include "secondary.h"
 #include "connect.h"
 //#include "NeuralNetConfig.h"
@@ -15,7 +15,7 @@ int partyNum;
 AESObject* aes_indep;
 AESObject* aes_next;
 AESObject* aes_prev;
-// TODO Precompute PrecomputeObject;
+Precompute PrecomputeObject;
 
 extern Profiler matmul_profiler;
 extern Profiler func_profiler;

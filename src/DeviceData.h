@@ -132,32 +132,38 @@ class DeviceData {
         }
 
         // vector overloads
-        DeviceData<T, Iterator, ConstIterator> &operator+=(const DeviceData<T, Iterator, ConstIterator> &rhs) {
+        template<typename I2, typename C2>
+        DeviceData<T, Iterator, ConstIterator> &operator+=(const DeviceData<T, I2, C2> &rhs) {
             thrust::transform(this->first(), this->last(), rhs.first(), this->first(), thrust::plus<T>());
             return *this;
         }
 
-        DeviceData<T, Iterator, ConstIterator> &operator-=(const DeviceData<T, Iterator, ConstIterator> &rhs) {
+        template<typename I2, typename C2>
+        DeviceData<T, Iterator, ConstIterator> &operator-=(const DeviceData<T, I2, C2> &rhs) {
             thrust::transform(this->first(), this->last(), rhs.first(), this->first(), thrust::minus<T>());
             return *this;
         }
 
-        DeviceData<T, Iterator, ConstIterator> &operator*=(const DeviceData<T, Iterator, ConstIterator> &rhs) {
+        template<typename I2, typename C2>
+        DeviceData<T, Iterator, ConstIterator> &operator*=(const DeviceData<T, I2, C2> &rhs) {
             thrust::transform(this->first(), this->last(), rhs.first(), this->first(), thrust::multiplies<T>());
             return *this;
         }
 
-        DeviceData<T, Iterator, ConstIterator> &operator/=(const DeviceData<T, Iterator, ConstIterator> &rhs) {
+        template<typename I2, typename C2>
+        DeviceData<T, Iterator, ConstIterator> &operator/=(const DeviceData<T, I2, C2> &rhs) {
             thrust::transform(this->first(), this->last(), rhs.first(), this->first(), thrust::divides<float>());
             return *this;
         }
 
-        DeviceData<T, Iterator, ConstIterator> &operator^=(const DeviceData<T, Iterator, ConstIterator> &rhs) {
+        template<typename I2, typename C2>
+        DeviceData<T, Iterator, ConstIterator> &operator^=(const DeviceData<T, I2, C2> &rhs) {
             thrust::transform(this->first(), this->last(), rhs.first(), this->first(), thrust::bit_xor<T>());
             return *this;
         }
 
-        DeviceData<T, Iterator, ConstIterator> &operator&=(const DeviceData<T, Iterator, ConstIterator> &rhs) {
+        template<typename I2, typename C2>
+        DeviceData<T, Iterator, ConstIterator> &operator&=(const DeviceData<T, I2, C2> &rhs) {
             thrust::transform(this->first(), this->last(), rhs.first(), this->first(), thrust::bit_and<T>());
             return *this;
         }

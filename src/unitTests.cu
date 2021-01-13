@@ -5,10 +5,10 @@
 #include <thrust/iterator/transform_iterator.h>
 #include <vector>
 
-//#include "bitwise.cuh"
+#include "bitwise.cuh"
 //#include "CNNConfig.h"
 //#include "CNNLayer.h"
-//#include "convolution.cuh"
+#include "convolution.cuh"
 #include "DeviceData.h"
 #include "DeviceBuffer.h"
 #include "DeviceBufferView.h"
@@ -16,14 +16,14 @@
 //#include "FCLayer.h"
 #include "Functionalities.h"
 #include "globals.h"
-//#include "matrix.cuh"
+#include "matrix.cuh"
 //#include "MaxpoolConfig.h"
 //#include "MaxpoolLayer.h"
 #include "Profiler.h"
 //#include "ReLUConfig.h"
 //#include "ReLULayer.h"
 #include "RSS.h"
-//#include "secondary.h"
+#include "secondary.h"
 #include "util.cuh"
 
 extern int partyNum;
@@ -68,12 +68,12 @@ void rightShift(std::vector<uint32_t> &v, int bits) {
 }
 
 template<typename T, typename I, typename C>
-void assertDeviceData(DeviceData<T, I, C> *result, std::vector<float> &expected, bool convertFixed=true) {
+void assertDeviceData(DeviceData<T, I, C> &result, std::vector<float> &expected, bool convertFixed=true) {
 
-    ASSERT_EQ(result->size(), expected.size());
+    ASSERT_EQ(result.size(), expected.size());
     
-    std::vector<float> host_result(result->size());
-    copyToHost(*result, host_result, convertFixed);
+    std::vector<float> host_result(result.size());
+    copyToHost(result, host_result, convertFixed);
 
     for(int i = 0; i < host_result.size(); i++) {
         ASSERT_EQ(host_result[i], expected[i]);
@@ -81,14 +81,12 @@ void assertDeviceData(DeviceData<T, I, C> *result, std::vector<float> &expected,
 }
 
 template<typename T, typename I, typename C>
-void assertRSS(RSS<T, I, C> *result, std::vector<float> &expected, bool convertFixed=true) {
+void assertRSS(RSS<T, I, C> &result, std::vector<float> &expected, bool convertFixed=true) {
 
-    ASSERT_EQ(result->size(), expected.size());
+    ASSERT_EQ(result.size(), expected.size());
 
-    std::vector<float> host_result(result->size());
-    std::cout << "starting copy" << std::endl;
-    copyToHost(*result, host_result, convertFixed);
-    std::cout << "finished copy" << std::endl;
+    std::vector<float> host_result(result.size());
+    copyToHost(result, host_result, convertFixed);
 
     for(int i = 0; i < host_result.size(); i++) {
         ASSERT_EQ(host_result[i], expected[i]);
@@ -108,7 +106,7 @@ TEST(DataTest, DeviceBuffer) {
     //printDeviceData(d1, "test buffer", false);
 
     std::vector<float> expected = {2, 3, 4};
-    assertDeviceData(&d1, expected, false);
+    assertDeviceData(d1, expected, false);
 }
 
 template<typename T>
@@ -130,11 +128,10 @@ TEST(DataTest, DeviceBufferView) {
     d1 += negated;
 
     std::vector<float> expected = {0, 0, 0};
-    assertDeviceData(&d1, expected, false);
+    assertDeviceData(d1, expected, false);
 }
 
-/*
-TEST(GPUTest, FixedPointMatMul) {
+TEST(GPUTest, MatMul) {
     DeviceBuffer<uint32_t> a = {1, 2, 1, 2, 1, 2};  // 2 x 3
     DeviceBuffer<uint32_t> b = {2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1}; // 3 x 4
     DeviceBuffer<uint32_t> c(8); // 2 x 4
@@ -142,37 +139,19 @@ TEST(GPUTest, FixedPointMatMul) {
     gpu::matrixMultiplication(a, b, c, false, false, 2, 3, 4);
     cudaDeviceSynchronize();
 
-    std::vector<uint32_t> hostC(c.size());
-    thrust::copy(c.getData().begin(), c.getData().end(), hostC.begin());
-    rightShift(hostC, FLOAT_PRECISION);
-
-    std::vector<float> result(c.size());
-    fromFixed(hostC, result);
-
     std::vector<float> expected = {8, 4, 8, 4, 10, 5, 10, 5};
-    for (int i = 0; i < result.size(); i++) {
-        ASSERT_EQ(result[i], expected[i]);
-    }
+    assertDeviceData(c, expected, false);
 }
 
-TEST(GPUTest, FixedPointMatMulTranspose) {
+TEST(GPUTest, MatMulTranspose) {
     DeviceBuffer<uint32_t> a = {1, 2, 1, 2, 1, 2}; // 2 x 3
     DeviceBuffer<uint32_t> c(4); // 2 x 2
 
     gpu::matrixMultiplication(a, a, c, false, true, 2, 3, 2);
     cudaDeviceSynchronize();
 
-    std::vector<uint32_t> hostC(c.size());
-    thrust::copy(c.getData().begin(), c.getData().end(), hostC.begin());
-    rightShift(hostC, FLOAT_PRECISION);
-
-    std::vector<float> result(c.size());
-    fromFixed(hostC, result);
-
     std::vector<float> expected = {6, 6, 6, 9};
-    for (int i = 0; i < result.size(); i++) {
-        ASSERT_EQ(result[i], expected[i]);
-    }
+    assertDeviceData(c, expected, false);
 }
 
 TEST(GPUTest, Transpose) {
@@ -183,7 +162,7 @@ TEST(GPUTest, Transpose) {
     cudaDeviceSynchronize();
 
     std::vector<float> expected = {1, 4, 2, 5, 3, 6};
-    assertDeviceBuffer(&b, expected);
+    assertDeviceData(b, expected, false);
 }
 
 TEST(GPUTest, ElementwiseVectorAdd) {
@@ -195,32 +174,33 @@ TEST(GPUTest, ElementwiseVectorAdd) {
     cudaDeviceSynchronize();
     
     std::vector<float> expected = {2, 3, 5, 4, 3, 3};
-    assertDeviceBuffer(&a, expected);
+    assertDeviceData(a, expected, false);
 
     DeviceBuffer<uint32_t> col_b = {2, 3};
     gpu::elementVectorAdd(a, col_b, false, 2, 3);
     cudaDeviceSynchronize();
 
     expected = {4, 5, 7, 7, 6, 6};
-    assertDeviceBuffer(&a, expected);
+    assertDeviceData(a, expected, false);
 }
 
 TEST(GPUTest, BitExpand) {
 
     DeviceBuffer<uint32_t> a = {2, 3, 1};
 
-    DeviceBuffer<uint8_t> abits(a.size() * 32);
+    DeviceBuffer<uint32_t> abits(a.size() * 32);
     gpu::bitexpand(a, abits);
     cudaDeviceSynchronize();
 
     std::vector<float> expected = {
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     };
-    assertDeviceBuffer(&abits, expected, false);
+    assertDeviceData(abits, expected, false);
 }
 
+/*
 TEST(GPUTest, Unzip) {
     
     DeviceBuffer<uint32_t> a = {1, 3, 2, 4};
@@ -248,6 +228,7 @@ TEST(GPUTest, Zip) {
     std::vector<float> expected = {1, 3, 2, 4};
     assertDeviceBuffer(&c, expected);
 }
+*/
 
 TEST(GPUTest, Im2Row) {
 
@@ -277,53 +258,52 @@ TEST(GPUTest, Im2Row) {
         1, 2, 1, 2, 1, 2, 0, 0, 0,  1, 2, 3, 2, 0, 1, 0, 0, 0,
         2, 1, 0, 1, 2, 0, 0, 0, 0,  2, 3, 0, 0, 1, 0, 0, 0, 0
     };
-    assertDeviceBuffer(&out, expected);
+    assertDeviceData(out, expected, false);
 }
 
 TEST(FuncTest, Reconstruct2of3) {
     
-    RSSData<uint32_t> a = {1, 2, 3, 10, 5};
+    RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t>> a = {1, 2, 3, 10, 5};
 
     DeviceBuffer<uint32_t> r(a.size());
     NEW_funcReconstruct(a, r);
 
     std::vector<float> expected = {1, 2, 3, 10, 5};
-    assertDeviceBuffer(&r, expected);
+    assertDeviceData(r, expected);
 }
 
 TEST(FuncTest, Reconstruct3of3) {
-    DeviceBuffer<uint32_t> data;
+    DeviceBuffer<uint32_t> *data;
     switch (partyNum) {
         case PARTY_A:
-            data = {1, 2, 3, 4};
+            data = new DeviceBuffer<uint32_t>({1, 2, 3, 4});
             break;
         case PARTY_B:
-            data = {1, 1, 2, 2};
+            data = new DeviceBuffer<uint32_t>({1, 1, 2, 2});
             break;
         case PARTY_C:
-            data = {1, 1, 0, 0};
+            data = new DeviceBuffer<uint32_t>({1, 1, 0, 0});
             break;
     }
 
-    DeviceBuffer<uint32_t> r(data.size());
-    NEW_funcReconstruct3out3(data, r);
+    DeviceBuffer<uint32_t> r(data->size());
+    NEW_funcReconstruct3out3(*data, r);
 
     std::vector<float> expected = {3, 4, 5, 6};
-    assertDeviceBuffer(&r, expected);
+    assertDeviceData(r, expected, false);
 }
 
 TEST(FuncTest, MatMul) {
 
-    RSSData<uint32_t> a = {1, 1, 1, 1, 1, 1};  // 2 x 3
-    RSSData<uint32_t> b = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0}; // 3 x 4
-    RSSData<uint32_t> c(8); // 2 x 4
+    RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > a = {1, 1, 1, 1, 1, 1};  // 2 x 3
+    RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > b = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0}; // 3 x 4
+    RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > c(8); // 2 x 4
 
     NEW_funcMatMul(a, b, c, 2, 3, 4, false, false, FLOAT_PRECISION);
 
     std::vector<float> expected = {1, 1, 1, 0, 1, 1, 1, 0};
-    assertRSS(&c, expected);
+    assertRSS(c, expected);
 }
-*/
 
 TEST(FuncTest, Reshare) {
     
@@ -339,40 +319,37 @@ TEST(FuncTest, Reshare) {
     NEW_funcReshare(*a, reshared);
 
     std::vector<float> expected = {1, 2, 3, 4};
-    std::cout << "starting assert" << std::endl;
-    assertRSS(&reshared, expected);
-    std::cout << "finished assert" << std::endl;
+    assertRSS(reshared, expected, false);
 }
 
-/*
 TEST(FuncTest, SelectShare) {
 
-    RSSData<uint32_t> x = {1, 2};
-    RSSData<uint32_t> y = {4, 5};
-    RSSData<uint32_t> b = {0, 1};
-    b[0] >>= FLOAT_PRECISION;
-    b[1] >>= FLOAT_PRECISION;
+    RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > x = {1, 2};
+    RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > y = {4, 5};
+    RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > b = {0, 1};
+    *b[0] >>= FLOAT_PRECISION;
+    *b[1] >>= FLOAT_PRECISION;
 
-    RSSData<uint32_t> z(x.size());
+    RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > z(x.size());
     NEW_funcSelectShare(x, y, b, z);
 
     std::vector<float> expected = {1, 5};
-    assertRSS(&z, expected);
+    assertRSS(z, expected);
 }
 
 TEST(FuncTest, Truncate) {
 
-    RSSData<uint32_t> a = {1 << 3, 2 << 3, 3 << 3};
+    RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > a = {1 << 3, 2 << 3, 3 << 3};
     NEW_funcTruncate(a, 3);
 
     std::vector<float> expected = {1, 2, 3};
-    assertRSS(&a, expected);
+    assertRSS(a, expected);
 }
 
 TEST(FuncTest, Convolution) {
 
     // 2x3, Din=2
-    RSSData<uint32_t> im = {
+    RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > im = {
         1, 2, 1,
         2, 1, 2,
         1, 2, 3,
@@ -380,7 +357,7 @@ TEST(FuncTest, Convolution) {
     };
 
     // 2 3x3 filters, Dout=1
-    RSSData<uint32_t> filters = {
+    RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > filters = {
         1, 1, 1,
         1, 1, 1,
         1, 1, 1,
@@ -390,7 +367,7 @@ TEST(FuncTest, Convolution) {
     };
 
     // 1xDout, duplicated for each row in the convolved output
-    RSSData<uint32_t> biases = {
+    RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > biases = {
         1
     };
 
@@ -398,7 +375,7 @@ TEST(FuncTest, Convolution) {
     size_t wKernels = ((3 - 3 + (2 * 1))/1)+1;
     // imageH - filterSize + (2*padding) / stride + 1
     size_t hKernels = ((2 - 3 + (2 * 1))/1)+1;
-    RSSData<uint32_t> out(wKernels * hKernels * 1); // Dout = 1
+    RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > out(wKernels * hKernels * 1); // Dout = 1
 
     NEW_funcConvolution(im, filters, biases, out,
             3, 2, 3, 2, 1, 1, 1, FLOAT_PRECISION);
@@ -406,62 +383,63 @@ TEST(FuncTest, Convolution) {
     std::vector<float> expected = {
         8, 13, 10, 9, 11, 10
     };
-    assertRSS(&out, expected);
+    assertRSS(out, expected);
 }
 
 TEST(FuncTest, DRELU) {
     
-    RSSData<uint32_t> input = {-1, 2, -2, -3};
+    RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > input = {-1, 2, -2, -3};
 
-    RSSData<uint32_t> result(input.size());
+    RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > result(input.size());
     NEW_funcDRELU(input, result);
 
     std::vector<float> expected = {
         0, 1, 0, 0
     };
-    assertRSS(&result, expected, false);
+    assertRSS(result, expected, false);
 }
 
 TEST(FuncTest, RELU) {
 
-    RSSData<uint32_t> input = {
+    RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > input = {
         -2, -3, 4, 3, 3.5, 1, -1.5, -1
     };
 
-    RSSData<uint32_t> result(input.size());
-    RSSData<uint32_t> dresult(input.size());
+    RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > result(input.size());
+    RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > dresult(input.size());
     NEW_funcRELU(input, result, dresult);
 
     std::vector<float> expected = {
         0, 0, 4, 3, 3.5, 1, 0, 0
     };
-    assertRSS(&result, expected);
+    assertRSS(result, expected);
 
     std::vector<float> dexpected = {
         0, 0, 1, 1, 1, 1, 0, 0
     };
-    assertRSS(&dresult, dexpected, false);
+    assertRSS(dresult, dexpected, false);
 }
 
 TEST(FuncTest, Maxpool) {
 
-    RSSData<uint32_t> input = {1, 3, 4, 3, 7, 1, 2, 10};
-    RSSData<uint32_t> result(input.size() / 4);
-    RSSData<uint32_t> dresult(input.size());
+    RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > input = {1, 3, 4, 3, 7, 1, 2, 10};
+    RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > result(input.size() / 4);
+    RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > dresult(input.size());
 
     NEW_funcMaxpool(input, result, dresult, 4);
 
     std::vector<float> expected = {
         4, 10
     };
-    assertRSS(&result, expected);
+    assertRSS(result, expected);
 
     std::vector<float> dexpected = {
         0, 0, 1, 0, 0, 0, 0, 1
     };
-    assertRSS(&dresult, dexpected, false);
+    assertRSS(dresult, dexpected, false);
 }
 
+/*
 TEST(LayerTest, FCForward) {
 
     int inputDim = 4;

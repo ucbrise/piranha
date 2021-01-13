@@ -1,8 +1,9 @@
 
 #pragma once
-#include "globals.h"
-#include "RSSData.h"
+
 #include "DeviceBuffer.h"
+#include "globals.h"
+#include "RSS.h"
 
 class Precompute
 {
@@ -13,9 +14,20 @@ class Precompute
         Precompute();
         ~Precompute();
 
-        template<typename T>
-        void getDividedShares(RSSData<T> &r, RSSData<T> &rPrime,
-                int d, size_t size);
+        // Currently, r = 3 and rPrime = 3 * 2^d
+        template<typename T, typename I, typename C>
+        void getDividedShares(RSS<T, I, C> &r, RSS<T, I, C> &rPrime,
+                int d, size_t size) {
+
+            assert(r.size() == size && "r.size is incorrect");
+            assert(rPrime.size() == size && "rPrime.size is incorrect");
+
+            // TODO use random numbers
+
+            rPrime.fill(d);
+            r.fill(1);
+        }
+
         //void getRandomBitShares(RSSVectorSmallType &a, size_t size);
         //void getSelectorBitShares(RSSVectorSmallType &c, RSSVectorMyType &m_c, size_t size);
         //void getShareConvertObjects(RSSVectorMyType &r, RSSVectorSmallType &shares_r, RSSVectorSmallType &alpha, size_t size);

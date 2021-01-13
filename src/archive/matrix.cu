@@ -8,8 +8,8 @@
 
 namespace kernel {
 
-template<typename T>
-__global__ void matrixMultiplication(T *a, T *b, T *c,
+template<typename Iterator>
+__global__ void matrixMultiplication(Iterator a, Iterator b, Iterator c,
         bool transpose_a, bool transpose_b,
         int rows, int shared, int cols, int party) {
 
@@ -33,15 +33,6 @@ __global__ void matrixMultiplication(T *a, T *b, T *c,
         }
     }
 }
-
-template __global__ void matrixMultiplication<uint32_t>(uint32_t *a,
-        uint32_t *b, uint32_t *c,
-        bool transpose_a, bool transpose_b,
-        int rows, int shared, int cols, int party);
-template __global__ void matrixMultiplication<uint8_t>(uint8_t *a,
-        uint8_t *b, uint8_t *c,
-        bool transpose_a, bool transpose_b,
-        int rows, int shared, int cols, int party);
 
 template<typename T>
 __global__ void transpose(T* a, T* b, int rows, int cols) {
@@ -100,9 +91,9 @@ extern int partyNum;
 
 namespace gpu {
 
-template<typename T>
+template<typename T, typename I, typename C>
 void matrixMultiplication(
-        DeviceBuffer<T> &a, DeviceBuffer<T> &b, DeviceBuffer<T> &c,
+        DeviceData<T, I, C> &a, DeviceData<T, I, C> &b, DeviceData<T, I, C> &c,
         bool transpose_a, bool transpose_b,
         size_t rows, size_t shared, size_t cols) {
 

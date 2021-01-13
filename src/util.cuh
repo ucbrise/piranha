@@ -52,7 +52,6 @@ template<typename T, typename I, typename C>
 void copyToHost(RSS<T, I, C> &rss, std::vector<float> &host_data, bool convertFixed=true) {
 
     DeviceBuffer<T> db(rss.size());
-    printRSS(rss, "rss before reconstruct");
     NEW_funcReconstruct(rss, db);
 
     copyToHost(db, host_data, convertFixed);

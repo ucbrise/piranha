@@ -25,6 +25,9 @@ class DeviceBuffer : public DeviceData<T, DeviceVectorIterator<T>, DeviceVectorC
     public:
 
         DeviceBuffer(size_t n) : data(n) {}
+        DeviceBuffer(std::vector<T> v) : data(v.size()) {
+            thrust::copy(v.begin(), v.end(), data.begin());
+        }
         DeviceBuffer(std::initializer_list<T> il) : data(il.size()) {
             thrust::copy(il.begin(), il.end(), data.begin());
         }

@@ -10,8 +10,10 @@
 #include <cstddef>
 #include <initializer_list>
 
-#include "globals.h"
 #include "DeviceData.h"
+#include "DeviceBuffer.h"
+#include "DeviceBufferView.h"
+#include "globals.h"
 
 template<typename T, typename Iterator, typename ConstIterator> class RSSData;
 /* TODO
@@ -47,8 +49,17 @@ class RSS {
             switch (partyNum) {
                 case PARTY_A:
                     shareA = new DeviceBuffer<T>(shifted_vals);
+                    shareB = new DeviceBuffer<T>(shifted_vals.size());
+                    shareB->zero();
                     break;
+                case PARTY_B:
+                    shareA = new DeviceBuffer<T>(shifted_vals.size());
+                    shareA->zero();
+                    shareB = new DeviceBuffer<T>(shifted_vals.size());
+                    shareB->zero();
                 case PARTY_C:
+                    shareA = new DeviceBuffer<T>(shifted_vals.size());
+                    shareA->zero();
                     shareB = new DeviceBuffer<T>(shifted_vals);
                     break;
             }
@@ -78,9 +89,9 @@ class RSS {
             shareB->zero();
         };
 
-        void fillPublic(T val) {
+        void fill(T val) {
             shareA->fill(partyNum == PARTY_A ? val : 0);
-            shareB->fill(0);     
+            shareB->fill(partyNum == PARTY_C ? val : 0);     
         }
 
         // TODO void setPublic(std::vector<float> &v);
@@ -126,7 +137,8 @@ class RSS {
         friend RSSData<T> operator* <> (RSSData<T> lhs, const T rhs);
         */
 
-        RSS<T, Iterator, ConstIterator> &operator+=(const DeviceData<T, Iterator, ConstIterator> &rhs) {
+        template<typename I2, typename C2>
+        RSS<T, Iterator, ConstIterator> &operator+=(const DeviceData<T, I2, C2> &rhs) {
             if (partyNum == PARTY_A) {
                 *shareA += rhs;
             } else if (partyNum == PARTY_C) {
@@ -135,7 +147,8 @@ class RSS {
             return *this;
         }
 
-        RSS<T, Iterator, ConstIterator> &operator-=(const DeviceData<T, Iterator, ConstIterator> &rhs) {
+        template<typename I2, typename C2>
+        RSS<T, Iterator, ConstIterator> &operator-=(const DeviceData<T, I2, C2> &rhs) {
             if (partyNum == PARTY_A) {
                 *shareA -= rhs;
             } else if (partyNum == PARTY_C) {
@@ -144,13 +157,15 @@ class RSS {
             return *this;
         }
 
-        RSS<T, Iterator, ConstIterator> &operator*=(const DeviceData<T, Iterator, ConstIterator> &rhs) {
+        template<typename I2, typename C2>
+        RSS<T, Iterator, ConstIterator> &operator*=(const DeviceData<T, I2, C2> &rhs) {
             *shareA *= rhs;
             *shareB *= rhs;
             return *this;
         }
 
-        RSS<T, Iterator, ConstIterator> &operator^=(const DeviceData<T, Iterator, ConstIterator> &rhs) {
+        template<typename I2, typename C2>
+        RSS<T, Iterator, ConstIterator> &operator^=(const DeviceData<T, I2, C2> &rhs) {
             if (partyNum == PARTY_A) {
                 *shareA ^= rhs;
             } else if (partyNum == PARTY_C) {
@@ -159,9 +174,11 @@ class RSS {
             return *this;
         }
 
-        RSS<T, Iterator, ConstIterator> &operator&=(const DeviceData<T, Iterator, ConstIterator> &rhs) {
+        template<typename I2, typename C2>
+        RSS<T, Iterator, ConstIterator> &operator&=(const DeviceData<T, I2, C2> &rhs) {
             *shareA &= rhs;
             *shareB &= rhs;
+            return *this;
         }
 
         /* TODO
@@ -172,54 +189,96 @@ class RSS {
         friend RSSData<T> operator& <> (RSSData<T> lhs, const DeviceBuffer<T> &rhs);
         */
 
-        RSS<T, Iterator, ConstIterator> &operator+=(const RSS<T, Iterator, ConstIterator> &rhs) {
+        template<typename I2, typename C2>
+        RSS<T, Iterator, ConstIterator> &operator+=(const RSS<T, I2, C2> &rhs) {
             *shareA += *rhs.shareA;
             *shareB += *rhs.shareB;
             return *this;
         }
 
-        RSS<T, Iterator, ConstIterator> &operator-=(const RSS<T, Iterator, ConstIterator> &rhs) {
+        template<typename I2, typename C2>
+        RSS<T, Iterator, ConstIterator> &operator-=(const RSS<T, I2, C2> &rhs) {
             *shareA -= *rhs.shareA;
             *shareB -= *rhs.shareB;
             return *this;
         }
 
-        RSS<T, Iterator, ConstIterator> &operator*=(const RSS<T, Iterator, ConstIterator> &rhs) {
+        template<typename I2, typename C2>
+        RSS<T, Iterator, ConstIterator> &operator*=(const RSS<T, I2, C2> &rhs) {
 
-            using VIterator = thrust::detail::normal_iterator<thrust::device_ptr<T> >;
-            using VConstIterator = thrust::detail::normal_iterator<thrust::device_ptr<const T> >;
-            typedef thrust::transform_iterator<thrust::plus<T>, VIterator, VIterator > TIterator;
-            typedef thrust::transform_iterator<thrust::plus<T>, VConstIterator, VConstIterator > TConstIterator;
+            /*
+            //using VIterator = thrust::detail::normal_iterator<thrust::device_ptr<T> >;
+            //using VConstIterator = thrust::detail::normal_iterator<thrust::device_ptr<const T> >;
+            //using IteratorTuple = thrust::tuple<VIterator, VIterator>;
+            //using IteratorConstTuple = thrust::tuple<VConstIterator, VConstIterator>;
 
-            DeviceBufferView<T, TIterator, TConstIterator> summed(
-                thrust::make_transform_iterator(rhs.shareA->first(), rhs.shareB->first(), thrust::plus<T>()),
-                thrust::make_transform_iterator(rhs.shareA->last(), rhs.shareB->last(), thrust::plus<T>())
-            );
+            using IteratorTuple = thrust::tuple<I2, I2>;
+            using IteratorConstTuple = thrust::tuple<C2, C2>;
+
+            using ZIterator = thrust::zip_iterator<IteratorTuple>;
+            using ZConstIterator = thrust::zip_iterator<IteratorConstTuple>;
+
+            using TIterator = thrust::transform_iterator<thrust::plus<T>, ZIterator, ZIterator>;
+            using TConstIterator = thrust::transform_iterator<thrust::plus<T>, ZConstIterator, ZConstIterator>;
+
+            DeviceBufferView<T, TIterator, TConstIterator> summed(thrust::make_transform_iterator(
+                thrust::make_zip_iterator(thrust::make_tuple(rhs.shareA->first(), rhs.shareB->first())),
+                thrust::plus<T>()
+            ),
+            thrust::make_transform_iterator(
+                thrust::make_zip_iterator(thrust::make_tuple(rhs.shareA->last(), rhs.shareB->last())),
+                thrust::plus<T>()
+            ));
+            */
+            DeviceBuffer<T> summed(rhs.size());
+            summed.zero();
+            summed += *rhs.shareA;
+            summed += *rhs.shareB;
+
             *shareA *= summed;
             *shareB *= *rhs.shareA;
             *shareA += *shareB;
 
-            // TODO
             NEW_funcReshare(*shareA, *this);
             return *this;
         }
 
-        RSS<T, Iterator, ConstIterator> &operator^=(const RSS<T, Iterator, ConstIterator> &rhs) {
+        template<typename I2, typename C2>
+        RSS<T, Iterator, ConstIterator> &operator^=(const RSS<T, I2, C2> &rhs) {
             *shareA ^= *rhs.shareA;
             *shareB ^= *rhs.shareB;
             return *this;
         }
 
-        RSS<T, Iterator, ConstIterator> &operator&=(const RSS<T, Iterator, ConstIterator> &rhs) {
-            using VIterator = thrust::detail::normal_iterator<thrust::device_ptr<T> >;
-            using VConstIterator = thrust::detail::normal_iterator<thrust::device_ptr<const T> >;
-            typedef thrust::transform_iterator<thrust::bit_xor<T>, VIterator, VIterator > TIterator;
-            typedef thrust::transform_iterator<thrust::bit_xor<T>, VConstIterator, VConstIterator > TConstIterator;
+        template<typename I2, typename C2>
+        RSS<T, Iterator, ConstIterator> &operator&=(const RSS<T, I2, C2> &rhs) {
+
+            //using VIterator = thrust::detail::normal_iterator<thrust::device_ptr<T> >;
+            //using VConstIterator = thrust::detail::normal_iterator<thrust::device_ptr<const T> >;
+            //typedef thrust::transform_iterator<thrust::bit_xor<T>, VIterator, VIterator > TIterator;
+            //typedef thrust::transform_iterator<thrust::bit_xor<T>, VConstIterator, VConstIterator > TConstIterator;
+
+            /*
+            typedef thrust::transform_iterator<thrust::bit_xor<T>, I2, I2> TIterator;
+            typedef thrust::transform_iterator<thrust::bit_xor<T>, C2, C2> TConstIterator;
 
             DeviceBufferView<T, TIterator, TConstIterator> summed(
                 thrust::make_transform_iterator(rhs.shareA->first(), rhs.shareB->first(), thrust::bit_xor<T>()),
                 thrust::make_transform_iterator(rhs.shareA->last(), rhs.shareB->last(), thrust::bit_xor<T>())
             );
+            *shareA &= summed;
+            *shareB &= *rhs.shareA;
+            *shareA ^= *shareB;
+
+            NEW_funcReshare(*shareA, *this);
+            return *this;
+            */
+
+            DeviceBuffer<T> summed(rhs.size());
+            summed.zero();
+            summed ^= *rhs.shareA;
+            summed ^= *rhs.shareB;
+
             *shareA &= summed;
             *shareB &= *rhs.shareA;
             *shareA ^= *shareB;
