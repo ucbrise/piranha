@@ -532,6 +532,7 @@ void NEW_funcRELU(RSS<T, I, C> &input, RSS<T, I, C> &result, RSS<T, I, C> &dresu
     //std::cout << "end of relu" << std::endl;
 }
 
+/*
 template<typename T, typename I, typename C>
 void expandCompare(RSS<T, I, C> &b, RSS<T, I, C> &inverseB, RSS<T, I, C> &expanded) {
     int expansionFactor = (expanded.size() / b.size()) / 2;
@@ -553,6 +554,7 @@ void expandCompare(RSS<T, I, C> &b, RSS<T, I, C> &inverseB, RSS<T, I, C> &expand
         }
     }
 }
+*/
 
 template<typename T, typename I, typename C>
 void NEW_funcMaxpool(RSS<T, I, C> &input, RSS<T, I, C> &result, RSS<T, I, C> &dresult, int k) {
@@ -566,6 +568,7 @@ void NEW_funcMaxpool(RSS<T, I, C> &input, RSS<T, I, C> &result, RSS<T, I, C> &dr
     int stride = 2;
     int offset = 1;
 
+    func_profiler.start();
     StridedRange<I> even0Range(input[0]->first(), input[0]->last(), stride);
     DeviceBufferView<T, SRIterator, SRIterator> even0(even0Range.begin(), even0Range.end());
     StridedRange<I> even1Range(input[1]->first(), input[1]->last(), stride);
@@ -577,32 +580,42 @@ void NEW_funcMaxpool(RSS<T, I, C> &input, RSS<T, I, C> &result, RSS<T, I, C> &dr
     StridedRange<I> odd1Range(input[1]->first() + offset, input[1]->last(), stride);
     DeviceBufferView<T, SRIterator, SRIterator> odd1(odd1Range.begin(), odd1Range.end());
     RSS<T, SRIterator, SRIterator> odd(&odd0, &odd1);
+    func_profiler.accumulate("range creation");
 
     while(k > 2) {
 
         // -- MP --
 
         // diff = even - odd
+        func_profiler.start();
         RSS<T, I, C> b(even.size());
         b.zero();
         b += even;
         b -= odd;
+        func_profiler.accumulate("maxpool-diff");
 
         // DRELU diff -> b
+        func_profiler.start();
         NEW_funcDRELU(b, b);
+        func_profiler.accumulate("maxpool-drelu");
         
         // b * even + 1-b * odd
+        func_profiler.start();
         RSS<T, I, C> negated(b.size());
         negated.fill(1);
         negated -= b;
+        func_profiler.accumulate("maxpool-complement");
 
+        func_profiler.start();
         even *= b;
         odd *= negated;
         even += odd;
+        func_profiler.accumulate("maxpool-calc");
 
         // unzip even -> into even, odd
         stride *= 2;
 
+        func_profiler.start();
         even0Range.set(input[0]->first(), input[0]->last(), stride);
         even0.set(even0Range.begin(), even0Range.end());
         even1Range.set(input[1]->first(), input[1]->last(), stride);
@@ -614,15 +627,20 @@ void NEW_funcMaxpool(RSS<T, I, C> &input, RSS<T, I, C> &result, RSS<T, I, C> &dr
         odd1Range.set(input[1]->first() + stride/2, input[1]->last(), stride);
         odd1.set(odd1Range.begin(), odd1Range.end());
         odd.set(&odd0, &odd1);
+        func_profiler.accumulate("maxpool-unzip");
         
         // -- dMP --
 
         // expandCompare b -> expandedB
+        func_profiler.start();
         RSS<T, I, C> expandedB(input.size());
-        expandCompare(b, negated, expandedB);
+        gpu::expandCompare(b, negated, expandedB);
+        func_profiler.accumulate("maxpool-expandCompare");
         
         // dresult &= expandedB
+        func_profiler.start();
         dresult &= expandedB;
+        func_profiler.accumulate("maxpool-dcalc");
 
         k /= 2;
     }
@@ -633,34 +651,46 @@ void NEW_funcMaxpool(RSS<T, I, C> &input, RSS<T, I, C> &result, RSS<T, I, C> &dr
     // -- MP --
     
     // diff = even - odd
+    func_profiler.start();
     RSS<T, I, C> b(even.size());
     b.zero();
     b += even;
     b -= odd;
+    func_profiler.accumulate("maxpool-z-diff");
 
     // DRELU diff -> b
+    func_profiler.start();
     NEW_funcDRELU(b, b);
+    func_profiler.accumulate("maxpool-z-drelu");
     
     // b * even + 1-b * odd
+    func_profiler.start();
     RSS<T, I, C> negated(b.size());
     negated.fill(1);
     negated -= b;
+    func_profiler.accumulate("maxpool-z-complement");
 
+    func_profiler.start();
     even *= b;
     odd *= negated;
     even += odd;
 
     result.zero();
     result += even;
+    func_profiler.accumulate("maxpool-z-calc");
 
     // -- dMP --
 
     // expandCompare b -> expandedB
+    func_profiler.start();
     RSS<T, I, C> expandedB(input.size());
-    expandCompare(b, negated, expandedB);
+    gpu::expandCompare(b, negated, expandedB);
+    func_profiler.accumulate("maxpool-z-expandCompare");
     
     // dresult &= expandedB
+    func_profiler.start();
     dresult &= expandedB;
+    func_profiler.accumulate("maxpool-z-dcalc");
 
     /*
     // Maxpool setup

@@ -61,6 +61,7 @@ int main(int argc, char** argv) {
 
 	// TEST
     //returnCode = runTests(argc, argv);
+    //return returnCode;
 
 	// Run forward/backward for single layers
 	//  1. what {F, D, U}

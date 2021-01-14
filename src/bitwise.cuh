@@ -46,6 +46,36 @@ __global__ void setCarryOutMSB(T *rbits_0, T *rbits_1,
     }
 }
 
+template<typename T>
+__global__ void expandCompare(T *b0, T *b1, T *invB0, T *invB1, T *expanded0, T *expanded1,
+        int bSize, int expandedSize, int expansionFactor) {
+
+    int EXP_IDX = blockIdx.y*blockDim.y+threadIdx.y;
+    int B_IDX = blockIdx.x*blockDim.x+threadIdx.x;
+
+    /*
+        for each b_idx:
+            for expansion_factor vals:
+                expanded[next idx] = b[b_idx]
+            for expansion_factor vals:
+                expanded[next idx] = negated[b_idx]
+    */
+
+    if (B_IDX <= bSize && EXP_IDX < expandedSize) {
+
+        //printf("expansion factor: %d\n", expansionFactor);
+        bool useB = EXP_IDX < expansionFactor;
+        T *bit0 = useB ? b0 : invB0;
+        T *bit1 = useB ? b1 : invB1;
+
+        int destIdx = (B_IDX * expansionFactor * 2) + EXP_IDX;
+        expanded0[destIdx] = bit0[B_IDX];
+        expanded1[destIdx] = bit1[B_IDX];
+
+        //printf("b: %d -> dest: %d (exp: %d, using b? %d)\n", B_IDX, destIdx, EXP_IDX, useB);
+    }
+}
+
 }
 
 namespace gpu {
@@ -114,15 +144,50 @@ void setCarryOutMSB(RSS<T, I, C> &rbits, DeviceBuffer<T> &abits, RSS<T, I2, C2> 
     );
 }
 
-/*
-template<typename T>
-void zip(DeviceBuffer<T> &out, DeviceBuffer<T> &even, DeviceBuffer<T> &odd);
+template<typename T, typename I, typename C>
+void expandCompare(RSS<T, I, C> &b, RSS<T, I, C> &inverseB, RSS<T, I, C> &expanded) {
 
-template<typename T>
-void unzip(DeviceBuffer<T> &in, DeviceBuffer<T> &even, DeviceBuffer<T> &odd);
+    int expansionFactor = (expanded.size() / b.size()) / 2;
 
-template<typename T>
-void setCarryOutMSB(RSSData<T> &rbits, DeviceBuffer<T> &abits, RSSData<T> &msb);
-*/
+    int cols = expansionFactor * 2;
+    int rows = b.size();
+
+    dim3 threadsPerBlock(cols, rows);
+    dim3 blocksPerGrid(1, 1);
+
+    if (cols > MAX_THREADS_PER_BLOCK) {
+        threadsPerBlock.x = MAX_THREADS_PER_BLOCK;
+        blocksPerGrid.x = ceil(double(cols)/double(threadsPerBlock.x));
+    }
+    
+    if (rows > MAX_THREADS_PER_BLOCK) {
+        threadsPerBlock.y = MAX_THREADS_PER_BLOCK;
+        blocksPerGrid.y = ceil(double(rows)/double(threadsPerBlock.y));
+    }
+
+    kernel::expandCompare<<<blocksPerGrid,threadsPerBlock>>>(
+        thrust::raw_pointer_cast(
+            static_cast<DeviceBuffer<T>*>(b[0])->raw().data()
+        ),
+        thrust::raw_pointer_cast(
+            static_cast<DeviceBuffer<T>*>(b[1])->raw().data()
+        ),
+        thrust::raw_pointer_cast(
+            static_cast<DeviceBuffer<T>*>(inverseB[0])->raw().data()
+        ),
+        thrust::raw_pointer_cast(
+            static_cast<DeviceBuffer<T>*>(inverseB[1])->raw().data()
+        ),
+        thrust::raw_pointer_cast(
+            static_cast<DeviceBuffer<T>*>(expanded[0])->raw().data()
+        ),
+        thrust::raw_pointer_cast(
+            static_cast<DeviceBuffer<T>*>(expanded[1])->raw().data()
+        ),
+        b.size(),
+        expanded.size(),
+        expansionFactor
+    );
+}
 
 }
