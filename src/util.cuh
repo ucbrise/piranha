@@ -13,6 +13,11 @@
 #include "globals.h"
 #include "RSS.h"
 
+template<typename T>
+using DeviceVectorIterator = thrust::detail::normal_iterator<thrust::device_ptr<T> >;
+template<typename T>
+using DeviceVectorConstIterator = thrust::detail::normal_iterator<thrust::device_ptr<const T> >;
+
 extern int partyNum;
 
 void log_print(std::string str);

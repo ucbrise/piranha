@@ -10,12 +10,15 @@
 #include "globals.h"
 #include "matrix.cuh"
 #include "Precompute.h"
+#include "Profiler.h"
 #include "RSS.h"
 #include "StridedRange.cuh"
 #include "util.cuh"
 
 extern Precompute PrecomputeObject;
 extern std::string SECURITY_TYPE;
+
+extern Profiler func_profiler;
 
 template<typename T, typename Iterator, typename ConstIterator, typename I2, typename C2>
 void NEW_funcReconstruct(RSS<T, Iterator, ConstIterator> &a, DeviceData<T, I2, C2> &reconstructed) {

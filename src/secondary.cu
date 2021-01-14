@@ -2,6 +2,8 @@
 #include "connect.h" 
 #include "secondary.h"
 
+#include "DeviceBuffer.h"
+
 void print_usage (const char * bin);
 
 extern CommunicationObject commObject;
@@ -25,8 +27,8 @@ extern smallType additionModPrime[PRIME_NUMBER][PRIME_NUMBER];
 extern smallType subtractModPrime[PRIME_NUMBER][PRIME_NUMBER];
 extern smallType multiplicationModPrime[PRIME_NUMBER][PRIME_NUMBER];
 
-//RSSData<uint32_t> trainData, testData;
-//RSSData<uint32_t> trainLabels, testLabels;
+RSS<uint32_t, DeviceVectorIterator<uint32_t>, DeviceVectorConstIterator<uint32_t> > trainData(0), testData(0);
+RSS<uint32_t, DeviceVectorIterator<uint32_t>, DeviceVectorConstIterator<uint32_t> > trainLabels(0), testLabels(0);
 
 size_t trainDataBatchCounter = 0;
 size_t trainLabelsBatchCounter = 0;
@@ -61,9 +63,8 @@ void parseInputs(int argc, char* argv[])
     */
 }
 
-/*
-template<typename T>
-void train(NeuralNetwork<T> *net, NeuralNetConfig *config)
+template<typename T, typename I, typename C>
+void train(NeuralNetwork<T, I, C> *net, NeuralNetConfig *config)
 {
 	log_print("train");
 
@@ -78,16 +79,16 @@ void train(NeuralNetwork<T> *net, NeuralNetConfig *config)
 	}
 }
 
-template<typename T>
-void test(NeuralNetwork<T> *net)
+template<typename T, typename I, typename C>
+void test(NeuralNetwork<T, I, C> *net)
 {
 	log_print("test");
 
 	// counter[0]: Correct samples, counter[1]: total samples
-    / * XXX
+    /* XXX
 	vector<size_t> counter(2,0);
 	RSSData<T> maxIndex(MINI_BATCH_SIZE);
-    * /
+    */
 
 	for (int i = 0; i < NUM_ITERATIONS; ++i)
 	{
@@ -101,7 +102,8 @@ void test(NeuralNetwork<T> *net)
 	}
 }
 
-template void test<uint32_t>(NeuralNetwork<uint32_t> *net);
+template void test<uint32_t, DeviceVectorIterator<uint32_t>, DeviceVectorConstIterator<uint32_t> >(
+        NeuralNetwork<uint32_t, DeviceVectorIterator<uint32_t>, DeviceVectorConstIterator<uint32_t> > *net);
 
 void loadData(string net, string dataset)
 {
@@ -186,8 +188,12 @@ void loadData(string net, string dataset)
 	for (int i = 0; i < TRAINING_DATA_SIZE * INPUT_SIZE; ++i)
 	{
 		f_next >> temp_next; f_prev >> temp_prev;
-        trainData[0].getData().push_back((uint32_t)(temp_next * (1 << FLOAT_PRECISION)));
-        trainData[1].getData().push_back((uint32_t)(temp_prev* (1 << FLOAT_PRECISION)));
+        static_cast<DeviceBuffer<uint32_t> *>(trainData[0])->raw().push_back(
+            (uint32_t)(temp_next * (1 << FLOAT_PRECISION))
+        ),
+        static_cast<DeviceBuffer<uint32_t> *>(trainData[1])->raw().push_back(
+            (uint32_t)(temp_prev * (1 << FLOAT_PRECISION))
+        );
 		//trainData.push_back(std::make_pair(floatToMyType(temp_next), floatToMyType(temp_prev)));
 	}
 	f_next.close(); f_prev.close();
@@ -197,8 +203,12 @@ void loadData(string net, string dataset)
 	for (int i = 0; i < TRAINING_DATA_SIZE * LAST_LAYER_SIZE; ++i)
 	{
 		g_next >> temp_next; g_prev >> temp_prev;
-        trainLabels[0].getData().push_back((uint32_t)(temp_next * (1 << FLOAT_PRECISION)));
-        trainLabels[1].getData().push_back((uint32_t)(temp_prev * (1 << FLOAT_PRECISION)));
+        static_cast<DeviceBuffer<uint32_t> *>(trainLabels[0])->raw().push_back(
+            (uint32_t)(temp_next * (1 << FLOAT_PRECISION))
+        );
+        static_cast<DeviceBuffer<uint32_t> *>(trainLabels[1])->raw().push_back(
+            (uint32_t)(temp_prev * (1 << FLOAT_PRECISION))
+        );
 		//trainLabels.push_back(std::make_pair(floatToMyType(temp_next), floatToMyType(temp_prev)));
 	}
 	g_next.close(); g_prev.close();
@@ -208,8 +218,12 @@ void loadData(string net, string dataset)
 	for (int i = 0; i < TRAINING_DATA_SIZE * INPUT_SIZE; ++i)
 	{
 		h_next >> temp_next; h_prev >> temp_prev;
-        testData[0].getData().push_back((uint32_t)(temp_next * (1 << FLOAT_PRECISION)));
-        testData[1].getData().push_back((uint32_t)(temp_prev * (1 << FLOAT_PRECISION)));
+        static_cast<DeviceBuffer<uint32_t> *>(testData[0])->raw().push_back(
+            (uint32_t)(temp_next * (1 << FLOAT_PRECISION))
+        );
+        static_cast<DeviceBuffer<uint32_t> *>(testData[1])->raw().push_back(
+            (uint32_t)(temp_prev * (1 << FLOAT_PRECISION))
+        );
 		//testData.push_back(std::make_pair(floatToMyType(temp_next), floatToMyType(temp_prev)));
 	}
 	h_next.close(); h_prev.close();
@@ -219,8 +233,12 @@ void loadData(string net, string dataset)
 	for (int i = 0; i < TRAINING_DATA_SIZE * LAST_LAYER_SIZE; ++i)
 	{
 		k_next >> temp_next; k_prev >> temp_prev;
-        testLabels[0].getData().push_back((uint32_t)(temp_next * (1 << FLOAT_PRECISION)));
-        testLabels[1].getData().push_back((uint32_t)(temp_prev * (1 << FLOAT_PRECISION)));
+        static_cast<DeviceBuffer<uint32_t> *>(testLabels[0])->raw().push_back(
+            (uint32_t)(temp_next * (1 << FLOAT_PRECISION))
+        );
+        static_cast<DeviceBuffer<uint32_t> *>(testLabels[1])->raw().push_back(
+            (uint32_t)(temp_prev * (1 << FLOAT_PRECISION))
+        );
 		//testLabels.push_back(std::make_pair(floatToMyType(temp_next), floatToMyType(temp_prev)));
 	}
 	k_next.close(); k_prev.close();		
@@ -228,8 +246,9 @@ void loadData(string net, string dataset)
 	cout << "Loading data done....." << endl;
 }
 
-template<typename T>
-void readMiniBatch(NeuralNetwork<T> *net, string phase)
+/*
+template<typename T, typename I, typename C>
+void readMiniBatch(NeuralNetwork<T, I, C> *net, string phase)
 {
 	size_t s = trainData.size();
 	size_t t = trainLabels.size();
@@ -276,9 +295,10 @@ void readMiniBatch(NeuralNetwork<T> *net, string phase)
 	if (testLabelsBatchCounter > q)
 		testLabelsBatchCounter -= q;
 }
+*/
 
-template<typename T>
-void printNetwork(NeuralNetwork<T> *net)
+template<typename T, typename I, typename C>
+void printNetwork(NeuralNetwork<T, I, C> *net)
 {
 	for (int i = 0; i < net->layers.size(); ++i)
 		net->layers[i]->printLayer();
@@ -380,6 +400,7 @@ void selectNetwork(string network, string dataset, string security, NeuralNetCon
 		config->addLayer(l8);
 		config->addLayer(l9);
 	}
+    /*
 	else if (network.compare("AlexNet") == 0)
 	{
 		if(dataset.compare("MNIST") == 0)
@@ -479,6 +500,7 @@ void selectNetwork(string network, string dataset, string security, NeuralNetCon
 			config->addLayer(l18);
 		}
 	}
+*/
 	else if (network.compare("VGG16") == 0)
 	{
 		if(dataset.compare("MNIST") == 0)
@@ -656,8 +678,8 @@ void selectNetwork(string network, string dataset, string security, NeuralNetCon
 		assert(false && "Only SecureML, Sarda, Gazelle, LeNet, AlexNet, and VGG16 Networks supported");
 }
 
-template<typename T>
-void runOnly(NeuralNetwork<T> *net, size_t l, string what, string& network)
+template<typename T, typename I, typename C>
+void runOnly(NeuralNetwork<T, I, C> *net, size_t l, string what, string& network)
 {
 	size_t total_layers = net->layers.size();
 	assert((l < total_layers) && "Incorrect layer number for runOnly"); 
@@ -685,11 +707,9 @@ void runOnly(NeuralNetwork<T> *net, size_t l, string what, string& network)
 	else
 		assert(false && "Only F,D or U allowed in runOnly");
 }
-*/
 
 /********************* COMMUNICATION AND HELPERS *********************/
 
-/*
 void start_m()
 {
 	// cout << endl;
@@ -794,7 +814,6 @@ void aggregateCommunication()
 		cout << "----------------------------------------------" << endl;
 	}
 }
-*/
 
 void print_usage (const char * bin) {
     std::cout << "Usage: ./" << bin << " PARTY_NUM IP_ADDR_FILE AES_SEED_INDEP AES_SEED_NEXT AES_SEED_PREV" << std::endl;
@@ -810,7 +829,6 @@ void print_usage (const char * bin) {
     exit(-1);
 }
 
-/*
 double diff(timespec start, timespec end)
 {
     timespec temp;
@@ -827,12 +845,10 @@ double diff(timespec start, timespec end)
     }
     return temp.tv_sec + (double)temp.tv_nsec/NANOSECONDS_PER_SEC;
 }
-*/
 
 void deleteObjects()
 {
 	//close connection
-    /*
 	for (int i = 0; i < NUM_OF_PARTIES; i++) {
 		if (i != partyNum) {
 			delete communicationReceivers[i];
@@ -842,7 +858,6 @@ void deleteObjects()
 	delete[] communicationReceivers;
 	delete[] communicationSenders;
 	delete[] addrs;
-    */
 }
 
 

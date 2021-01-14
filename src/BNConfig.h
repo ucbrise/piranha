@@ -1,7 +1,9 @@
 
 #pragma once
+
 #include "LayerConfig.h"
 #include "globals.h"
+
 using namespace std;
 
 class BNConfig : public LayerConfig

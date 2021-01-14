@@ -3,8 +3,8 @@
 #include "BNLayer.h"
 #include "Functionalities.h"
 
-template<typename T>
-BNLayer<T>::BNLayer(BNConfig* conf, int _layerNum) : Layer<T>(_layerNum),
+template<typename T, typename I, typename C>
+BNLayer<T, I, C>::BNLayer(BNConfig* conf, int _layerNum) : Layer<T, I, C>(_layerNum),
  conf(conf->inputSize, conf->numBatches),
  gamma(conf->numBatches),
  beta(conf->numBatches),
@@ -14,19 +14,19 @@ BNLayer<T>::BNLayer(BNConfig* conf, int _layerNum) : Layer<T>(_layerNum),
  deltas(conf->inputSize * conf->numBatches)
 {initialize();};
 
-template<typename T>
-void BNLayer<T>::initialize() {};
+template<typename T, typename I, typename C>
+void BNLayer<T, I, C>::initialize() {};
 
-template<typename T>
-void BNLayer<T>::printLayer()
+template<typename T, typename I, typename C>
+void BNLayer<T, I, C>::printLayer()
 {
 	cout << "----------------------------------------------" << endl;  	
 	cout << "(" << this->layerNum+1 << ") BN Layer\t\t  " << conf.inputSize << " x " 
 		 << conf.numBatches << endl;
 }
 
-template<typename T>
-void BNLayer<T>::forward(RSSData<T> &input)
+template<typename T, typename I, typename C>
+void BNLayer<T, I, C>::forward(RSS<T, I, C> &input)
 {
     //TODO
     /*
@@ -102,8 +102,8 @@ void BNLayer<T>::forward(RSSData<T> &input)
 }
 
 //https://kevinzakka.github.io/2016/09/14/batch_normalization/
-template<typename T>
-void BNLayer<T>::backward(RSSData<T> &delta, RSSData<T> &forwardInput) {
+template<typename T, typename I, typename C>
+void BNLayer<T, I, C>::backward(RSS<T, I, C> &delta, RSS<T, I, C> &forwardInput) {
     // TODO
     /*
 	log_print("BN.computeDelta");
@@ -166,4 +166,4 @@ void BNLayer<T>::backward(RSSData<T> &delta, RSSData<T> &forwardInput) {
     */
 }
 
-template class BNLayer<uint32_t>;
+template class BNLayer<uint32_t, DeviceVectorIterator<uint32_t>, DeviceVectorConstIterator<uint32_t> >;
