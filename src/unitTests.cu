@@ -6,22 +6,22 @@
 #include <vector>
 
 #include "bitwise.cuh"
-//#include "CNNConfig.h"
-//#include "CNNLayer.h"
+#include "CNNConfig.h"
+#include "CNNLayer.h"
 #include "convolution.cuh"
 #include "DeviceData.h"
 #include "DeviceBuffer.h"
 #include "DeviceBufferView.h"
-//#include "FCConfig.h"
-//#include "FCLayer.h"
+#include "FCConfig.h"
+#include "FCLayer.h"
 #include "Functionalities.h"
 #include "globals.h"
 #include "matrix.cuh"
-//#include "MaxpoolConfig.h"
-//#include "MaxpoolLayer.h"
+#include "MaxpoolConfig.h"
+#include "MaxpoolLayer.h"
 #include "Profiler.h"
-//#include "ReLUConfig.h"
-//#include "ReLULayer.h"
+#include "ReLUConfig.h"
+#include "ReLULayer.h"
 #include "RSS.h"
 #include "secondary.h"
 #include "util.cuh"
@@ -200,36 +200,6 @@ TEST(GPUTest, BitExpand) {
     assertDeviceData(abits, expected, false);
 }
 
-/*
-TEST(GPUTest, Unzip) {
-    
-    DeviceBuffer<uint32_t> a = {1, 3, 2, 4};
-    DeviceBuffer<uint32_t> b(a.size()/2), c(a.size()/2);
-
-    gpu::unzip(a, b, c);
-    cudaDeviceSynchronize();
-
-    std::vector<float> expected = {1, 2};
-    assertDeviceBuffer(&b, expected);
-
-    expected = {3, 4};
-    assertDeviceBuffer(&c, expected);
-}
-
-TEST(GPUTest, Zip) {
-    
-    DeviceBuffer<uint32_t> a = {1, 2};
-    DeviceBuffer<uint32_t> b = {3, 4};
-    DeviceBuffer<uint32_t> c(a.size() + b.size());
-
-    gpu::zip(c, a, b);
-    cudaDeviceSynchronize();
-
-    std::vector<float> expected = {1, 3, 2, 4};
-    assertDeviceBuffer(&c, expected);
-}
-*/
-
 TEST(GPUTest, Im2Row) {
 
     // 2x3, Din=2
@@ -386,6 +356,19 @@ TEST(FuncTest, Convolution) {
     assertRSS(out, expected);
 }
 
+TEST(FuncTest, CarryOut) {
+    RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > p = {0, 1, 0, 1, 0, 1, 0, 1};
+    p >>= FLOAT_PRECISION;
+    RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > g = {0, 1, 0, 1, 0, 1, 0, 1};
+    g >>= FLOAT_PRECISION;
+
+    RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > out(2);
+    carryOut(p, g, 4, out);
+
+    std::vector<float> expected = {1, 1};
+    assertRSS(out, expected, false);
+}
+
 TEST(FuncTest, DRELU) {
     
     RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > input = {-1, 2, -2, -3};
@@ -439,14 +422,13 @@ TEST(FuncTest, Maxpool) {
     assertRSS(dresult, dexpected, false);
 }
 
-/*
 TEST(LayerTest, FCForward) {
 
     int inputDim = 4;
     int batchSize = 4;
     int outputDim = 3;
 
-    RSSData<uint32_t> input {
+    RSS<uint32_t, DeviceVectorIterator<uint32_t>, DeviceVectorConstIterator<uint32_t> > input {
         1, 0, 0, 0,
         0, 1, 0, 0,
         0, 0, 1, 0,
@@ -454,20 +436,20 @@ TEST(LayerTest, FCForward) {
     };
 
     FCConfig *lconfig = new FCConfig(inputDim, batchSize, outputDim);
-    FCLayer<uint32_t> layer(lconfig, 0); 
+    FCLayer<uint32_t, DeviceVectorIterator<uint32_t>, DeviceVectorConstIterator<uint32_t> > layer(lconfig, 0); 
 
     layer.forward(input);
 
     std::vector<float> expected(4*3); // 12
     copyToHost(*(layer.getWeights()), expected);
 
-    assertRSS(layer.getActivation(), expected);
+    assertRSS(*layer.getActivation(), expected);
 }
 
 TEST(LayerTest, CNNForward) {
 
     // 2x2, Din=3
-    RSSData<uint32_t> im = {
+    RSS<uint32_t, DeviceVectorIterator<uint32_t>, DeviceVectorConstIterator<uint32_t> > im = {
         1, 0,
         0, 0,
         0, 1,
@@ -486,7 +468,7 @@ TEST(LayerTest, CNNForward) {
         2, 1, // stride, padding
         1 // batch size
     );
-    CNNLayer<uint32_t> layer(lconfig, 0); 
+    CNNLayer<uint32_t, DeviceVectorIterator<uint32_t>, DeviceVectorConstIterator<uint32_t> > layer(lconfig, 0); 
     layer.forward(im);
 
     // construct expected results based on randomized layer weights 
@@ -504,12 +486,12 @@ TEST(LayerTest, CNNForward) {
         host_weights[20]
     };
 
-    assertRSS(layer.getActivation(), expected);
+    assertRSS(*layer.getActivation(), expected);
 }
 
 TEST(LayerTest, RELUForward) {
 
-    RSSData<uint32_t> input = {
+    RSS<uint32_t, DeviceVectorIterator<uint32_t>, DeviceVectorConstIterator<uint32_t> > input = {
         -2, -3, 4, 3, 3.5, 1, -1.5, -1
     };
 
@@ -517,20 +499,20 @@ TEST(LayerTest, RELUForward) {
         input.size(),
         1 // batch size? 
     );
-    ReLULayer<uint32_t> layer(lconfig, 0);
+    ReLULayer<uint32_t, DeviceVectorIterator<uint32_t>, DeviceVectorConstIterator<uint32_t> > layer(lconfig, 0);
     layer.forward(input);
 
     std::vector<float> expected = {
         0, 0, 4, 3, 3.5, 1, 0, 0
     };
-    assertRSS(layer.getActivation(), expected);
+    assertRSS(*layer.getActivation(), expected);
 }
 
 TEST(LayerTest, MaxpoolForward) {
     // imageWidth x imageHeight = 2 x 2
     // features = 3
     // batchSize = 2
-    RSSData<uint32_t> inputImage = {
+    RSS<uint32_t, DeviceVectorIterator<uint32_t>, DeviceVectorConstIterator<uint32_t> > inputImage = {
         // im 1
          1,  3,
         -3,  0,
@@ -554,15 +536,16 @@ TEST(LayerTest, MaxpoolForward) {
         1, // stride
         2 // batchSize
     );
-    MaxpoolLayer<uint32_t> layer(lconfig, 0);
+    MaxpoolLayer<uint32_t, DeviceVectorIterator<uint32_t>, DeviceVectorConstIterator<uint32_t> > layer(lconfig, 0);
     layer.forward(inputImage);
 
     std::vector<float> expected = {
         3, 2, 3, 2, 3, 0    
     };
-    assertRSS(layer.getActivation(), expected);
+    assertRSS(*layer.getActivation(), expected);
 }
 
+/*
 TEST(PerfTest, DISABLED_LargeMatMul) {
 
     int rows = 8;

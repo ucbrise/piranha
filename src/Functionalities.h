@@ -2,6 +2,7 @@
 #pragma once
 
 #include <string>
+#include <thrust/copy.h>
 
 #include "bitwise.cuh"
 #include "connect.h"
@@ -10,13 +11,14 @@
 #include "matrix.cuh"
 #include "Precompute.h"
 #include "RSS.h"
+#include "StridedRange.cuh"
 #include "util.cuh"
 
 extern Precompute PrecomputeObject;
 extern std::string SECURITY_TYPE;
 
-template<typename T, typename Iterator, typename ConstIterator>
-void NEW_funcReconstruct(RSS<T, Iterator, ConstIterator> &a, DeviceData<T, Iterator, ConstIterator> &reconstructed) {
+template<typename T, typename Iterator, typename ConstIterator, typename I2, typename C2>
+void NEW_funcReconstruct(RSS<T, Iterator, ConstIterator> &a, DeviceData<T, I2, C2> &reconstructed) {
 
     if (SECURITY_TYPE.compare("Semi-honest") == 0) {
         // 1 - send shareA to next party
@@ -305,41 +307,100 @@ void NEW_funcConvolution(RSS<T, I, C> &im, RSS<T, I, C> &filters, RSS<T, I, C> &
 template<typename T, typename I, typename C>
 void carryOut(RSS<T, I, C> &p, RSS<T, I, C> &g, int k, RSS<T, I, C> &out) {
 
-    /*
-    RSS<T, I, C> pEven(p.size()/2), pOdd(p.size()/2);
-    RSS<T, I, C> gEven(g.size()/2), gOdd(g.size()/2);
+    // get zip iterators on both p and g
+    //  -> pEven, pOdd, gEven, gOdd
+    
+    int stride = 2;
+    int offset = 1;
 
-    p.unzip(pEven, pOdd);
-    g.unzip(gEven, gOdd);
+    using SRIterator = typename StridedRange<I>::iterator;
+
+    StridedRange<I> pEven0Range(p[0]->first(), p[0]->last(), stride);
+    DeviceBufferView<T, SRIterator, SRIterator> pEven0(pEven0Range.begin(), pEven0Range.end());
+    StridedRange<I> pEven1Range(p[1]->first(), p[1]->last(), stride);
+    DeviceBufferView<T, SRIterator, SRIterator> pEven1(pEven1Range.begin(), pEven1Range.end());
+    RSS<T, SRIterator, SRIterator> pEven(&pEven0, &pEven1);
+
+    StridedRange<I> pOdd0Range(p[0]->first() + offset, p[0]->last(), stride);
+    DeviceBufferView<T, SRIterator, SRIterator> pOdd0(pOdd0Range.begin(), pOdd0Range.end());
+    StridedRange<I> pOdd1Range(p[1]->first() + offset, p[1]->last(), stride);
+    DeviceBufferView<T, SRIterator, SRIterator> pOdd1(pOdd1Range.begin(), pOdd1Range.end());
+    RSS<T, SRIterator, SRIterator> pOdd(&pOdd0, &pOdd1);
+
+    StridedRange<I> gEven0Range(g[0]->first(), g[0]->last(), stride);
+    DeviceBufferView<T, SRIterator, SRIterator> gEven0(gEven0Range.begin(), gEven0Range.end());
+    StridedRange<I> gEven1Range(g[1]->first(), g[1]->last(), stride);
+    DeviceBufferView<T, SRIterator, SRIterator> gEven1(gEven1Range.begin(), gEven1Range.end());
+    RSS<T, SRIterator, SRIterator> gEven(&gEven0, &gEven1);
+
+    StridedRange<I> gOdd0Range(g[0]->first() + offset, g[0]->last(), stride);
+    DeviceBufferView<T, SRIterator, SRIterator> gOdd0(gOdd0Range.begin(), gOdd0Range.end());
+    StridedRange<I> gOdd1Range(g[1]->first() + offset, g[1]->last(), stride);
+    DeviceBufferView<T, SRIterator, SRIterator> gOdd1(gOdd1Range.begin(), gOdd1Range.end());
+    RSS<T, SRIterator, SRIterator> gOdd(&gOdd0, &gOdd1);
 
     while(k > 1) {
 
-        / *
-        printf("-> k=%d\n", k);
+        // gTemp = pOdd & gEven
+        //  store result in gEven
+        gEven &= pOdd;
 
-        RSSData<U> pCombined(pEven.size() + pOdd.size());
-        pCombined.zip(pEven, pOdd);
-        printRSS(pCombined, "  p");
+        // pEven & pOdd
+        //  store result in pEven
+        pEven &= pOdd;
 
-        RSSData<U> gCombined(gEven.size() + gOdd.size());
-        gCombined.zip(gEven, gOdd);
-        printRSS(gCombined, "  g");
-        * /
+        // gOdd ^ gTemp
+        //  store result in gOdd
+        gOdd ^= gEven;
+        
+        // regenerate zip iterators to p and g
+        
+        //  gOdd -> gEven, gOdd
+        gEven0Range.set(g[0]->first() + offset, g[0]->last(), stride*2);
+        gEven0.set(gEven0Range.begin(), gEven0Range.end());
+        gEven1Range.set(g[1]->first() + offset, g[1]->last(), stride*2);
+        gEven1.set(gEven1Range.begin(), gEven1Range.end());
+        gEven.set(&gEven0, &gEven1);
 
-        RSSData<U> gTemp = pOdd & gEven;
-        (pEven & pOdd).unzip(pEven, pOdd);
-        (gOdd ^ gTemp).unzip(gEven, gOdd);
+        offset += stride;
 
-        pEven.resize(pEven.size()/2);
-        pOdd.resize(pOdd.size()/2);
-        gEven.resize(gEven.size()/2);
-        gOdd.resize(gOdd.size()/2);
+        gOdd0Range.set(g[0]->first() + offset, g[0]->last(), stride*2);
+        gOdd0.set(gOdd0Range.begin(), gOdd0Range.end());
+        gOdd1Range.set(g[1]->first() + offset, g[1]->last(), stride*2);
+        gOdd1.set(gOdd1Range.begin(), gOdd1Range.end());
+        gOdd.set(&gOdd0, &gOdd1);
 
+        //  pEven -> pEven, pOdd
+        stride *= 2;
+
+        pEven0Range.set(p[0]->first(), p[0]->last(), stride);
+        pEven0.set(pEven0Range.begin(), pEven0Range.end());
+        pEven1Range.set(p[1]->first(), p[1]->last(), stride);
+        pEven1.set(pEven1Range.begin(), pEven1Range.end());
+        pEven.set(&pEven0, &pEven1);
+
+        pOdd0Range.set(p[0]->first() + stride/2, p[0]->last(), stride);
+        pOdd0.set(pOdd0Range.begin(), pOdd0Range.end());
+        pOdd1Range.set(p[1]->first() + stride/2, p[1]->last(), stride);
+        pOdd1.set(pOdd1Range.begin(), pOdd1Range.end());
+        pOdd.set(&pOdd0, &pOdd1);
+        
         k /= 2;
     }
 
-    out.zip(gEven, gOdd);
-    */
+    // copy output to destination
+    // out.zip(gEven, gOdd);
+    StridedRange<I> outputEven0Range(out[0]->first(), out[0]->last(), 2);
+    thrust::copy(gEven[0]->first(), gEven[0]->last(), outputEven0Range.begin());
+
+    StridedRange<I> outputEven1Range(out[1]->first(), out[1]->last(), 2);
+    thrust::copy(gEven[1]->first(), gEven[1]->last(), outputEven1Range.begin());
+
+    StridedRange<I> outputOdd0Range(out[0]->first() + 1, out[0]->last(), 2);
+    thrust::copy(gOdd[0]->first(), gOdd[0]->last(), outputOdd0Range.begin());
+
+    StridedRange<I> outputOdd1Range(out[1]->first() + 1, out[1]->last(), 2);
+    thrust::copy(gOdd[1]->first(), gOdd[1]->last(), outputOdd1Range.begin());
 }
 
 /*
@@ -468,29 +529,135 @@ void NEW_funcRELU(RSS<T, I, C> &input, RSS<T, I, C> &result, RSS<T, I, C> &dresu
     //std::cout << "end of relu" << std::endl;
 }
 
-/*
-template<typename T>
-void expandCompare(RSSData<T> &b, RSSData<T> &expanded) {
+template<typename T, typename I, typename C>
+void expandCompare(RSS<T, I, C> &b, RSS<T, I, C> &inverseB, RSS<T, I, C> &expanded) {
     int expansionFactor = (expanded.size() / b.size()) / 2;
-    RSSData<T> inverseB = (T)1 - b;
 
     // TODO parallelize
     int expandedIndex = 0;
     for (int bIndex = 0; bIndex < b.size(); bIndex++) {
         for (int i = 0; i < expansionFactor; i++, expandedIndex++) {
-            expanded[0].getData()[expandedIndex] = b[0].getData()[bIndex];
-            expanded[1].getData()[expandedIndex] = b[1].getData()[bIndex];
+            static_cast<DeviceBuffer<T>*>(expanded[0])->raw()[expandedIndex] =
+                static_cast<DeviceBuffer<T>*>(b[0])->raw()[bIndex];
+            static_cast<DeviceBuffer<T>*>(expanded[1])->raw()[expandedIndex] =
+                static_cast<DeviceBuffer<T>*>(b[1])->raw()[bIndex];
         } 
         for (int i = 0; i < expansionFactor; i++, expandedIndex++) {
-            expanded[0].getData()[expandedIndex] = inverseB[0].getData()[bIndex];
-            expanded[1].getData()[expandedIndex] = inverseB[1].getData()[bIndex];
+            static_cast<DeviceBuffer<T>*>(expanded[0])->raw()[expandedIndex] =
+                static_cast<DeviceBuffer<T>*>(inverseB[0])->raw()[bIndex];
+            static_cast<DeviceBuffer<T>*>(expanded[1])->raw()[expandedIndex] =
+                static_cast<DeviceBuffer<T>*>(inverseB[1])->raw()[bIndex];
         }
     }
 }
-*/
 
 template<typename T, typename I, typename C>
 void NEW_funcMaxpool(RSS<T, I, C> &input, RSS<T, I, C> &result, RSS<T, I, C> &dresult, int k) {
+
+    // d(Maxpool) setup
+    dresult.fill(1);
+
+    // split input into even, odd
+    using SRIterator = typename StridedRange<I>::iterator;
+
+    int stride = 2;
+    int offset = 1;
+
+    StridedRange<I> even0Range(input[0]->first(), input[0]->last(), stride);
+    DeviceBufferView<T, SRIterator, SRIterator> even0(even0Range.begin(), even0Range.end());
+    StridedRange<I> even1Range(input[1]->first(), input[1]->last(), stride);
+    DeviceBufferView<T, SRIterator, SRIterator> even1(even1Range.begin(), even1Range.end());
+    RSS<T, SRIterator, SRIterator> even(&even0, &even1);
+
+    StridedRange<I> odd0Range(input[0]->first() + offset, input[0]->last(), stride);
+    DeviceBufferView<T, SRIterator, SRIterator> odd0(odd0Range.begin(), odd0Range.end());
+    StridedRange<I> odd1Range(input[1]->first() + offset, input[1]->last(), stride);
+    DeviceBufferView<T, SRIterator, SRIterator> odd1(odd1Range.begin(), odd1Range.end());
+    RSS<T, SRIterator, SRIterator> odd(&odd0, &odd1);
+
+    while(k > 2) {
+
+        // -- MP --
+
+        // diff = even - odd
+        RSS<T, I, C> b(even.size());
+        b.zero();
+        b += even;
+        b -= odd;
+
+        // DRELU diff -> b
+        NEW_funcDRELU(b, b);
+        
+        // b * even + 1-b * odd
+        RSS<T, I, C> negated(b.size());
+        negated.fill(1);
+        negated -= b;
+
+        even *= b;
+        odd *= negated;
+        even += odd;
+
+        // unzip even -> into even, odd
+        stride *= 2;
+
+        even0Range.set(input[0]->first(), input[0]->last(), stride);
+        even0.set(even0Range.begin(), even0Range.end());
+        even1Range.set(input[1]->first(), input[1]->last(), stride);
+        even1.set(even1Range.begin(), even1Range.end());
+        even.set(&even0, &even1);
+
+        odd0Range.set(input[0]->first() + stride/2, input[0]->last(), stride);
+        odd0.set(odd0Range.begin(), odd0Range.end());
+        odd1Range.set(input[1]->first() + stride/2, input[1]->last(), stride);
+        odd1.set(odd1Range.begin(), odd1Range.end());
+        odd.set(&odd0, &odd1);
+        
+        // -- dMP --
+
+        // expandCompare b -> expandedB
+        RSS<T, I, C> expandedB(input.size());
+        expandCompare(b, negated, expandedB);
+        
+        // dresult &= expandedB
+        dresult &= expandedB;
+
+        k /= 2;
+    }
+
+    // Fencepost - don't unzip the final results after the last comparison and finish
+    // calculating derivative.
+    
+    // -- MP --
+    
+    // diff = even - odd
+    RSS<T, I, C> b(even.size());
+    b.zero();
+    b += even;
+    b -= odd;
+
+    // DRELU diff -> b
+    NEW_funcDRELU(b, b);
+    
+    // b * even + 1-b * odd
+    RSS<T, I, C> negated(b.size());
+    negated.fill(1);
+    negated -= b;
+
+    even *= b;
+    odd *= negated;
+    even += odd;
+
+    result.zero();
+    result += even;
+
+    // -- dMP --
+
+    // expandCompare b -> expandedB
+    RSS<T, I, C> expandedB(input.size());
+    expandCompare(b, negated, expandedB);
+    
+    // dresult &= expandedB
+    dresult &= expandedB;
 
     /*
     // Maxpool setup
@@ -498,7 +665,6 @@ void NEW_funcMaxpool(RSS<T, I, C> &input, RSS<T, I, C> &result, RSS<T, I, C> &dr
     RSSData<T> even(input.size() / 2), odd(input.size() / 2);
     input.unzip(even, odd);
 
-    // d(Maxpool) setup
     dresult.fillKnown(1);
 
     while (k > 2) {

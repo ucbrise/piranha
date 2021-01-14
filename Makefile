@@ -3,7 +3,7 @@ BUILDDIR=build
 
 CXX=nvcc
 FLAGS := -Xcompiler="-O3,-w,-std=c++11,-pthread,-msse4.1,-maes,-msse2,-mpclmul,-fpermissive,-fpic,-pthread" -Xcudafe "--diag_suppress=declared_but_not_referenced"
-#FLAGS := -Xcompiler="-O3,-w,-std=c++11,-pthread,-msse4.1,-maes,-msse2,-mpclmul,-fpermissive,-fpic,-pthread" -Xcudafe "--diag_suppress=declared_but_not_referenced"
+#FLAGS := -Xcompiler="-O0,-g,-w,-std=c++11,-pthread,-msse4.1,-maes,-msse2,-mpclmul,-fpermissive,-fpic,-pthread" -Xcudafe "--diag_suppress=declared_but_not_referenced"
 
 VPATH             := src/ util/
 SRC_CPP_FILES     := $(wildcard src/*.cpp) $(wildcard util/*.cpp)

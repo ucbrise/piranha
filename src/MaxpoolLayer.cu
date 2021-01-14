@@ -3,11 +3,11 @@
 #include "MaxpoolLayer.h"
 #include "Functionalities.h"
 
-template<typename T>
-Profiler MaxpoolLayer<T>::maxpool_profiler;
+template<typename T, typename I, typename C>
+Profiler MaxpoolLayer<T, I, C>::maxpool_profiler;
 
-template<typename T>
-MaxpoolLayer<T>::MaxpoolLayer(MaxpoolConfig* conf, int _layerNum) : Layer<T>(_layerNum),
+template<typename T, typename I, typename C>
+MaxpoolLayer<T, I, C>::MaxpoolLayer(MaxpoolConfig* conf, int _layerNum) : Layer<T, I, C>(_layerNum),
  	conf(conf->imageHeight, conf->imageWidth, conf->features, 
 	  		conf->poolSize, conf->stride, conf->batchSize),
  	activations(conf->batchSize * conf->features * 
@@ -22,8 +22,8 @@ MaxpoolLayer<T>::MaxpoolLayer(MaxpoolConfig* conf, int _layerNum) : Layer<T>(_la
 	// nothing
 };
 
-template<typename T>
-void MaxpoolLayer<T>::printLayer()
+template<typename T, typename I, typename C>
+void MaxpoolLayer<T, I, C>::printLayer()
 {
 	cout << "----------------------------------------------" << endl;  	
 	cout << "(" << this->layerNum+1 << ") Maxpool Layer\t  " << conf.imageHeight << " x " << conf.imageWidth 
@@ -33,8 +33,8 @@ void MaxpoolLayer<T>::printLayer()
 		 << conf.batchSize << "\t\t(Batch Size)" << endl;
 }
 
-template<typename T>
-void MaxpoolLayer<T>::forward(RSSData<T>& input)
+template<typename T, typename I, typename C>
+void MaxpoolLayer<T, I, C>::forward(RSS<T, I, C>& input)
 {
 	log_print("Maxpool.forward");
 
@@ -43,9 +43,11 @@ void MaxpoolLayer<T>::forward(RSSData<T>& input)
 
     int nPools = ((conf.imageHeight - conf.poolSize)/conf.stride + 1) *
     			 ((conf.imageWidth - conf.poolSize)/conf.stride + 1);
-   	RSSData<T> pools(nPools * conf.features * conf.batchSize * (conf.poolSize * conf.poolSize));
+   	RSS<T, I, C> pools(nPools * conf.features * conf.batchSize * (conf.poolSize * conf.poolSize));
    	for(int share = 0; share <= 1; share++) {
-	   	gpu::im2row(input[share], pools[share],
+	   	gpu::im2row(
+                *static_cast<DeviceBuffer<T> *>(input[share]),
+                *static_cast<DeviceBuffer<T> *>(pools[share]),
 	   			conf.imageWidth, conf.imageHeight, conf.poolSize, conf.features * conf.batchSize,
 	   			conf.stride, 0);
    	}
@@ -56,8 +58,8 @@ void MaxpoolLayer<T>::forward(RSSData<T>& input)
     maxpool_profiler.accumulate("maxpool-forward");
 }
 
-template<typename T>
-void MaxpoolLayer<T>::backward(RSSData<T> &delta, RSSData<T> &forwardInput) {
+template<typename T, typename I, typename C>
+void MaxpoolLayer<T, I, C>::backward(RSS<T, I, C> &delta, RSS<T, I, C> &forwardInput) {
 
 	log_print("Maxpool.computeDelta");
 
@@ -123,4 +125,10 @@ void MaxpoolLayer<T>::backward(RSSData<T> &delta, RSSData<T> &forwardInput) {
     this->layer_profiler.accumulate("maxpool-backward");
 }
 
-template class MaxpoolLayer<uint32_t>;
+template<typename T>
+using DeviceVectorIterator = thrust::detail::normal_iterator<thrust::device_ptr<T> >;
+template<typename T>
+using DeviceVectorConstIterator = thrust::detail::normal_iterator<thrust::device_ptr<const T> >;
+
+template class MaxpoolLayer<uint32_t, DeviceVectorIterator<uint32_t>, DeviceVectorConstIterator<uint32_t> >;
+

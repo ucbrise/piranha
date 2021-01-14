@@ -53,6 +53,18 @@ __global__ void elementVectorAdd(T* a, T* b, bool rowwise, int rows, int cols) {
     }
 }
 
+// add vector b to every row/col in a
+template<typename T>
+__global__ void reduceSum(T* a, T* b, bool reduceRows, int rows, int cols) {
+
+    int ROW = blockIdx.y*blockDim.y+threadIdx.y;
+    int COL = blockIdx.x*blockDim.x+threadIdx.x;
+
+    if (ROW < rows && COL < cols) {
+        b[reduceRows ? COL : ROW] += a[ROW * cols + COL];
+    }
+}
+
 }
 
 namespace gpu {
@@ -135,10 +147,28 @@ void elementVectorAdd(DeviceBuffer<T> &a, DeviceBuffer<T> &b,
     );
 }
 
-/*
 template<typename T> 
 void reduceSum(DeviceBuffer<T> &a, DeviceBuffer<T> &b,
-        bool reduceRows, size_t rows, size_t cols);
-*/
+        bool reduceRows, size_t rows, size_t cols) {
+        
+    dim3 threadsPerBlock(cols, rows);
+    dim3 blocksPerGrid(1, 1);
+
+    if (cols > MAX_THREADS_PER_BLOCK) {
+        threadsPerBlock.x = MAX_THREADS_PER_BLOCK;
+        blocksPerGrid.x = ceil(double(cols)/double(threadsPerBlock.x));
+    }
+    
+    if (rows > MAX_THREADS_PER_BLOCK) {
+        threadsPerBlock.y = MAX_THREADS_PER_BLOCK;
+        blocksPerGrid.y = ceil(double(rows)/double(threadsPerBlock.y));
+    }
+
+    kernel::reduceSum<<<blocksPerGrid,threadsPerBlock>>>(
+        thrust::raw_pointer_cast(a.raw().data()),
+        thrust::raw_pointer_cast(b.raw().data()),
+        reduceRows, rows, cols
+    );
+}
 
 }

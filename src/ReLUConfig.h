@@ -14,3 +14,4 @@ class ReLUConfig : public LayerConfig {
 			// nothing
 		};
 };
+

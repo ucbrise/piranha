@@ -5,11 +5,11 @@
 #include "Functionalities.h"
 #include "Profiler.h"
 
-template<typename T>
-Profiler ReLULayer<T>::relu_profiler;
+template<typename T, typename I, typename C>
+Profiler ReLULayer<T, I, C>::relu_profiler;
 
-template<typename T>
-ReLULayer<T>::ReLULayer(ReLUConfig* conf, int _layerNum) : Layer<T>(_layerNum),
+template<typename T, typename I, typename C>
+ReLULayer<T, I, C>::ReLULayer(ReLUConfig* conf, int _layerNum) : Layer<T, I, C>(_layerNum),
 	conf(conf->batchSize, conf->inputDim),
 	activations(conf->batchSize * conf->inputDim), 
 	deltas(conf->batchSize * conf->inputDim),
@@ -20,15 +20,15 @@ ReLULayer<T>::ReLULayer(ReLUConfig* conf, int _layerNum) : Layer<T>(_layerNum),
 	deltas.zero();	
 }
 
-template<typename T>
-void ReLULayer<T>::printLayer()
+template<typename T, typename I, typename C>
+void ReLULayer<T, I, C>::printLayer()
 {
 	std::cout << "----------------------------------------------" << std::endl;
 	std::cout << "(" << this->layerNum+1 << ") ReLU Layer\t\t  " << conf.batchSize << " x " << conf.inputDim << std::endl;
 }
 
-template<typename T>
-void ReLULayer<T>::forward(RSSData<T> &input)
+template<typename T, typename I, typename C>
+void ReLULayer<T, I, C>::forward(RSS<T, I, C> &input)
 {
 	log_print("ReLU.forward");
 
@@ -47,8 +47,8 @@ void ReLULayer<T>::forward(RSSData<T> &input)
     relu_profiler.accumulate("relu-forward");
 }
 
-template<typename T>
-void ReLULayer<T>::backward(RSSData<T> &delta, RSSData<T> &forwardInput) {
+template<typename T, typename I, typename C>
+void ReLULayer<T, I, C>::backward(RSS<T, I, C> &delta, RSS<T, I, C> &forwardInput) {
 
 	log_print("ReLU.backward");
 
@@ -56,7 +56,7 @@ void ReLULayer<T>::backward(RSSData<T> &delta, RSSData<T> &forwardInput) {
 	this->layer_profiler.start();
 
 	// (1) Compute backwards gradient for previous layer
-	RSSData<T> zeros(delta.size());
+	RSS<T, I, C> zeros(delta.size());
 	zeros.zero();
     NEW_funcSelectShare(delta, zeros, reluPrime, deltas);
 
@@ -66,7 +66,13 @@ void ReLULayer<T>::backward(RSSData<T> &delta, RSSData<T> &forwardInput) {
     relu_profiler.accumulate("relu-backward");
     this->layer_profiler.accumulate("relu-backward");
 
-    return deltas;
+    //return deltas;
 }
 
-template class ReLULayer<uint32_t>;
+template<typename T>
+using DeviceVectorIterator = thrust::detail::normal_iterator<thrust::device_ptr<T> >;
+template<typename T>
+using DeviceVectorConstIterator = thrust::detail::normal_iterator<thrust::device_ptr<const T> >;
+
+template class ReLULayer<uint32_t, DeviceVectorIterator<uint32_t>, DeviceVectorConstIterator<uint32_t> >;
+

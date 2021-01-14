@@ -10,8 +10,8 @@
 
 extern bool LARGE_NETWORK;
 
-template<typename T>
-CNNLayer<T>::CNNLayer(CNNConfig* conf, int _layerNum) : Layer<T>(_layerNum),
+template<typename T, typename I, typename C>
+CNNLayer<T, I, C>::CNNLayer(CNNConfig* conf, int _layerNum) : Layer<T, I, C>(_layerNum),
 	conf(conf->imageHeight, conf->imageWidth, conf->inputFeatures, 
 	 	conf->filters, conf->filterSize, conf->stride, 
 		conf->padding, conf->batchSize),
@@ -26,8 +26,8 @@ CNNLayer<T>::CNNLayer(CNNConfig* conf, int _layerNum) : Layer<T>(_layerNum),
 	initialize();
 };
 
-template<typename T>
-void CNNLayer<T>::initialize()
+template<typename T, typename I, typename C>
+void CNNLayer<T, I, C>::initialize()
 {
 	//Initialize weights and biases here.
 	//Ensure that initialization is correctly done.
@@ -41,12 +41,12 @@ void CNNLayer<T>::initialize()
         weight_vals[i] = ((float)(rand() % (higher - lower) + lower)) / decimation;
     }
 
-    weights.setKnown(weight_vals);
+    weights.setPublic(weight_vals);
     biases.zero();
 }
 
-template<typename T>
-void CNNLayer<T>::printLayer()
+template<typename T, typename I, typename C>
+void CNNLayer<T, I, C>::printLayer()
 {
 	cout << "----------------------------------------------" << endl;  	
 	cout << "(" << this->layerNum+1 << ") CNN Layer\t\t  " << conf.imageHeight << " x " << conf.imageWidth 
@@ -59,8 +59,8 @@ void CNNLayer<T>::printLayer()
 		 << conf.filters << " \t(Output)" << endl;
 }
 
-template<typename T>
-void CNNLayer<T>::forward(RSSData<T> &input)
+template<typename T, typename I, typename C>
+void CNNLayer<T, I, C>::forward(RSS<T, I, C> &input)
 {
 	log_print("CNN.forward");
 
@@ -69,16 +69,20 @@ void CNNLayer<T>::forward(RSSData<T> &input)
     for (int k = 0; k < conf.batchSize; k++) {
     	// TODO this is terri-bad 
     	int imSize = input.size() / conf.batchSize;
-    	RSSData<T> im(imSize);
+    	RSS<T, I, C> im(imSize);
     	cudaMemcpy(
-    		thrust::raw_pointer_cast(im[0].getData().data()),
-    		thrust::raw_pointer_cast(input[0].getData().data()) + (k * imSize),
+    		thrust::raw_pointer_cast(
+                static_cast<DeviceBuffer<T> *>(im[0])->raw().data()),
+            thrust::raw_pointer_cast(
+                static_cast<DeviceBuffer<T> *>(input[0])->raw().data() + (k * imSize)),
     		imSize * sizeof(T),
     		cudaMemcpyDefault
     	);
 		cudaMemcpy(
-    		thrust::raw_pointer_cast(im[1].getData().data()),
-    		thrust::raw_pointer_cast(input[1].getData().data()) + (k * imSize),
+            thrust::raw_pointer_cast(
+                static_cast<DeviceBuffer<T> *>(im[1])->raw().data()),
+            thrust::raw_pointer_cast(
+                static_cast<DeviceBuffer<T> *>(input[1])->raw().data() + (k * imSize)),
     		imSize * sizeof(T),
     		cudaMemcpyDefault
     	);
@@ -92,8 +96,8 @@ void CNNLayer<T>::forward(RSSData<T> &input)
     this->layer_profiler.accumulate("cnn-forward");
 }
 
-template<typename T>
-void CNNLayer<T>::backward(RSSData<T> &delta, RSSData<T> &forwardInput) {
+template<typename T, typename I, typename C>
+void CNNLayer<T, I, C>::backward(RSS<T, I, C> &delta, RSS<T, I, C> &forwardInput) {
     throw std::runtime_error(
         "[CNNLayer::computeDelta] GPU implementation not yet completed"
     );
@@ -203,4 +207,10 @@ void CNNLayer<T>::backward(RSSData<T> &delta, RSSData<T> &forwardInput) {
     */
 }
 
-template class CNNLayer<uint32_t>;
+template<typename T>
+using DeviceVectorIterator = thrust::detail::normal_iterator<thrust::device_ptr<T> >;
+template<typename T>
+using DeviceVectorConstIterator = thrust::detail::normal_iterator<thrust::device_ptr<const T> >;
+
+template class CNNLayer<uint32_t, DeviceVectorIterator<uint32_t>, DeviceVectorConstIterator<uint32_t> >;
+

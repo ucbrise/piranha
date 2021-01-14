@@ -43,7 +43,7 @@ class RSS {
         RSS(std::initializer_list<float> il) {
             std::vector<T> shifted_vals;
             for (float f : il) {
-                shifted_vals.push_back(static_cast<T>(f) << FLOAT_PRECISION);
+                shifted_vals.push_back((T) (f * (1 << FLOAT_PRECISION)));
             }
 
             switch (partyNum) {
@@ -78,6 +78,11 @@ class RSS {
             }
         }
 
+        void set(DeviceBufferView<T, Iterator, ConstIterator> *a, DeviceBufferView<T, Iterator, ConstIterator> *b) {
+            shareA = a;
+            shareB = b; 
+        }
+
         size_t size() const {
             return shareA->size();
         }
@@ -94,7 +99,26 @@ class RSS {
             shareB->fill(partyNum == PARTY_C ? val : 0);     
         }
 
-        // TODO void setPublic(std::vector<float> &v);
+        void setPublic(std::vector<float> &v) {
+            std::vector<T> shifted_vals;
+            for (float f : v) {
+                shifted_vals.push_back((T) (f * (1 << FLOAT_PRECISION)));
+            }
+
+            switch (partyNum) {
+                case PARTY_A:
+                    thrust::copy(shifted_vals.begin(), shifted_vals.end(), shareA->first());
+                    shareB->zero();
+                    break;
+                case PARTY_B:
+                    shareA->zero();
+                    shareB->zero();
+                case PARTY_C:
+                    shareA->zero();
+                    thrust::copy(shifted_vals.begin(), shifted_vals.end(), shareB->first());
+                    break;
+            }
+        };
 
         /* TODO
         void unzip(RSSData<T> &even, RSSData<T> &odd);
@@ -127,6 +151,12 @@ class RSS {
 
         RSS<T, Iterator, ConstIterator> &operator*=(const T rhs) {
             *shareA *= rhs;
+            return *this;
+        }
+
+        RSS<T, Iterator, ConstIterator> &operator>>=(const T rhs) {
+            *shareA >>= rhs;
+            *shareB >>= rhs;
             return *this;
         }
 
@@ -190,21 +220,21 @@ class RSS {
         */
 
         template<typename I2, typename C2>
-        RSS<T, Iterator, ConstIterator> &operator+=(const RSS<T, I2, C2> &rhs) {
-            *shareA += *rhs.shareA;
-            *shareB += *rhs.shareB;
+        RSS<T, Iterator, ConstIterator> &operator+=(RSS<T, I2, C2> &rhs) {
+            *shareA += *rhs[0];
+            *shareB += *rhs[1];
             return *this;
         }
 
         template<typename I2, typename C2>
-        RSS<T, Iterator, ConstIterator> &operator-=(const RSS<T, I2, C2> &rhs) {
-            *shareA -= *rhs.shareA;
-            *shareB -= *rhs.shareB;
+        RSS<T, Iterator, ConstIterator> &operator-=(RSS<T, I2, C2> &rhs) {
+            *shareA -= *rhs[0];
+            *shareB -= *rhs[1];
             return *this;
         }
 
         template<typename I2, typename C2>
-        RSS<T, Iterator, ConstIterator> &operator*=(const RSS<T, I2, C2> &rhs) {
+        RSS<T, Iterator, ConstIterator> &operator*=(RSS<T, I2, C2> &rhs) {
 
             /*
             //using VIterator = thrust::detail::normal_iterator<thrust::device_ptr<T> >;
@@ -232,11 +262,11 @@ class RSS {
             */
             DeviceBuffer<T> summed(rhs.size());
             summed.zero();
-            summed += *rhs.shareA;
-            summed += *rhs.shareB;
+            summed += *rhs[0];
+            summed += *rhs[1];
 
             *shareA *= summed;
-            *shareB *= *rhs.shareA;
+            *shareB *= *rhs[0];
             *shareA += *shareB;
 
             NEW_funcReshare(*shareA, *this);
@@ -244,14 +274,14 @@ class RSS {
         }
 
         template<typename I2, typename C2>
-        RSS<T, Iterator, ConstIterator> &operator^=(const RSS<T, I2, C2> &rhs) {
-            *shareA ^= *rhs.shareA;
-            *shareB ^= *rhs.shareB;
+        RSS<T, Iterator, ConstIterator> &operator^=(RSS<T, I2, C2> &rhs) {
+            *shareA ^= *rhs[0];
+            *shareB ^= *rhs[1];
             return *this;
         }
 
         template<typename I2, typename C2>
-        RSS<T, Iterator, ConstIterator> &operator&=(const RSS<T, I2, C2> &rhs) {
+        RSS<T, Iterator, ConstIterator> &operator&=(RSS<T, I2, C2> &rhs) {
 
             //using VIterator = thrust::detail::normal_iterator<thrust::device_ptr<T> >;
             //using VConstIterator = thrust::detail::normal_iterator<thrust::device_ptr<const T> >;
@@ -276,11 +306,11 @@ class RSS {
 
             DeviceBuffer<T> summed(rhs.size());
             summed.zero();
-            summed ^= *rhs.shareA;
-            summed ^= *rhs.shareB;
+            summed ^= *rhs[0];
+            summed ^= *rhs[1];
 
             *shareA &= summed;
-            *shareB &= *rhs.shareA;
+            *shareB &= *rhs[0];
             *shareA ^= *shareB;
 
             NEW_funcReshare(*shareA, *this);

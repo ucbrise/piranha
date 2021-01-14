@@ -1,13 +1,15 @@
 
 #pragma once
-#include "tools.h"
+
+#include "util.cuh"
 #include "FCLayer.h"
 #include "CNNLayer.h"
 #include "MaxpoolLayer.h"
 #include "ReLULayer.h"
-#include "BNLayer.h"
+//#include "BNLayer.h"
 #include "NeuralNetwork.h"
 #include "Functionalities.h"
+
 using namespace std;
 
 extern size_t INPUT_SIZE;
@@ -15,31 +17,31 @@ extern size_t LAST_LAYER_SIZE;
 extern bool WITH_NORMALIZATION;
 extern bool LARGE_NETWORK;
 
-template<typename T>
-NeuralNetwork<T>::NeuralNetwork(NeuralNetConfig* config)
+template<typename T, typename I, typename C>
+NeuralNetwork<T, I, C>::NeuralNetwork(NeuralNetConfig* config)
 :inputData(INPUT_SIZE * MINI_BATCH_SIZE),
  outputData(LAST_LAYER_SIZE * MINI_BATCH_SIZE)
 {
-	for (size_t i = 0; i < NUM_LAYERS; ++i)
+	for (int i = 0; i < NUM_LAYERS; ++i)
 	{
 		if (config->layerConf[i]->type.compare("FC") == 0)
-			layers.push_back(new FCLayer<T>(config->layerConf[i], i));
+			layers.push_back(new FCLayer<T, I, C>((FCConfig *)config->layerConf[i], i));
 		else if (config->layerConf[i]->type.compare("CNN") == 0)
-			layers.push_back(new CNNLayer<T>(config->layerConf[i], i));
-		else if (config->layerConf[i]->type.compare("Maxpool") == 0)
-			layers.push_back(new MaxpoolLayer<T>(config->layerConf[i], i));
+			layers.push_back(new CNNLayer<T, I, C>((CNNConfig *)config->layerConf[i], i));
 		else if (config->layerConf[i]->type.compare("ReLU") == 0)
-			layers.push_back(new ReLULayer<T>(config->layerConf[i], i));
+			layers.push_back(new ReLULayer<T, I, C>((ReLUConfig *)config->layerConf[i], i));
+		else if (config->layerConf[i]->type.compare("Maxpool") == 0)
+			layers.push_back(new MaxpoolLayer<T, I, C>((MaxpoolConfig *)config->layerConf[i], i));
 		//else if (config->layerConf[i]->type.compare("BN") == 0)
-	    //	layers.push_back(new BNLayer(config->layerConf[i], i));
+	    //	layers.push_back(new BNLayer<T, I, C>((BNConfig *)config->layerConf[i], i));
 		else
 			//error("Only FC, CNN, ReLU, Maxpool, and BN layer types currently supported");
 			error("Only FC, CNN, ReLU, and Maxpool layer types currently supported");
 	}
 }
 
-template<typename T>
-NeuralNetwork<T>::~NeuralNetwork()
+template<typename T, typename I, typename C>
+NeuralNetwork<T, I, C>::~NeuralNetwork()
 {
 	for (auto it = layers.begin() ; it != layers.end(); ++it)
 		delete (*it);
@@ -47,8 +49,8 @@ NeuralNetwork<T>::~NeuralNetwork()
 	layers.clear();
 }
 
-template<typename T>
-void NeuralNetwork<T>::forward()
+template<typename T, typename I, typename C>
+void NeuralNetwork<T, I, C>::forward()
 {
 	log_print("NN.forward");
 
@@ -64,8 +66,8 @@ void NeuralNetwork<T>::forward()
 	}
 }
 
-template<typename T>
-void NeuralNetwork<T>::backward()
+template<typename T, typename I, typename C>
+void NeuralNetwork<T, I, C>::backward()
 {
     //TODO
     /*
@@ -76,8 +78,8 @@ void NeuralNetwork<T>::backward()
     */
 }
 
-template<typename T>
-void NeuralNetwork<T>::computeDelta()
+template<typename T, typename I, typename C>
+void NeuralNetwork<T, I, C>::computeDelta()
 {
     //TODO
     /*
@@ -135,8 +137,8 @@ void NeuralNetwork<T>::computeDelta()
     */
 }
 
-template<typename T>
-void NeuralNetwork<T>::updateEquations()
+template<typename T, typename I, typename C>
+void NeuralNetwork<T, I, C>::updateEquations()
 {
     //TODO
     /*
@@ -155,8 +157,8 @@ void NeuralNetwork<T>::updateEquations()
     */
 }
 
-template<typename T>
-void NeuralNetwork<T>::predict(RSSData<T> &maxIndex)
+template<typename T, typename I, typename C>
+void NeuralNetwork<T, I, C>::predict(RSS<T, I, C> &maxIndex)
 {
     //TODO
     /*
@@ -171,8 +173,8 @@ void NeuralNetwork<T>::predict(RSSData<T> &maxIndex)
     */
 }
 
-template<typename T>
-void NeuralNetwork<T>::getAccuracy(const RSSData<T> &maxIndex, vector<size_t> &counter)
+template<typename T, typename I, typename C>
+void NeuralNetwork<T, I, C>::getAccuracy(const RSS<T, I, C> &maxIndex, vector<size_t> &counter)
 {
     //TODO
     /*
@@ -214,4 +216,9 @@ void NeuralNetwork<T>::getAccuracy(const RSSData<T> &maxIndex, vector<size_t> &c
     */
 }
 
-template class NeuralNetwork<uint32_t>;
+template<typename T>
+using DeviceVectorIterator = thrust::detail::normal_iterator<thrust::device_ptr<T> >;
+template<typename T>
+using DeviceVectorConstIterator = thrust::detail::normal_iterator<thrust::device_ptr<const T> >;
+
+template class NeuralNetwork<uint32_t, DeviceVectorIterator<uint32_t>, DeviceVectorConstIterator<uint32_t> >;

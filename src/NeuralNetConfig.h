@@ -1,18 +1,19 @@
 
 #pragma once
+
 #include "LayerConfig.h"
 #include "FCConfig.h"
 #include "CNNConfig.h"
 #include "MaxpoolConfig.h"
 #include "ReLUConfig.h"
-#include "BNConfig.h"
+//#include "BNConfig.h"
 #include "globals.h"
+
 using namespace std;
 
 extern size_t INPUT_SIZE;
 extern size_t LAST_LAYER_SIZE;
 extern size_t NUM_LAYERS;
-
 
 class NeuralNetConfig
 {
@@ -27,15 +28,17 @@ public:
 
 	void addLayer(FCConfig* fcl) {layerConf.push_back(fcl);};
 	void addLayer(CNNConfig* cnnl) {layerConf.push_back(cnnl);};
-	void addLayer(MaxpoolConfig* mpl) {layerConf.push_back(mpl);};
 	void addLayer(ReLUConfig* relul) {layerConf.push_back(relul);};
+	void addLayer(MaxpoolConfig* mpl) {layerConf.push_back(mpl);};
+    /*
 	void addLayer(BNConfig* bnl) {layerConf.push_back(bnl);};
+    */
 	
 	void checkNetwork() 
 	{
 		//Checks
-		// assert(layerConf.back()->type.compare("FC") == 0 && "Last layer has to be FC");
-		// assert(((FCConfig*)layerConf.back())->outputDim == LAST_LAYER_SIZE && "Last layer size does not match LAST_LAYER_SIZE");
+		assert(layerConf.back()->type.compare("FC") == 0 && "Last layer has to be FC");
+		assert(((FCConfig*)layerConf.back())->outputDim == LAST_LAYER_SIZE && "Last layer size does not match LAST_LAYER_SIZE");
 		if (layerConf.front()->type.compare("FC") == 0)
 	    	assert(((FCConfig*)layerConf.front())->inputDim == INPUT_SIZE && "FC input error");
 		else if (layerConf.front()->type.compare("CNN") == 0)
@@ -44,3 +47,4 @@ public:
 				  (((CNNConfig*)layerConf.front())->inputFeatures) == INPUT_SIZE && "CNN input error");
 	};
 };
+

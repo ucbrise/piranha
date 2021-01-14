@@ -21,6 +21,11 @@ class DeviceBufferView : public DeviceData<T, Iterator, ConstIterator> {
 
         DeviceBufferView(Iterator _f, Iterator _l) : f(_f), l(_l) {}
 
+        void set(Iterator _f, Iterator _l) {
+            f = _f;
+            l = _l;
+        }
+
         ConstIterator first() const { return f; }
         Iterator first() { return f; }
 

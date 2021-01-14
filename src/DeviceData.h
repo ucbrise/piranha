@@ -8,6 +8,7 @@
 #pragma once
 
 #include <thread>
+#include <thrust/copy.h>
 #include <thrust/fill.h>
 #include <thrust/functional.h>
 #include <thrust/transform.h>
