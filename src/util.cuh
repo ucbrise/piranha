@@ -26,6 +26,8 @@ void error(std::string str);
 size_t nextParty(size_t party);
 size_t prevParty(size_t party);
 
+void printMemUsage();
+
 template<typename T>
 void toFixed(std::vector<float> &v, std::vector<T> &r) {
     for (int i = 0; i < v.size(); i++) {

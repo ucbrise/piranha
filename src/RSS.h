@@ -69,13 +69,23 @@ class RSS {
 
         ~RSS() {
             // free memory if we allocated it
-            if (DeviceBuffer<T> *a_buffer = dynamic_cast<DeviceBuffer<T> *>(shareA)) {
-                delete shareA;
-            }
+            //printf("~RSS dealloc %d\n", size());
 
-            if (DeviceBuffer<T> *b_buffer = dynamic_cast<DeviceBuffer<T> *>(shareB)) {
-                delete shareB;
-            }
+            DeviceBuffer<T> *a_buffer = dynamic_cast<DeviceBuffer<T> *>(shareA);
+            if (a_buffer) {
+                //printf(" delete A\n");
+                delete a_buffer;
+            }/* else {
+                printf("A: dynamic cast failed\n");
+            }*/
+
+            DeviceBuffer<T> *b_buffer = dynamic_cast<DeviceBuffer<T> *>(shareB);
+            if (b_buffer) {
+                //printf(" delete B\n");
+                delete b_buffer;
+            }/* else {
+                printf("B: dynamic cast failed\n");
+            }*/
         }
 
         void set(DeviceBufferView<T, Iterator, ConstIterator> *a, DeviceBufferView<T, Iterator, ConstIterator> *b) {
@@ -329,4 +339,6 @@ class RSS {
 
         DeviceData<T, Iterator, ConstIterator> *shareA;
         DeviceData<T, Iterator, ConstIterator> *shareB;
+
+        bool buffer;
 };

@@ -22,6 +22,9 @@ NeuralNetwork<T, I, C>::NeuralNetwork(NeuralNetConfig* config)
 :inputData(INPUT_SIZE * MINI_BATCH_SIZE),
  outputData(LAST_LAYER_SIZE * MINI_BATCH_SIZE)
 {
+    //size_t prev_bytes = db_bytes;
+    std::cout << db_bytes << std::endl;
+
 	for (int i = 0; i < NUM_LAYERS; ++i)
 	{
 		if (config->layerConf[i]->type.compare("FC") == 0)
@@ -37,7 +40,12 @@ NeuralNetwork<T, I, C>::NeuralNetwork(NeuralNetConfig* config)
 		else
 			//error("Only FC, CNN, ReLU, Maxpool, and BN layer types currently supported");
 			error("Only FC, CNN, ReLU, and Maxpool layer types currently supported");
+        //std::cout << "layer " << i << " required " << db_bytes - prev_bytes << " bytes of allocation" << std::endl;
+        //printMemUsage();
+        //prev_bytes = db_bytes;
 	}
+
+    std::cout << db_bytes << std::endl;
 }
 
 template<typename T, typename I, typename C>
@@ -53,6 +61,9 @@ template<typename T, typename I, typename C>
 void NeuralNetwork<T, I, C>::forward()
 {
 	log_print("NN.forward");
+    std::cout << "Initial memory usage:" << std::endl;
+    printMemUsage();
+    db_layer_max_bytes = 0;
 
 	layers[0]->forward(inputData);
 	if (LARGE_NETWORK)
@@ -60,10 +71,19 @@ void NeuralNetwork<T, I, C>::forward()
 
 	for (size_t i = 1; i < NUM_LAYERS; ++i)
 	{
+        std::cout << "Memory usage after layer " << i-1 << ":" << std::endl;
+        printMemUsage();
+    db_layer_max_bytes = 0;
 		layers[i]->forward(*(layers[i-1]->getActivation()));
 		if (LARGE_NETWORK)
 			cout << "Forward \t" << layers[i]->layerNum << " completed..." << endl;
 	}
+
+    std::cout << "Memory usage after last layer:" << std::endl;
+    printMemUsage();
+    db_layer_max_bytes = 0;
+
+    log_print("NN.forward_done");
 }
 
 template<typename T, typename I, typename C>

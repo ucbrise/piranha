@@ -19,17 +19,48 @@ using DeviceVectorIterator = thrust::detail::normal_iterator<thrust::device_ptr<
 template<typename T>
 using DeviceVectorConstIterator = thrust::detail::normal_iterator<thrust::device_ptr<const T> >;
 
+extern size_t db_bytes;
+extern size_t db_max_bytes;
+extern size_t db_layer_max_bytes;
+
 template<typename T>
 class DeviceBuffer : public DeviceData<T, DeviceVectorIterator<T>, DeviceVectorConstIterator<T> > {
 
     public:
 
-        DeviceBuffer(size_t n) : data(n) {}
+        DeviceBuffer(size_t n) : data(n) {
+            //std::cout << "DB ALLOCATION: " << n*sizeof(T) << " bytes" << std::endl;
+            //printf("    DB: empty init allocating %u bytes\n", n * sizeof(T));
+            //printf("n-alloc %d\n", n);
+            db_bytes += n * sizeof(T);
+            if (db_bytes > db_max_bytes) db_max_bytes = db_bytes;
+            if (db_bytes > db_layer_max_bytes) db_layer_max_bytes = db_bytes;
+            //printMemUsage();
+        }
         DeviceBuffer(std::vector<T> v) : data(v.size()) {
+            //printf("    DB: vector initialization with size %u bytes\n", v.size() * sizeof(T));
             thrust::copy(v.begin(), v.end(), data.begin());
+            //printf("v-alloc %d\n", v.size());
+            db_bytes += v.size() * sizeof(T);
+            if (db_bytes > db_max_bytes) db_max_bytes = db_bytes;
+            if (db_bytes > db_layer_max_bytes) db_layer_max_bytes = db_bytes;
+            //printMemUsage();
         }
         DeviceBuffer(std::initializer_list<T> il) : data(il.size()) {
+            //printf("    DB: initlist initialization with size %u bytes\n", il.size() * sizeof(T));
             thrust::copy(il.begin(), il.end(), data.begin());
+            //printf("i-alloc %d\n", il.size());
+            db_bytes += il.size() * sizeof(T);
+            if (db_bytes > db_max_bytes) db_max_bytes = db_bytes;
+            if (db_bytes > db_layer_max_bytes) db_layer_max_bytes = db_bytes;
+            //printMemUsage();
+        }
+
+        ~DeviceBuffer() {
+            //printf("    DB: deallocating %u bytes\n", data.size() * sizeof(T));
+            //printMemUsage();
+            //printf("~dealloc %d\n", data.size());
+            db_bytes -= data.size() * sizeof(T);
         }
 
         DeviceVectorConstIterator<T> first() const {
@@ -48,7 +79,13 @@ class DeviceBuffer : public DeviceData<T, DeviceVectorIterator<T>, DeviceVectorC
         }
 
         void resize(size_t n) {
+            //printf("    DB: resizing %u -> %u bytes\n", data.size() * sizeof(T), n * sizeof(T));
+            db_bytes -= data.size() * sizeof(T);
+            //printMemUsage();
             data.resize(n);
+            db_bytes += n * sizeof(T);
+            if (db_bytes > db_max_bytes) db_max_bytes = db_bytes;
+            if (db_bytes > db_layer_max_bytes) db_layer_max_bytes = db_bytes;
         }
 
         thrust::device_vector<T> &raw() {

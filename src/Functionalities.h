@@ -59,7 +59,9 @@ void NEW_funcReconstruct3out3(DeviceData<T, Iterator, ConstIterator> &a, DeviceD
     auto next = nextParty(partyNum);
     auto prev = prevParty(partyNum);
     
+    //std::cout << "allocating reconstruct buffer 1" << std::endl;
     DeviceBuffer<T> reconst1(a.size());
+    //std::cout << "allocating reconstruct buffer 2" << std::endl;
     DeviceBuffer<T> reconst2(a.size());
 
     reconst.zero();
@@ -164,7 +166,13 @@ void NEW_funcMatMul(RSS<T, I, C> &a, RSS<T, I, C> &b, RSS<T, I, C> &c,
     cudaMemGetInfo(&free, &total);
     std::cout << "using " << total-free << "/" << total << " bytes on GPU" << std::endl;
     */
+    //std::cout << "allocating raw result" << std::endl;
+    //std::cout << "start of matmul" << std::endl;
+    //printMemUsage();
     DeviceBuffer<T> rawResult(rows*columns);
+
+    //std::cout << "allocated raw result" << std::endl;
+    //printMemUsage();
 
     // TODO a little sketch
     DeviceBuffer<T> *a0 = static_cast<DeviceBuffer<T>*>(a[0]);
@@ -172,23 +180,36 @@ void NEW_funcMatMul(RSS<T, I, C> &a, RSS<T, I, C> &b, RSS<T, I, C> &c,
     DeviceBuffer<T> *b0 = static_cast<DeviceBuffer<T>*>(b[0]);
     DeviceBuffer<T> *b1 = static_cast<DeviceBuffer<T>*>(b[1]);
 
+    //DeviceBuffer<T>::printMemUsage();
+    //std::cout << "gpu mat mul 1" << std::endl;
     gpu::matrixMultiplication<T>(*a0, *b0, rawResult, transpose_a,
             transpose_b, rows, common_dim, columns);
+    //std::cout << "gpu mat mul 2" << std::endl;
     gpu::matrixMultiplication<T>(*a0, *b1, rawResult, transpose_a,
             transpose_b, rows, common_dim, columns);
+    //std::cout << "gpu mat mul 3" << std::endl;
     gpu::matrixMultiplication<T>(*a1, *b0, rawResult, transpose_a,
             transpose_b, rows, common_dim, columns);
     cudaThreadSynchronize();
 
+    //std::cout << "kernels called" << std::endl;
+    //printMemUsage();
+
     // truncate
+    //std::cout << "creating rprime for truncation" << std::endl;
+    //std::cout << "allocating rprime" << std::endl;
     RSS<T, I, C> rPrime(rows*columns);
     PrecomputeObject.getDividedShares(c, rPrime, (1<<truncation), rows*columns); 
 
     rawResult -= *rPrime[0];
 
     // reconstruct
+    //std::cout << "creating reconstruction result" << std::endl;
+    //std::cout << "allocating reconstrution" << std::endl;
     DeviceBuffer<T> reconstructedResult(rows*columns);
+    //std::cout << "begin recon" << std::endl;
     NEW_funcReconstruct3out3(rawResult, reconstructedResult);
+    //std::cout << "end recon" << std::endl;
 
     reconstructedResult >>= (T)truncation;
     c += reconstructedResult;
@@ -229,6 +250,8 @@ void NEW_funcSelectShare(RSS<T, I, C> &x, RSS<T, I, C> &y, RSS<T, I, C> &b,
     // TODO XXX fix templating to avoid this, enable public-RSS multiplication
     // etemp (uint8_t) -> e (uint32_t)
     //e.copy(etemp);
+    
+    // NOTE perhaps replace with if/else functor
     
     // d = 1-c if e=1 else c -> d = (e)(1-c) + (1-e)(c)
     RSS<T, I, C> d(e.size());
@@ -274,8 +297,10 @@ void NEW_funcConvolution(RSS<T, I, C> &im, RSS<T, I, C> &filters, RSS<T, I, C> &
         RSS<T, I, C> &out, size_t imageWidth, size_t imageHeight, size_t filterSize,
         size_t Din, size_t Dout, size_t stride, size_t padding, size_t truncation) {
 
+    //std::cout << "allocating reshaped image" << std::endl;
     RSS<T, I, C> reshapedIm(0);
     for(int share = 0; share <= 1; share++) {
+        //std::cout << "im2row on share #" << share << std::endl;
         gpu::im2row(
             *static_cast<DeviceBuffer<T>*>(im[share]), 
             *static_cast<DeviceBuffer<T>*>(reshapedIm[share]),
@@ -287,24 +312,31 @@ void NEW_funcConvolution(RSS<T, I, C> &im, RSS<T, I, C> &filters, RSS<T, I, C> &
     size_t heightKernels = ((imageHeight - filterSize + (2*padding))/stride)+1;
 
     // perform the convolution
+    //std::cout << "allocating convolution result" << std::endl;
     RSS<T, I, C> convolvedResult(widthKernels * heightKernels * Dout);
+
+    //std::cout << "matrix multiplication" << std::endl;
     NEW_funcMatMul(reshapedIm, filters, convolvedResult,
         widthKernels * heightKernels, Din * filterSize * filterSize, Dout,
         false, true, truncation);
 
     // add biases and transpose 
     for(int share = 0; share <= 1; share++) {
+        //std::cout << "bias add share #" << share << std::endl;
         gpu::elementVectorAdd(
             *static_cast<DeviceBuffer<T>*>(convolvedResult[share]), 
             *static_cast<DeviceBuffer<T>*>(biases[share]),
             true, widthKernels * heightKernels, Dout
         );
+        //std::cout << "transpose share #" << share << std::endl;
         gpu::transpose(
             *static_cast<DeviceBuffer<T>*>(convolvedResult[share]),
             *static_cast<DeviceBuffer<T>*>(out[share]),
             widthKernels * heightKernels, Dout
         );
     }
+
+    //std::cout << "convolution functionality done" << std::endl;
 }
 
 template<typename T, typename I, typename C>
@@ -416,6 +448,9 @@ void NEW_funcDRELU(RSS<T, I, C> &input, RSS<T, I2, C2> &result) {
     //printRSS(input, "drelu-argument:input");
     //printRSS(result, "drelu-argument:result");
     //std::cout << "drelu start" << std::endl;
+    
+    printf("func-drelu-start\n");
+    printMemUsage();
 
     // TODO move most code to pre-processing 
     RSS<T, I, C> r(input.size());
@@ -424,6 +459,9 @@ void NEW_funcDRELU(RSS<T, I, C> &input, RSS<T, I2, C2> &result) {
     // XXX fix
     //  rbits = (U)1 - rbits; // element-wise subtract bits
     rbits.fill(1);
+
+    printf("func-drelu-rbits\n");
+    printMemUsage();
 
     //printRSS(r, "drelu-406");
     //printRSS(rbits, "drelu-407");
@@ -437,6 +475,9 @@ void NEW_funcDRELU(RSS<T, I, C> &input, RSS<T, I2, C2> &result) {
     // a += (1 << FLOAT_PRECISION);
     a += 1;
 
+    printf("func-drelu-post-reconstruct\n");
+    printMemUsage();
+
     //printDB(a, "drelu-417");
     //std::cout << "drelu 417" << std::endl;
 
@@ -448,6 +489,9 @@ void NEW_funcDRELU(RSS<T, I, C> &input, RSS<T, I2, C2> &result) {
     //func_profiler.start();
     gpu::bitexpand(a, abits);
     //func_profiler.accumulate("drelu-bitexpand");
+    //
+    printf("func-drelu-post-bitexpand\n");
+    printMemUsage();
 
     //printDB(abits, "drelu-428");
     //std::cout << "drelu 428" << std::endl;
@@ -467,6 +511,9 @@ void NEW_funcDRELU(RSS<T, I, C> &input, RSS<T, I2, C2> &result) {
     //func_profiler.accumulate("drelu-msb");
 
     //printRSS(msb, "msb");
+    //
+    printf("func-drelu-post-setmsb\n");
+    printMemUsage();
 
     //printRSS(msb, "drelu-459");
     //std::cout << "drelu 459" << std::endl;
@@ -498,6 +545,9 @@ void NEW_funcDRELU(RSS<T, I, C> &input, RSS<T, I2, C2> &result) {
     //printRSS(result, "carryout result");
     //std::cout << "drelu carryout result" << std::endl;
 
+    printf("func-drelu-post-carryout\n");
+    printMemUsage();
+
     preResult ^= msb;
     //printRSS(result, "after xor with msb");
     result.fill(1);
@@ -515,6 +565,8 @@ void NEW_funcRELU(RSS<T, I, C> &input, RSS<T, I, C> &result, RSS<T, I, C> &dresu
 
     //func_profiler.start();
     NEW_funcDRELU(input, dresult);
+    printf("func-relu-post-drelu\n");
+    printMemUsage();
     //func_profiler.accumulate("relu-drelu");
 
     //std::cout << "after drelu" << std::endl;
@@ -527,6 +579,8 @@ void NEW_funcRELU(RSS<T, I, C> &input, RSS<T, I, C> &result, RSS<T, I, C> &dresu
 
     //func_profiler.start();
     NEW_funcSelectShare(zeros, input, dresult, result);
+    printf("func-relu-post-selectshare\n");
+    printMemUsage();
     //func_profiler.accumulate("relu-selectshare");
 
     //std::cout << "end of relu" << std::endl;
@@ -582,6 +636,9 @@ void NEW_funcMaxpool(RSS<T, I, C> &input, RSS<T, I, C> &result, RSS<T, I, C> &dr
     RSS<T, SRIterator, SRIterator> odd(&odd0, &odd1);
     func_profiler.accumulate("range creation");
 
+    printf("func-maxpool-post-rangecreate\n");
+    printMemUsage();
+
     while(k > 2) {
 
         // -- MP --
@@ -594,10 +651,16 @@ void NEW_funcMaxpool(RSS<T, I, C> &input, RSS<T, I, C> &result, RSS<T, I, C> &dr
         b -= odd;
         func_profiler.accumulate("maxpool-diff");
 
+        printf("func-maxpool-post-diff-k=%d\n", k);
+        printMemUsage();
+
         // DRELU diff -> b
         func_profiler.start();
         NEW_funcDRELU(b, b);
         func_profiler.accumulate("maxpool-drelu");
+
+        printf("func-maxpool-post-drelu-k=%d\n", k);
+        printMemUsage();
         
         // b * even + 1-b * odd
         func_profiler.start();
@@ -615,6 +678,9 @@ void NEW_funcMaxpool(RSS<T, I, C> &input, RSS<T, I, C> &result, RSS<T, I, C> &dr
         // unzip even -> into even, odd
         stride *= 2;
 
+        printf("func-maxpool-pre-rangeupdate-k=%d\n", k);
+        printMemUsage();
+
         func_profiler.start();
         even0Range.set(input[0]->first(), input[0]->last(), stride);
         even0.set(even0Range.begin(), even0Range.end());
@@ -631,11 +697,17 @@ void NEW_funcMaxpool(RSS<T, I, C> &input, RSS<T, I, C> &result, RSS<T, I, C> &dr
         
         // -- dMP --
 
+        printf("func-maxpool-pre-expand-k=%d\n", k);
+        printMemUsage();
+
         // expandCompare b -> expandedB
         func_profiler.start();
         RSS<T, I, C> expandedB(input.size());
         gpu::expandCompare(b, negated, expandedB);
         func_profiler.accumulate("maxpool-expandCompare");
+
+        printf("func-maxpool-post-expand-k=%d\n", k);
+        printMemUsage();
         
         // dresult &= expandedB
         func_profiler.start();

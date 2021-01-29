@@ -54,10 +54,16 @@ void FCLayer<T, I, C>::forward(RSS<T, I, C> &input)
 	size_t common_dim = conf.inputDim;
 	size_t size = rows*columns;
 
+    //std::cout << "before matmul" << std::endl;
+    //printMemUsage();
+
     matmul_profiler.start();
 	NEW_funcMatMul(input, weights, activations,
             rows, common_dim, columns, false, false, FLOAT_PRECISION);
     matmul_profiler.accumulate("fc-matmul");
+
+    //std::cout << "after matmul" << std::endl;
+    //printMemUsage();
 
     // add biases to each column
     for (int share = 0; share <= 1; share++) {
@@ -66,6 +72,9 @@ void FCLayer<T, I, C>::forward(RSS<T, I, C> &input)
             *static_cast<DeviceBuffer<T>*>(biases[share]), false, rows, columns
         );
     }
+
+    //std::cout << "after bias" << std::endl;
+    //printMemUsage();
 
     this->layer_profiler.accumulate("fc-forward");
 }

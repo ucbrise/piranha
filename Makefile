@@ -19,8 +19,8 @@ BMR_INCLUDES := $(OBJ_INCLUDES), -L./ -L$(CONDA_BASE)/lib -L/usr/local/cuda-10.2
 
 #########################################################################################
 RUN_TYPE := localhost# RUN_TYPE {localhost, LAN or WAN} 
-NETWORK := SecureML# NETWORK {SecureML, Sarda, MiniONN, LeNet, AlexNet, and VGG16}
-DATASET	:= MNIST# Dataset {MNIST, CIFAR10, and ImageNet}
+NETWORK := VGG16# NETWORK {SecureML, Sarda, MiniONN, LeNet, AlexNet, and VGG16}
+DATASET	:= ImageNet# Dataset {MNIST, CIFAR10, and ImageNet}
 SECURITY:= Semi-honest# Security {Semi-honest or Malicious} 
 #########################################################################################
 

@@ -67,9 +67,15 @@ void CNNLayer<T, I, C>::forward(RSS<T, I, C> &input)
     this->layer_profiler.start();
 
     for (int k = 0; k < conf.batchSize; k++) {
+
+        //std::cout << std::endl << "> Batch Image " << k << std::endl << std::endl;
+        //DeviceBuffer<T>::printMemUsage();
+
     	// TODO this is terri-bad 
     	int imSize = input.size() / conf.batchSize;
+        //std::cout << "allocating individual image" << std::endl;
     	RSS<T, I, C> im(imSize);
+        //std::cout << "copy 1" << std::endl;
     	cudaMemcpy(
     		thrust::raw_pointer_cast(
                 static_cast<DeviceBuffer<T> *>(im[0])->raw().data()),
@@ -78,6 +84,7 @@ void CNNLayer<T, I, C>::forward(RSS<T, I, C> &input)
     		imSize * sizeof(T),
     		cudaMemcpyDefault
     	);
+        //std::cout << "copy 2" << std::endl;
 		cudaMemcpy(
             thrust::raw_pointer_cast(
                 static_cast<DeviceBuffer<T> *>(im[1])->raw().data()),
@@ -94,6 +101,8 @@ void CNNLayer<T, I, C>::forward(RSS<T, I, C> &input)
     }
 
     this->layer_profiler.accumulate("cnn-forward");
+    //std::cout << "convolution forward done" << std::endl << std::endl;
+    //DeviceBuffer<T>::printMemUsage();
 }
 
 template<typename T, typename I, typename C>

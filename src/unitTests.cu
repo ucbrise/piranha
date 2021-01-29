@@ -93,7 +93,7 @@ void assertRSS(RSS<T, I, C> &result, std::vector<float> &expected, bool convertF
     }
 }
 
-TEST(DataTest, DeviceBuffer) {
+TEST(DataTest, DISABLED_DeviceBuffer) {
 
     DeviceBuffer<uint32_t> d1 = {1, 2, 3};
     DeviceBuffer<uint32_t> d2 = {1, 1, 1};
@@ -117,7 +117,7 @@ using VConstIterator = thrust::detail::normal_iterator<thrust::device_ptr<const 
 typedef thrust::transform_iterator<thrust::negate<uint32_t>, VIterator<uint32_t> > TIterator;
 typedef thrust::transform_iterator<thrust::negate<uint32_t>, VConstIterator<uint32_t> > TConstIterator;
 
-TEST(DataTest, DeviceBufferView) {
+TEST(DataTest, DISABLED_DeviceBufferView) {
 
     DeviceBuffer<uint32_t> d1 = {1, 2, 3};
     DeviceBufferView<uint32_t, TIterator, TConstIterator> negated(
@@ -131,7 +131,7 @@ TEST(DataTest, DeviceBufferView) {
     assertDeviceData(d1, expected, false);
 }
 
-TEST(GPUTest, MatMul) {
+TEST(GPUTest, DISABLED_MatMul) {
     DeviceBuffer<uint32_t> a = {1, 2, 1, 2, 1, 2};  // 2 x 3
     DeviceBuffer<uint32_t> b = {2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1}; // 3 x 4
     DeviceBuffer<uint32_t> c(8); // 2 x 4
@@ -143,7 +143,7 @@ TEST(GPUTest, MatMul) {
     assertDeviceData(c, expected, false);
 }
 
-TEST(GPUTest, MatMulTranspose) {
+TEST(GPUTest, DISABLED_MatMulTranspose) {
     DeviceBuffer<uint32_t> a = {1, 2, 1, 2, 1, 2}; // 2 x 3
     DeviceBuffer<uint32_t> c(4); // 2 x 2
 
@@ -154,7 +154,7 @@ TEST(GPUTest, MatMulTranspose) {
     assertDeviceData(c, expected, false);
 }
 
-TEST(GPUTest, Transpose) {
+TEST(GPUTest, DISABLED_Transpose) {
     
     DeviceBuffer<uint32_t> a = {1, 2, 3, 4, 5, 6};
     DeviceBuffer<uint32_t> b(a.size());
@@ -165,7 +165,7 @@ TEST(GPUTest, Transpose) {
     assertDeviceData(b, expected, false);
 }
 
-TEST(GPUTest, ElementwiseVectorAdd) {
+TEST(GPUTest, DISABLED_ElementwiseVectorAdd) {
     
     DeviceBuffer<uint32_t> a = {1, 2, 3, 3, 2, 1}; // 2 x 3
 
@@ -184,7 +184,7 @@ TEST(GPUTest, ElementwiseVectorAdd) {
     assertDeviceData(a, expected, false);
 }
 
-TEST(GPUTest, BitExpand) {
+TEST(GPUTest, DISABLED_BitExpand) {
 
     DeviceBuffer<uint32_t> a = {2, 3, 1};
 
@@ -200,7 +200,7 @@ TEST(GPUTest, BitExpand) {
     assertDeviceData(abits, expected, false);
 }
 
-TEST(GPUTest, Im2Row) {
+TEST(GPUTest, DISABLED_Im2Row) {
 
     // 2x3, Din=2
     DeviceBuffer<uint32_t> im = {
@@ -231,7 +231,7 @@ TEST(GPUTest, Im2Row) {
     assertDeviceData(out, expected, false);
 }
 
-TEST(GPUTest, ExpandCompare) {
+TEST(GPUTest, DISABLED_ExpandCompare) {
 
     RSS<uint32_t, DeviceVectorIterator<uint32_t>, DeviceVectorConstIterator<uint32_t> > b = {0, 1};
     b >>= FLOAT_PRECISION;
@@ -246,7 +246,7 @@ TEST(GPUTest, ExpandCompare) {
     assertRSS(output, expected, false);
 }
 
-TEST(FuncTest, Reconstruct2of3) {
+TEST(FuncTest, DISABLED_Reconstruct2of3) {
     
     RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t>> a = {1, 2, 3, 10, 5};
 
@@ -257,7 +257,7 @@ TEST(FuncTest, Reconstruct2of3) {
     assertDeviceData(r, expected);
 }
 
-TEST(FuncTest, Reconstruct3of3) {
+TEST(FuncTest, DISABLED_Reconstruct3of3) {
     DeviceBuffer<uint32_t> *data;
     switch (partyNum) {
         case PARTY_A:
@@ -278,7 +278,7 @@ TEST(FuncTest, Reconstruct3of3) {
     assertDeviceData(r, expected, false);
 }
 
-TEST(FuncTest, MatMul) {
+TEST(FuncTest, DISABLED_MatMul) {
 
     RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > a = {1, 1, 1, 1, 1, 1};  // 2 x 3
     RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > b = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0}; // 3 x 4
@@ -290,7 +290,7 @@ TEST(FuncTest, MatMul) {
     assertRSS(c, expected);
 }
 
-TEST(FuncTest, Reshare) {
+TEST(FuncTest, DISABLED_Reshare) {
     
     DeviceBuffer<uint32_t> *a;
     if (partyNum == PARTY_A) {
@@ -307,7 +307,7 @@ TEST(FuncTest, Reshare) {
     assertRSS(reshared, expected, false);
 }
 
-TEST(FuncTest, SelectShare) {
+TEST(FuncTest, DISABLED_SelectShare) {
 
     RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > x = {1, 2};
     RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > y = {4, 5};
@@ -322,7 +322,7 @@ TEST(FuncTest, SelectShare) {
     assertRSS(z, expected);
 }
 
-TEST(FuncTest, Truncate) {
+TEST(FuncTest, DISABLED_Truncate) {
 
     RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > a = {1 << 3, 2 << 3, 3 << 3};
     NEW_funcTruncate(a, 3);
@@ -331,7 +331,7 @@ TEST(FuncTest, Truncate) {
     assertRSS(a, expected);
 }
 
-TEST(FuncTest, Convolution) {
+TEST(FuncTest, DISABLED_Convolution) {
 
     // 2x3, Din=2
     RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > im = {
@@ -371,7 +371,7 @@ TEST(FuncTest, Convolution) {
     assertRSS(out, expected);
 }
 
-TEST(FuncTest, CarryOut) {
+TEST(FuncTest, DISABLED_CarryOut) {
     RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > p = {0, 1, 0, 1, 0, 1, 0, 1};
     p >>= FLOAT_PRECISION;
     RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > g = {0, 1, 0, 1, 0, 1, 0, 1};
@@ -384,7 +384,7 @@ TEST(FuncTest, CarryOut) {
     assertRSS(out, expected, false);
 }
 
-TEST(FuncTest, DRELU) {
+TEST(FuncTest, DISABLED_DRELU) {
     
     RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > input = {-1, 2, -2, -3};
 
@@ -397,7 +397,7 @@ TEST(FuncTest, DRELU) {
     assertRSS(result, expected, false);
 }
 
-TEST(FuncTest, RELU) {
+TEST(FuncTest, DISABLED_RELU) {
 
     RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > input = {
         -2, -3, 4, 3, 3.5, 1, -1.5, -1
@@ -437,7 +437,7 @@ TEST(FuncTest, DISABLED_Maxpool) {
     assertRSS(dresult, dexpected, false);
 }
 
-TEST(LayerTest, FCForward) {
+TEST(LayerTest, DISABLED_FCForward) {
 
     int inputDim = 4;
     int batchSize = 4;
@@ -463,19 +463,23 @@ TEST(LayerTest, FCForward) {
 
 TEST(LayerTest, CNNForward) {
 
+    //DeviceBuffer<uint32_t>::printMemUsage();
+
     // 2x2, Din=3
+    //std::cout << "allocating im RSS" << std::endl;
     RSS<uint32_t, DeviceVectorIterator<uint32_t>, DeviceVectorConstIterator<uint32_t> > im = {
         1, 0,
         0, 0,
         0, 1,
         0, 0,
         0, 0,
-        0, 1,
+        0, 1
     };
 
     // weights: 2 2x2 filters, Dout=2 -> 4 2x2 filters
     // biases: 1xDout, duplicated for each row in the convolved output
     //              -> 1x2 biases
+    //std::cout << "allocating CNN config" << std::endl;
     CNNConfig *lconfig = new CNNConfig(
         2, 2, // image width x image height
         3, // input features
@@ -483,11 +487,14 @@ TEST(LayerTest, CNNForward) {
         2, 1, // stride, padding
         1 // batch size
     );
+    //std::cout << "allocating CNN layer" << std::endl;
     CNNLayer<uint32_t, DeviceVectorIterator<uint32_t>, DeviceVectorConstIterator<uint32_t> > layer(lconfig, 0); 
+
     layer.forward(im);
 
     // construct expected results based on randomized layer weights 
     std::vector<float> host_weights(2*2*3*2); // 24
+    //std::cout << "copy to host" << std::endl;
     copyToHost(*layer.getWeights(), host_weights);
 
     std::vector<float> expected = {
@@ -501,10 +508,34 @@ TEST(LayerTest, CNNForward) {
         host_weights[20]
     };
 
+    //std::cout << "assert RSS" << std::endl;
     assertRSS(*layer.getActivation(), expected);
 }
 
-TEST(LayerTest, RELUForward) {
+TEST(LayerTest, DISABLED_CNNPerf) {
+
+    RSS<uint32_t, DeviceVectorIterator<uint32_t>, DeviceVectorConstIterator<uint32_t> > im(64 * 64 * 64);
+    im.fill(1);
+
+    // weights: 2 2x2 filters, Dout=2 -> 4 2x2 filters
+    // biases: 1xDout, duplicated for each row in the convolved output
+    //              -> 1x2 biases
+    CNNConfig *lconfig = new CNNConfig(
+        64, 64, // image width x image height
+        64, // input features
+        64, 3, // filters, filter size
+        1, 1, // stride, padding
+        128 // batch size
+    );
+    CNNLayer<uint32_t, DeviceVectorIterator<uint32_t>, DeviceVectorConstIterator<uint32_t> > layer(lconfig, 0); 
+    Profiler p;
+    p.start();
+    layer.forward(im);
+    p.accumulate("CNN forward");
+    p.dump_all();
+}
+
+TEST(LayerTest, DISABLED_RELUForward) {
 
     RSS<uint32_t, DeviceVectorIterator<uint32_t>, DeviceVectorConstIterator<uint32_t> > input = {
         -2, -3, 4, 3, 3.5, 1, -1.5, -1
@@ -523,7 +554,7 @@ TEST(LayerTest, RELUForward) {
     assertRSS(*layer.getActivation(), expected);
 }
 
-TEST(LayerTest, MaxpoolForward) {
+TEST(LayerTest, DISABLED_MaxpoolForward) {
     // imageWidth x imageHeight = 2 x 2
     // features = 3
     // batchSize = 2

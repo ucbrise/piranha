@@ -165,6 +165,10 @@ void loadData(string net, string dataset)
 	else
 		assert(false && "Only MNIST, CIFAR10, and ImageNet supported");
 
+    // XXX
+    return;
+
+    /*
 	string filename_train_data_next, filename_train_data_prev;
 	string filename_test_data_next, filename_test_data_prev;
 	string filename_train_labels_next, filename_train_labels_prev;
@@ -244,6 +248,7 @@ void loadData(string net, string dataset)
 	k_next.close(); k_prev.close();		
 
 	cout << "Loading data done....." << endl;
+    */
 }
 
 /*

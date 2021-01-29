@@ -21,6 +21,10 @@ Precompute PrecomputeObject;
 extern Profiler matmul_profiler;
 Profiler func_profiler;
 
+size_t db_bytes = 0;
+size_t db_layer_max_bytes = 0;
+size_t db_max_bytes = 0;
+
 int main(int argc, char** argv) {
 
 /****************************** PREPROCESSING ******************************/ 
@@ -88,6 +92,7 @@ int main(int argc, char** argv) {
     end_m(network);
 
     // STATS
+    /*
 	cout << "----------------------------------------------" << endl;  	
 	cout << "Run details: " << NUM_OF_PARTIES << "PC (P" << partyNum 
 		 << "), " << NUM_ITERATIONS << " iterations, batch size " << MINI_BATCH_SIZE << endl 
@@ -115,6 +120,8 @@ int main(int argc, char** argv) {
 
     cout << "-- Total runtime accounted for: " << total_measured_runtime/1000.0 << " s --" << endl;
 	//printNetwork(net);
+
+    */
 
 /****************************** CLEAN-UP ******************************/ 
 	delete aes_indep;
