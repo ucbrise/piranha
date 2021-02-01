@@ -19,12 +19,15 @@ Precompute PrecomputeObject;
 
 extern Profiler matmul_profiler;
 Profiler func_profiler;
+Profiler memory_profiler;
 
 size_t db_bytes = 0;
 size_t db_layer_max_bytes = 0;
 size_t db_max_bytes = 0;
 
 int main(int argc, char** argv) {
+    
+    memory_profiler.start();
 
 /****************************** PREPROCESSING ******************************/ 
 	parseInputs(argc, argv);
@@ -88,6 +91,7 @@ int main(int argc, char** argv) {
     start_m();
 	network += " test";
 	test(net);
+
     end_m(network);
 
     // STATS
@@ -119,10 +123,13 @@ int main(int argc, char** argv) {
     cout << "-- Total runtime accounted for: " << total_measured_runtime/1000.0 << " s --" << endl;
 	//printNetwork(net);
 
+    /*
     cout << "the figures" << endl;
     for (int l = 0; l < net->layers.size(); l++) {
         cout << net->layers[l]->layer_profiler.get_elapsed_all() << endl;
     }
+    */
+    memory_profiler.dump_mem_tags();
 
 /****************************** CLEAN-UP ******************************/ 
 	delete aes_indep;

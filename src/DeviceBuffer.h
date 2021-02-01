@@ -13,6 +13,9 @@
 #include <vector>
 
 #include "DeviceData.h"
+#include "Profiler.h"
+
+extern Profiler memory_profiler;
 
 template<typename T>
 using DeviceVectorIterator = thrust::detail::normal_iterator<thrust::device_ptr<T> >;
@@ -36,6 +39,9 @@ class DeviceBuffer : public DeviceData<T, DeviceVectorIterator<T>, DeviceVectorC
             if (db_bytes > db_max_bytes) db_max_bytes = db_bytes;
             if (db_bytes > db_layer_max_bytes) db_layer_max_bytes = db_bytes;
             //printMemUsage();
+
+            memory_profiler.track_alloc(n * sizeof(T));
+            memory_profiler.tag_mem();
         }
         DeviceBuffer(std::vector<T> v) : data(v.size()) {
             //printf("    DB: vector initialization with size %u bytes\n", v.size() * sizeof(T));
@@ -45,7 +51,11 @@ class DeviceBuffer : public DeviceData<T, DeviceVectorIterator<T>, DeviceVectorC
             if (db_bytes > db_max_bytes) db_max_bytes = db_bytes;
             if (db_bytes > db_layer_max_bytes) db_layer_max_bytes = db_bytes;
             //printMemUsage();
+            
+            memory_profiler.track_alloc(v.size() * sizeof(T));
+            memory_profiler.tag_mem();
         }
+
         DeviceBuffer(std::initializer_list<T> il) : data(il.size()) {
             //printf("    DB: initlist initialization with size %u bytes\n", il.size() * sizeof(T));
             thrust::copy(il.begin(), il.end(), data.begin());
@@ -54,6 +64,9 @@ class DeviceBuffer : public DeviceData<T, DeviceVectorIterator<T>, DeviceVectorC
             if (db_bytes > db_max_bytes) db_max_bytes = db_bytes;
             if (db_bytes > db_layer_max_bytes) db_layer_max_bytes = db_bytes;
             //printMemUsage();
+
+            memory_profiler.track_alloc(il.size() * sizeof(T));
+            memory_profiler.tag_mem();
         }
 
         ~DeviceBuffer() {
@@ -61,6 +74,9 @@ class DeviceBuffer : public DeviceData<T, DeviceVectorIterator<T>, DeviceVectorC
             //printMemUsage();
             //printf("~dealloc %d\n", data.size());
             db_bytes -= data.size() * sizeof(T);
+
+            memory_profiler.track_free(data.size() * sizeof(T));
+            memory_profiler.tag_mem();
         }
 
         DeviceVectorConstIterator<T> first() const {
@@ -81,11 +97,16 @@ class DeviceBuffer : public DeviceData<T, DeviceVectorIterator<T>, DeviceVectorC
         void resize(size_t n) {
             //printf("    DB: resizing %u -> %u bytes\n", data.size() * sizeof(T), n * sizeof(T));
             db_bytes -= data.size() * sizeof(T);
+            memory_profiler.track_free(data.size() * sizeof(T));
+
             //printMemUsage();
             data.resize(n);
             db_bytes += n * sizeof(T);
             if (db_bytes > db_max_bytes) db_max_bytes = db_bytes;
             if (db_bytes > db_layer_max_bytes) db_layer_max_bytes = db_bytes;
+
+            memory_profiler.track_alloc(n * sizeof(T));
+            memory_profiler.tag_mem();
         }
 
         thrust::device_vector<T> &raw() {

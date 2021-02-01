@@ -1,7 +1,7 @@
 #include "Profiler.h"
 #include <iostream>
 
-Profiler::Profiler() : running(false), total(0) {
+Profiler::Profiler() : running(false), total(0), mem(0) {
     // nothing else to do
 }
 
@@ -14,6 +14,9 @@ void Profiler::clear() {
     running = false;
     total = 0;
     accumulators.clear();
+
+    mem = 0;
+    tags.clear();    
 }
 
 void Profiler::accumulate(std::string tag) {
@@ -44,3 +47,35 @@ void Profiler::dump_all() {
     }
     std::cout << std::endl << "-------------------" << std::endl;
 }
+
+void Profiler::track_alloc(size_t bytes) {
+    if (!running) return;
+
+    mem += bytes;
+}
+
+void Profiler::track_free(size_t bytes) {
+    if (!running) return;
+
+    mem -= bytes;
+}
+
+void Profiler::tag_mem() {
+    if (!running) return;
+
+    double ms_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now() - start_time
+    ).count();
+
+    std::cout << mem << std::endl;
+    tags.push_back(std::make_pair(ms_elapsed, mem));
+}
+
+void Profiler::dump_mem_tags() {
+    std::cout << std::endl << "-------------------" << std::endl;
+    for (auto &p : tags) {
+        std::cout << p.first << "," << p.second << std::endl;
+    }
+    std::cout << std::endl << "-------------------" << std::endl;
+}
+
