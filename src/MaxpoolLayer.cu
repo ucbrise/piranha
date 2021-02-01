@@ -1,7 +1,7 @@
 
 #include "convolution.cuh"
 #include "MaxpoolLayer.h"
-#include "Functionalities.h"
+#include "Functionalities.cuh"
 
 template<typename T, typename I, typename C>
 Profiler MaxpoolLayer<T, I, C>::maxpool_profiler;

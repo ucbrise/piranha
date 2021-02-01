@@ -1,7 +1,7 @@
 #pragma once
 
 #include "BNLayer.h"
-#include "Functionalities.h"
+#include "Functionalities.cuh"
 
 template<typename T, typename I, typename C>
 BNLayer<T, I, C>::BNLayer(BNConfig* conf, int _layerNum) : Layer<T, I, C>(_layerNum),

@@ -1,6 +1,6 @@
 
 #include "FCLayer.h"
-#include "Functionalities.h"
+#include "Functionalities.cuh"
 #include "matrix.cuh"
 
 Profiler matmul_profiler;

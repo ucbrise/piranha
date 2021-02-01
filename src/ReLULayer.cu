@@ -2,7 +2,7 @@
 #pragma once
 
 #include "ReLULayer.h"
-#include "Functionalities.h"
+#include "Functionalities.cuh"
 #include "Profiler.h"
 
 template<typename T, typename I, typename C>

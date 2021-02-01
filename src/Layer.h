@@ -3,7 +3,7 @@
 
 #include "globals.h"
 #include "Profiler.h"
-#include "RSS.h"
+#include "RSS.cuh"
 
 template<typename T, typename I, typename C>
 class Layer

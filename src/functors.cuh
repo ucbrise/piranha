@@ -47,4 +47,3 @@ struct scalar_arith_rshift_functor {
     }
 };
 
-

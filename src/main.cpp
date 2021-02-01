@@ -11,7 +11,6 @@
 #include "MaxpoolLayer.h"
 #include "ReLULayer.h"
 #include "util.cuh"
-
 int partyNum;
 AESObject* aes_indep;
 AESObject* aes_next;
@@ -92,7 +91,6 @@ int main(int argc, char** argv) {
     end_m(network);
 
     // STATS
-    /*
 	cout << "----------------------------------------------" << endl;  	
 	cout << "Run details: " << NUM_OF_PARTIES << "PC (P" << partyNum 
 		 << "), " << NUM_ITERATIONS << " iterations, batch size " << MINI_BATCH_SIZE << endl 
@@ -121,7 +119,10 @@ int main(int argc, char** argv) {
     cout << "-- Total runtime accounted for: " << total_measured_runtime/1000.0 << " s --" << endl;
 	//printNetwork(net);
 
-    */
+    cout << "the figures" << endl;
+    for (int l = 0; l < net->layers.size(); l++) {
+        cout << net->layers[l]->layer_profiler.get_elapsed_all() << endl;
+    }
 
 /****************************** CLEAN-UP ******************************/ 
 	delete aes_indep;

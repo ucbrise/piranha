@@ -14,7 +14,7 @@
 #include "DeviceBufferView.h"
 #include "FCConfig.h"
 #include "FCLayer.h"
-#include "Functionalities.h"
+#include "Functionalities.cuh"
 #include "globals.h"
 #include "matrix.cuh"
 #include "MaxpoolConfig.h"
@@ -22,7 +22,7 @@
 #include "Profiler.h"
 #include "ReLUConfig.h"
 #include "ReLULayer.h"
-#include "RSS.h"
+#include "RSS.cuh"
 #include "secondary.h"
 #include "util.cuh"
 
@@ -93,7 +93,7 @@ void assertRSS(RSS<T, I, C> &result, std::vector<float> &expected, bool convertF
     }
 }
 
-TEST(DataTest, DISABLED_DeviceBuffer) {
+TEST(DataTest, DeviceBuffer) {
 
     DeviceBuffer<uint32_t> d1 = {1, 2, 3};
     DeviceBuffer<uint32_t> d2 = {1, 1, 1};
@@ -117,7 +117,7 @@ using VConstIterator = thrust::detail::normal_iterator<thrust::device_ptr<const 
 typedef thrust::transform_iterator<thrust::negate<uint32_t>, VIterator<uint32_t> > TIterator;
 typedef thrust::transform_iterator<thrust::negate<uint32_t>, VConstIterator<uint32_t> > TConstIterator;
 
-TEST(DataTest, DISABLED_DeviceBufferView) {
+TEST(DataTest, DeviceBufferView) {
 
     DeviceBuffer<uint32_t> d1 = {1, 2, 3};
     DeviceBufferView<uint32_t, TIterator, TConstIterator> negated(
@@ -131,7 +131,7 @@ TEST(DataTest, DISABLED_DeviceBufferView) {
     assertDeviceData(d1, expected, false);
 }
 
-TEST(GPUTest, DISABLED_MatMul) {
+TEST(GPUTest, MatMul) {
     DeviceBuffer<uint32_t> a = {1, 2, 1, 2, 1, 2};  // 2 x 3
     DeviceBuffer<uint32_t> b = {2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1}; // 3 x 4
     DeviceBuffer<uint32_t> c(8); // 2 x 4
@@ -143,7 +143,7 @@ TEST(GPUTest, DISABLED_MatMul) {
     assertDeviceData(c, expected, false);
 }
 
-TEST(GPUTest, DISABLED_MatMulTranspose) {
+TEST(GPUTest, MatMulTranspose) {
     DeviceBuffer<uint32_t> a = {1, 2, 1, 2, 1, 2}; // 2 x 3
     DeviceBuffer<uint32_t> c(4); // 2 x 2
 
@@ -154,7 +154,7 @@ TEST(GPUTest, DISABLED_MatMulTranspose) {
     assertDeviceData(c, expected, false);
 }
 
-TEST(GPUTest, DISABLED_Transpose) {
+TEST(GPUTest, Transpose) {
     
     DeviceBuffer<uint32_t> a = {1, 2, 3, 4, 5, 6};
     DeviceBuffer<uint32_t> b(a.size());
@@ -165,7 +165,7 @@ TEST(GPUTest, DISABLED_Transpose) {
     assertDeviceData(b, expected, false);
 }
 
-TEST(GPUTest, DISABLED_ElementwiseVectorAdd) {
+TEST(GPUTest, ElementwiseVectorAdd) {
     
     DeviceBuffer<uint32_t> a = {1, 2, 3, 3, 2, 1}; // 2 x 3
 
@@ -184,7 +184,7 @@ TEST(GPUTest, DISABLED_ElementwiseVectorAdd) {
     assertDeviceData(a, expected, false);
 }
 
-TEST(GPUTest, DISABLED_BitExpand) {
+TEST(GPUTest, BitExpand) {
 
     DeviceBuffer<uint32_t> a = {2, 3, 1};
 
@@ -200,7 +200,7 @@ TEST(GPUTest, DISABLED_BitExpand) {
     assertDeviceData(abits, expected, false);
 }
 
-TEST(GPUTest, DISABLED_Im2Row) {
+TEST(GPUTest, Im2Row) {
 
     // 2x3, Din=2
     DeviceBuffer<uint32_t> im = {
@@ -231,7 +231,7 @@ TEST(GPUTest, DISABLED_Im2Row) {
     assertDeviceData(out, expected, false);
 }
 
-TEST(GPUTest, DISABLED_ExpandCompare) {
+TEST(GPUTest, ExpandCompare) {
 
     RSS<uint32_t, DeviceVectorIterator<uint32_t>, DeviceVectorConstIterator<uint32_t> > b = {0, 1};
     b >>= FLOAT_PRECISION;
@@ -246,7 +246,7 @@ TEST(GPUTest, DISABLED_ExpandCompare) {
     assertRSS(output, expected, false);
 }
 
-TEST(FuncTest, DISABLED_Reconstruct2of3) {
+TEST(FuncTest, Reconstruct2of3) {
     
     RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t>> a = {1, 2, 3, 10, 5};
 
@@ -257,7 +257,7 @@ TEST(FuncTest, DISABLED_Reconstruct2of3) {
     assertDeviceData(r, expected);
 }
 
-TEST(FuncTest, DISABLED_Reconstruct3of3) {
+TEST(FuncTest, Reconstruct3of3) {
     DeviceBuffer<uint32_t> *data;
     switch (partyNum) {
         case PARTY_A:
@@ -278,7 +278,7 @@ TEST(FuncTest, DISABLED_Reconstruct3of3) {
     assertDeviceData(r, expected, false);
 }
 
-TEST(FuncTest, DISABLED_MatMul) {
+TEST(FuncTest, MatMul) {
 
     RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > a = {1, 1, 1, 1, 1, 1};  // 2 x 3
     RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > b = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0}; // 3 x 4
@@ -290,7 +290,7 @@ TEST(FuncTest, DISABLED_MatMul) {
     assertRSS(c, expected);
 }
 
-TEST(FuncTest, DISABLED_Reshare) {
+TEST(FuncTest, Reshare) {
     
     DeviceBuffer<uint32_t> *a;
     if (partyNum == PARTY_A) {
@@ -307,7 +307,7 @@ TEST(FuncTest, DISABLED_Reshare) {
     assertRSS(reshared, expected, false);
 }
 
-TEST(FuncTest, DISABLED_SelectShare) {
+TEST(FuncTest, SelectShare) {
 
     RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > x = {1, 2};
     RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > y = {4, 5};
@@ -322,7 +322,7 @@ TEST(FuncTest, DISABLED_SelectShare) {
     assertRSS(z, expected);
 }
 
-TEST(FuncTest, DISABLED_Truncate) {
+TEST(FuncTest, Truncate) {
 
     RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > a = {1 << 3, 2 << 3, 3 << 3};
     NEW_funcTruncate(a, 3);
@@ -331,7 +331,7 @@ TEST(FuncTest, DISABLED_Truncate) {
     assertRSS(a, expected);
 }
 
-TEST(FuncTest, DISABLED_Convolution) {
+TEST(FuncTest, Convolution) {
 
     // 2x3, Din=2
     RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > im = {
@@ -371,7 +371,7 @@ TEST(FuncTest, DISABLED_Convolution) {
     assertRSS(out, expected);
 }
 
-TEST(FuncTest, DISABLED_CarryOut) {
+TEST(FuncTest, CarryOut) {
     RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > p = {0, 1, 0, 1, 0, 1, 0, 1};
     p >>= FLOAT_PRECISION;
     RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > g = {0, 1, 0, 1, 0, 1, 0, 1};
@@ -384,11 +384,11 @@ TEST(FuncTest, DISABLED_CarryOut) {
     assertRSS(out, expected, false);
 }
 
-TEST(FuncTest, DISABLED_DRELU) {
+TEST(FuncTest, DRELU) {
     
     RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > input = {-1, 2, -2, -3};
 
-    RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > result(input.size());
+    RSS<uint8_t, VIterator<uint8_t>, VConstIterator<uint8_t> > result(input.size());
     NEW_funcDRELU(input, result);
 
     std::vector<float> expected = {
@@ -397,14 +397,14 @@ TEST(FuncTest, DISABLED_DRELU) {
     assertRSS(result, expected, false);
 }
 
-TEST(FuncTest, DISABLED_RELU) {
+TEST(FuncTest, RELU) {
 
     RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > input = {
         -2, -3, 4, 3, 3.5, 1, -1.5, -1
     };
 
     RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > result(input.size());
-    RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > dresult(input.size());
+    RSS<uint8_t, VIterator<uint8_t>, VConstIterator<uint8_t> > dresult(input.size());
     NEW_funcRELU(input, result, dresult);
 
     std::vector<float> expected = {
@@ -418,11 +418,11 @@ TEST(FuncTest, DISABLED_RELU) {
     assertRSS(dresult, dexpected, false);
 }
 
-TEST(FuncTest, DISABLED_Maxpool) {
+TEST(FuncTest, Maxpool) {
 
     RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > input = {1, 3, 4, 3, 7, 1, 2, 10};
     RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > result(input.size() / 4);
-    RSS<uint32_t, VIterator<uint32_t>, VConstIterator<uint32_t> > dresult(input.size());
+    RSS<uint8_t, VIterator<uint8_t>, VConstIterator<uint8_t> > dresult(input.size());
 
     NEW_funcMaxpool(input, result, dresult, 4);
 
@@ -437,7 +437,7 @@ TEST(FuncTest, DISABLED_Maxpool) {
     assertRSS(dresult, dexpected, false);
 }
 
-TEST(LayerTest, DISABLED_FCForward) {
+TEST(LayerTest, FCForward) {
 
     int inputDim = 4;
     int batchSize = 4;
@@ -535,7 +535,7 @@ TEST(LayerTest, DISABLED_CNNPerf) {
     p.dump_all();
 }
 
-TEST(LayerTest, DISABLED_RELUForward) {
+TEST(LayerTest, RELUForward) {
 
     RSS<uint32_t, DeviceVectorIterator<uint32_t>, DeviceVectorConstIterator<uint32_t> > input = {
         -2, -3, 4, 3, 3.5, 1, -1.5, -1
@@ -554,7 +554,7 @@ TEST(LayerTest, DISABLED_RELUForward) {
     assertRSS(*layer.getActivation(), expected);
 }
 
-TEST(LayerTest, DISABLED_MaxpoolForward) {
+TEST(LayerTest, MaxpoolForward) {
     // imageWidth x imageHeight = 2 x 2
     // features = 3
     // batchSize = 2
@@ -592,7 +592,7 @@ TEST(LayerTest, DISABLED_MaxpoolForward) {
 }
 
 /*
-TEST(PerfTest, DISABLED_LargeMatMul) {
+TEST(PerfTest, LargeMatMul) {
 
     int rows = 8;
     int shared = 784; // 786
@@ -642,7 +642,7 @@ TEST(PerfTest, DISABLED_LargeMatMul) {
     p.dump_all();
 }
 
-TEST(PerfTest, DISABLED_FCLayer) {
+TEST(PerfTest, FCLayer) {
 
     int inputDim = 784;
     int batchSize = 8;
@@ -673,7 +673,7 @@ TEST(PerfTest, DISABLED_FCLayer) {
     layer.layer_profiler.dump_all();
 }
 
-TEST(PerfTest, DISABLED_ReLULayer) {
+TEST(PerfTest, ReLULayer) {
 
     func_profiler.clear();
 

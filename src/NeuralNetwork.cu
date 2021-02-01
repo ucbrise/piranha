@@ -8,7 +8,7 @@
 #include "ReLULayer.h"
 //#include "BNLayer.h"
 #include "NeuralNetwork.h"
-#include "Functionalities.h"
+#include "Functionalities.cuh"
 
 using namespace std;
 

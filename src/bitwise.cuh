@@ -4,12 +4,12 @@
 #include <thrust/device_vector.h>
 
 #include "DeviceBuffer.h"
-#include "RSS.h"
+#include "RSS.cuh"
 
 namespace kernel {
 
-template<typename T> 
-__global__ void bitexpand(T *a, size_t nVals, T *b) {
+template<typename T, typename U> 
+__global__ void bitexpand(T *a, size_t nVals, U *b) {
 
     int VAL_IDX = blockIdx.y*blockDim.y+threadIdx.y;
     int BIT_IDX = blockIdx.x*blockDim.x+threadIdx.x;
@@ -17,18 +17,18 @@ __global__ void bitexpand(T *a, size_t nVals, T *b) {
 
     if (VAL_IDX <= nVals && BIT_IDX < nBits) {
         T val = ((a[VAL_IDX] >> BIT_IDX) & 1);
-        b[VAL_IDX * nBits + BIT_IDX] = val;
+        b[VAL_IDX * nBits + BIT_IDX] = (U)val;
         //printf("b[%d] = %d\n", VAL_IDX * nBits + BIT_IDX, val);
     }
 }
 
-template<typename T>
-__global__ void setCarryOutMSB(T *rbits_0, T *rbits_1,
-        T *abits, T *msb_0, T *msb_1, size_t n, int partyNum) {
+template<typename U>
+__global__ void setCarryOutMSB(U *rbits_0, U *rbits_1,
+        U *abits, U *msb_0, U *msb_1, size_t n, int bitWidth, int partyNum) {
 
     int IDX = blockIdx.x*blockDim.x+threadIdx.x;
     if (IDX < n) {
-        int bitWidth = sizeof(T) * 8;
+        //int bitWidth = sizeof(T) * 8;
         int bitIdx = (IDX * bitWidth) + (bitWidth - 1);
 
         msb_0[IDX] = rbits_0[bitIdx];
@@ -80,8 +80,8 @@ __global__ void expandCompare(T *b0, T *b1, T *invB0, T *invB1, T *expanded0, T 
 
 namespace gpu {
 
-template<typename T>
-void bitexpand(DeviceBuffer<T> &a, DeviceBuffer<T> &b) {
+template<typename T, typename U>
+void bitexpand(DeviceBuffer<T> &a, DeviceBuffer<U> &b) {
 
     int cols = sizeof(T) * 8;
     int rows = a.size();
@@ -106,8 +106,8 @@ void bitexpand(DeviceBuffer<T> &a, DeviceBuffer<T> &b) {
     );
 }
 
-template<typename T, typename I, typename C, typename I2, typename C2>
-void setCarryOutMSB(RSS<T, I, C> &rbits, DeviceBuffer<T> &abits, RSS<T, I2, C2> &msb) {
+template<typename U, typename I, typename C, typename I2, typename C2>
+void setCarryOutMSB(RSS<U, I, C> &rbits, DeviceBuffer<U> &abits, RSS<U, I2, C2> &msb, int bitWidth) {
 
     int cols = msb.size();
     int rows = 1;
@@ -127,19 +127,20 @@ void setCarryOutMSB(RSS<T, I, C> &rbits, DeviceBuffer<T> &abits, RSS<T, I2, C2> 
 
     kernel::setCarryOutMSB<<<blocksPerGrid,threadsPerBlock>>>(
         thrust::raw_pointer_cast(
-            static_cast<DeviceBuffer<T>*>(rbits[0])->raw().data()
+            static_cast<DeviceBuffer<U>*>(rbits[0])->raw().data()
         ),
         thrust::raw_pointer_cast(
-            static_cast<DeviceBuffer<T>*>(rbits[1])->raw().data()
+            static_cast<DeviceBuffer<U>*>(rbits[1])->raw().data()
         ),
         thrust::raw_pointer_cast(abits.raw().data()),
         thrust::raw_pointer_cast(
-            static_cast<DeviceBuffer<T>*>(msb[0])->raw().data()
+            static_cast<DeviceBuffer<U>*>(msb[0])->raw().data()
         ),
         thrust::raw_pointer_cast(
-            static_cast<DeviceBuffer<T>*>(msb[1])->raw().data()
+            static_cast<DeviceBuffer<U>*>(msb[1])->raw().data()
         ),
         msb.size(),
+        bitWidth,
         partyNum
     );
 }

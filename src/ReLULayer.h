@@ -15,7 +15,7 @@ class ReLULayer : public Layer<T, I, C> {
     private:
         ReLUConfig conf;
 
-        RSS<uint32_t, I, C> reluPrime;
+        RSSType<uint8_t> reluPrime;
 
         RSS<T, I, C> activations;
         RSS<T, I, C> deltas;

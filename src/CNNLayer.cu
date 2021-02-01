@@ -6,7 +6,7 @@
 #include <thrust/transform.h>
 
 #include "CNNLayer.h"
-#include "Functionalities.h"
+#include "Functionalities.cuh"
 
 extern bool LARGE_NETWORK;
 

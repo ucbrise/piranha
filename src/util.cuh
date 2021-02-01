@@ -11,12 +11,14 @@
 #include "DeviceBuffer.h"
 #include "DeviceBufferView.h"
 #include "globals.h"
-#include "RSS.h"
+#include "RSS.cuh"
 
 template<typename T>
 using DeviceVectorIterator = thrust::detail::normal_iterator<thrust::device_ptr<T> >;
 template<typename T>
 using DeviceVectorConstIterator = thrust::detail::normal_iterator<thrust::device_ptr<const T> >;
+template<typename T>
+using RSSType = RSS<T, DeviceVectorIterator<T>, DeviceVectorConstIterator<T> >;
 
 extern int partyNum;
 

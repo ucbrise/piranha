@@ -1,5 +1,5 @@
 /*
- * RSS.h
+ * RSS.cuh
  * ----
  * 
  * Abstracts secret-shared data shares and GPU-managed linear operations.
@@ -9,13 +9,54 @@
 
 #include <cstddef>
 #include <initializer_list>
+#include <thrust/for_each.h>
+#include <thrust/iterator/zip_iterator.h>
 
 #include "DeviceData.h"
 #include "DeviceBuffer.h"
 #include "DeviceBufferView.h"
 #include "globals.h"
 
-template<typename T, typename Iterator, typename ConstIterator> class RSSData;
+template<typename T, typename Iterator, typename ConstIterator> class RSS;
+
+template<typename T>
+using DeviceVectorIterator = thrust::detail::normal_iterator<thrust::device_ptr<T> >;
+template<typename T>
+using DeviceVectorConstIterator = thrust::detail::normal_iterator<thrust::device_ptr<const T> >;
+template<typename T>
+using RSSType = RSS<T, DeviceVectorIterator<T>, DeviceVectorConstIterator<T> >;
+
+struct sketchy_functor {
+    const int party;
+    sketchy_functor(int _party) : party(_party) {}
+    
+    template<typename Tuple>
+    __host__ __device__
+    void operator()(Tuple t) {
+        // b, c share A, c share B, d share A, d share B
+        if (thrust::get<0>(t) == 1) {
+            switch(party) {
+                case PARTY_A:
+                    thrust::get<3>(t) = 1 - thrust::get<1>(t);
+                    thrust::get<4>(t) = -thrust::get<2>(t);
+                    break;
+                case PARTY_B:
+                    thrust::get<3>(t) = -thrust::get<1>(t);
+                    thrust::get<4>(t) = -thrust::get<2>(t);
+                    break;
+                case PARTY_C:
+
+                    thrust::get<3>(t) = -thrust::get<1>(t);
+                    thrust::get<4>(t) = 1 - thrust::get<2>(t);
+                    break;
+            }
+        } else {
+            thrust::get<3>(t) = thrust::get<1>(t);
+            thrust::get<4>(t) = thrust::get<2>(t);
+        }
+    }
+};
+
 /* TODO
 template<typename T> RSSData<T> operator+(RSSData<T> lhs, const T rhs);
 template<typename T> RSSData<T> operator-(RSSData<T> lhs, const T rhs);
@@ -135,6 +176,16 @@ class RSS {
         void zip(RSSData<T> &even, RSSData<T> &odd);
         template<typename U> void copy(RSSData<U> &src);
         */
+
+
+        template<typename U>
+        void sketchy(RSSType<T> &c, DeviceBuffer<U> &b) {
+
+            thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(b.first(), c[0]->first(), c[1]->first(), shareA->first(), shareB->first())),
+                thrust::make_zip_iterator(thrust::make_tuple(b.last(), c[0]->last(), c[1]->last(), shareA->last(), shareB->last())),
+                sketchy_functor(partyNum));
+
+        }
 
         DeviceData<T, Iterator, ConstIterator> *operator [](int i) {
             return i ? shareB : shareA;

@@ -11,7 +11,7 @@
 #include "matrix.cuh"
 #include "Precompute.h"
 #include "Profiler.h"
-#include "RSS.h"
+#include "RSS.cuh"
 #include "StridedRange.cuh"
 #include "util.cuh"
 
@@ -216,16 +216,16 @@ void NEW_funcMatMul(RSS<T, I, C> &a, RSS<T, I, C> &b, RSS<T, I, C> &c,
 }
 
 // TODO diff types
-template<typename T, typename I, typename C>
-void NEW_funcSelectShare(RSS<T, I, C> &x, RSS<T, I, C> &y, RSS<T, I, C> &b,
+template<typename T, typename C, typename I, typename C2, typename I2, typename U>
+void NEW_funcSelectShare(RSS<T, I, C> &x, RSS<T, I, C> &y, RSS<U, I2, C2> &b,
         RSS<T, I, C> &z) {
 
     int size = x.size();
 
     // TODO XXX use precomputation randomness XXX TODO
-    RSS<T, I, C> c(size);
+    RSSType<T> c(size);
     c.zero();
-    RSS<T, I, C> cbits(size);
+    RSSType<U> cbits(size);
     cbits.zero();
 
     /*
@@ -244,7 +244,7 @@ void NEW_funcSelectShare(RSS<T, I, C> &x, RSS<T, I, C> &y, RSS<T, I, C> &b,
     b ^= cbits;
 
     // XXX DeviceBuffer<T> etemp(b.size());
-    DeviceBuffer<T> e(b.size());
+    DeviceBuffer<U> e(b.size());
     NEW_funcReconstruct(b, e);
 
     // TODO XXX fix templating to avoid this, enable public-RSS multiplication
@@ -254,17 +254,21 @@ void NEW_funcSelectShare(RSS<T, I, C> &x, RSS<T, I, C> &y, RSS<T, I, C> &b,
     // NOTE perhaps replace with if/else functor
     
     // d = 1-c if e=1 else c -> d = (e)(1-c) + (1-e)(c)
-    RSS<T, I, C> d(e.size());
+    RSSType<T> d(e.size());
+    d.sketchy(c, e);
+
+    /*
     d.fill(1);
     d -= c;
     d *= e;
 
-    RSS<T, I, C> d2(e.size());
+    RSSType<T> d2(e.size());
     d2.fill(1);
     d2 -= e;
     d2 *= c;
 
     d += d2;
+    */
 
     // z = ((y - x) * d) + x
     z.zero();
@@ -443,25 +447,28 @@ void carryOut(RSS<T, I, C> &p, RSS<T, I, C> &g, int k, RSS<T, I, C> &out) {
  * sizeof(T) values).
  */
 template<typename T, typename I, typename C, typename I2, typename C2> 
-void NEW_funcDRELU(RSS<T, I, C> &input, RSS<T, I2, C2> &result) {
+void NEW_funcDRELU(RSS<T, I, C> &input, RSS<uint8_t, I2, C2> &result) {
 
     //printRSS(input, "drelu-argument:input");
     //printRSS(result, "drelu-argument:result");
     //std::cout << "drelu start" << std::endl;
     
-    printf("func-drelu-start\n");
-    printMemUsage();
+    //printf("func-drelu-start\n");
+    //printMemUsage();
+
+    int bitWidth = sizeof(T) * 8;
 
     // TODO move most code to pre-processing 
-    RSS<T, I, C> r(input.size());
+    RSSType<T> r(input.size());
     r.zero();
-    RSS<T, I, C> rbits(input.size() * sizeof(T) * 8);
+
+    RSSType<uint8_t> rbits(input.size() * bitWidth);
     // XXX fix
     //  rbits = (U)1 - rbits; // element-wise subtract bits
     rbits.fill(1);
 
-    printf("func-drelu-rbits\n");
-    printMemUsage();
+    //printf("func-drelu-rbits\n");
+    //printMemUsage();
 
     //printRSS(r, "drelu-406");
     //printRSS(rbits, "drelu-407");
@@ -475,8 +482,8 @@ void NEW_funcDRELU(RSS<T, I, C> &input, RSS<T, I2, C2> &result) {
     // a += (1 << FLOAT_PRECISION);
     a += 1;
 
-    printf("func-drelu-post-reconstruct\n");
-    printMemUsage();
+    //printf("func-drelu-post-reconstruct\n");
+    //printMemUsage();
 
     //printDB(a, "drelu-417");
     //std::cout << "drelu 417" << std::endl;
@@ -484,36 +491,35 @@ void NEW_funcDRELU(RSS<T, I, C> &input, RSS<T, I2, C2> &result) {
     //printRSS(rbits, "drelu-421");
     //std::cout << "drelu 421" << std::endl;
 
-    // TODO start here
-    DeviceBuffer<T> abits(rbits.size());
+    DeviceBuffer<uint8_t> abits(rbits.size());
     //func_profiler.start();
     gpu::bitexpand(a, abits);
     //func_profiler.accumulate("drelu-bitexpand");
-    //
-    printf("func-drelu-post-bitexpand\n");
-    printMemUsage();
+    
+    //printf("func-drelu-post-bitexpand\n");
+    //printMemUsage();
 
     //printDB(abits, "drelu-428");
     //std::cout << "drelu 428" << std::endl;
 
     // set MSBs
     //func_profiler.start();
-    int bitWidth = sizeof(T) * 8;
 
     //printRSS(rbits, "rbits");
     //printDB(abits, "abits");
     //std::cout << "drelu 439" << std::endl;
 
     //std::cout << "input size " << input.size() << std::endl;
-    RSS<T, I, C> msb(input.size());
+    //printf("starting setcarryout by creating an RSS for input size %d\n", input.size());
+    RSSType<uint8_t> msb(input.size());
     //std::cout << "msb size " << msb.size() << std::endl;
-    gpu::setCarryOutMSB(rbits, abits, msb);
+    gpu::setCarryOutMSB(rbits, abits, msb, bitWidth);
     //func_profiler.accumulate("drelu-msb");
 
     //printRSS(msb, "msb");
     //
-    printf("func-drelu-post-setmsb\n");
-    printMemUsage();
+    //printf("func-drelu-post-setmsb\n");
+    //printMemUsage();
 
     //printRSS(msb, "drelu-459");
     //std::cout << "drelu 459" << std::endl;
@@ -522,12 +528,12 @@ void NEW_funcDRELU(RSS<T, I, C> &input, RSS<T, I2, C2> &result) {
     //printRSS(rbits, "rbits");
     //printRSS(msb, "xor'd msbs");
     
-    RSS<T, I, C> g(rbits.size());
+    RSSType<uint8_t> g(rbits.size());
     g.zero();
     g += rbits;
     g &= abits;
 
-    RSS<T, I, C> p(rbits.size());
+    RSSType<uint8_t> p(rbits.size());
     p.zero();
     p += rbits;
     p ^= abits;
@@ -538,15 +544,15 @@ void NEW_funcDRELU(RSS<T, I, C> &input, RSS<T, I2, C2> &result) {
     //std::cout << "drelu before carryout" << std::endl;
 
     //func_profiler.start();
-    RSS<T, I2, C2> preResult(result.size());
+    RSSType<uint8_t> preResult(result.size());
     carryOut(p, g, bitWidth, preResult);
     //func_profiler.accumulate("drelu-carryout");
 
     //printRSS(result, "carryout result");
     //std::cout << "drelu carryout result" << std::endl;
 
-    printf("func-drelu-post-carryout\n");
-    printMemUsage();
+    //printf("func-drelu-post-carryout\n");
+    //printMemUsage();
 
     preResult ^= msb;
     //printRSS(result, "after xor with msb");
@@ -558,29 +564,29 @@ void NEW_funcDRELU(RSS<T, I, C> &input, RSS<T, I2, C2> &result) {
     //std::cout << "drelu end" << std::endl;
 }
 
-template<typename T, typename I, typename C>
-void NEW_funcRELU(RSS<T, I, C> &input, RSS<T, I, C> &result, RSS<T, I, C> &dresult) {
+template<typename T>
+void NEW_funcRELU(RSSType<T> &input, RSSType<T> &result, RSSType<uint8_t> &dresult) {
 
     //std::cout << "relu start" << std::endl;
 
     //func_profiler.start();
     NEW_funcDRELU(input, dresult);
-    printf("func-relu-post-drelu\n");
-    printMemUsage();
+    //printf("func-relu-post-drelu\n");
+    //printMemUsage();
     //func_profiler.accumulate("relu-drelu");
 
     //std::cout << "after drelu" << std::endl;
 
     // TODO XXX randomness use XXX TODO
-    RSS<T, I, C> zeros(input.size());
+    RSSType<T> zeros(input.size());
     zeros.zero();
 
     //std::cout << "before selectshare" << std::endl;
 
     //func_profiler.start();
     NEW_funcSelectShare(zeros, input, dresult, result);
-    printf("func-relu-post-selectshare\n");
-    printMemUsage();
+    //printf("func-relu-post-selectshare\n");
+    //printMemUsage();
     //func_profiler.accumulate("relu-selectshare");
 
     //std::cout << "end of relu" << std::endl;
@@ -611,7 +617,7 @@ void expandCompare(RSS<T, I, C> &b, RSS<T, I, C> &inverseB, RSS<T, I, C> &expand
 */
 
 template<typename T, typename I, typename C>
-void NEW_funcMaxpool(RSS<T, I, C> &input, RSS<T, I, C> &result, RSS<T, I, C> &dresult, int k) {
+void NEW_funcMaxpool(RSS<T, I, C> &input, RSS<T, I, C> &result, RSSType<uint8_t> &dresult, int k) {
 
     // d(Maxpool) setup
     dresult.fill(1);
@@ -636,8 +642,8 @@ void NEW_funcMaxpool(RSS<T, I, C> &input, RSS<T, I, C> &result, RSS<T, I, C> &dr
     RSS<T, SRIterator, SRIterator> odd(&odd0, &odd1);
     func_profiler.accumulate("range creation");
 
-    printf("func-maxpool-post-rangecreate\n");
-    printMemUsage();
+    //printf("func-maxpool-post-rangecreate\n");
+    //printMemUsage();
 
     while(k > 2) {
 
@@ -645,41 +651,40 @@ void NEW_funcMaxpool(RSS<T, I, C> &input, RSS<T, I, C> &result, RSS<T, I, C> &dr
 
         // diff = even - odd
         func_profiler.start();
-        RSS<T, I, C> b(even.size());
-        b.zero();
-        b += even;
-        b -= odd;
+        RSSType<T> diff(even.size());
+        diff.zero();
+        diff += even;
+        diff -= odd;
         func_profiler.accumulate("maxpool-diff");
 
-        printf("func-maxpool-post-diff-k=%d\n", k);
-        printMemUsage();
+        //printf("func-maxpool-post-diff-k=%d\n", k);
+        //printMemUsage();
 
         // DRELU diff -> b
         func_profiler.start();
-        NEW_funcDRELU(b, b);
+        RSSType<uint8_t> b(even.size());
+        NEW_funcDRELU(diff, b);
         func_profiler.accumulate("maxpool-drelu");
 
-        printf("func-maxpool-post-drelu-k=%d\n", k);
-        printMemUsage();
+        //printf("func-maxpool-post-drelu-k=%d\n", k);
+        //printMemUsage();
         
         // b * even + 1-b * odd
-        func_profiler.start();
-        RSS<T, I, C> negated(b.size());
-        negated.fill(1);
-        negated -= b;
-        func_profiler.accumulate("maxpool-complement");
+        NEW_funcSelectShare(even, odd, b, even);
 
+        /*
         func_profiler.start();
         even *= b;
         odd *= negated;
         even += odd;
         func_profiler.accumulate("maxpool-calc");
+        */
 
         // unzip even -> into even, odd
         stride *= 2;
 
-        printf("func-maxpool-pre-rangeupdate-k=%d\n", k);
-        printMemUsage();
+        //printf("func-maxpool-pre-rangeupdate-k=%d\n", k);
+        //printMemUsage();
 
         func_profiler.start();
         even0Range.set(input[0]->first(), input[0]->last(), stride);
@@ -697,17 +702,20 @@ void NEW_funcMaxpool(RSS<T, I, C> &input, RSS<T, I, C> &result, RSS<T, I, C> &dr
         
         // -- dMP --
 
-        printf("func-maxpool-pre-expand-k=%d\n", k);
-        printMemUsage();
+        //printf("func-maxpool-pre-expand-k=%d\n", k);
+        //printMemUsage();
 
         // expandCompare b -> expandedB
         func_profiler.start();
-        RSS<T, I, C> expandedB(input.size());
+        RSSType<uint8_t> negated(b.size());
+        negated.fill(1);
+        negated -= b;
+        RSSType<uint8_t> expandedB(input.size());
         gpu::expandCompare(b, negated, expandedB);
         func_profiler.accumulate("maxpool-expandCompare");
 
-        printf("func-maxpool-post-expand-k=%d\n", k);
-        printMemUsage();
+        //printf("func-maxpool-post-expand-k=%d\n", k);
+        //printMemUsage();
         
         // dresult &= expandedB
         func_profiler.start();
@@ -724,28 +732,27 @@ void NEW_funcMaxpool(RSS<T, I, C> &input, RSS<T, I, C> &result, RSS<T, I, C> &dr
     
     // diff = even - odd
     func_profiler.start();
-    RSS<T, I, C> b(even.size());
-    b.zero();
-    b += even;
-    b -= odd;
+    RSSType<T> diff(even.size());
+    diff.zero();
+    diff += even;
+    diff -= odd;
     func_profiler.accumulate("maxpool-z-diff");
 
     // DRELU diff -> b
     func_profiler.start();
-    NEW_funcDRELU(b, b);
+    RSSType<uint8_t> b(even.size());
+    NEW_funcDRELU(diff, b);
     func_profiler.accumulate("maxpool-z-drelu");
     
     // b * even + 1-b * odd
-    func_profiler.start();
-    RSS<T, I, C> negated(b.size());
-    negated.fill(1);
-    negated -= b;
-    func_profiler.accumulate("maxpool-z-complement");
+    NEW_funcSelectShare(even, odd, b, even);
 
     func_profiler.start();
+    /*
     even *= b;
     odd *= negated;
     even += odd;
+    */
 
     result.zero();
     result += even;
@@ -755,7 +762,10 @@ void NEW_funcMaxpool(RSS<T, I, C> &input, RSS<T, I, C> &result, RSS<T, I, C> &dr
 
     // expandCompare b -> expandedB
     func_profiler.start();
-    RSS<T, I, C> expandedB(input.size());
+    RSSType<uint8_t> negated(b.size());
+    negated.fill(1);
+    negated -= b;
+    RSSType<uint8_t> expandedB(input.size());
     gpu::expandCompare(b, negated, expandedB);
     func_profiler.accumulate("maxpool-z-expandCompare");
     

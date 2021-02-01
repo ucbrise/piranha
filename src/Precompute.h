@@ -3,7 +3,7 @@
 
 #include "DeviceBuffer.h"
 #include "globals.h"
-#include "RSS.h"
+#include "RSS.cuh"
 
 class Precompute
 {
