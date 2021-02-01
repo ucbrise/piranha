@@ -67,8 +67,9 @@ void Profiler::tag_mem() {
         std::chrono::system_clock::now() - start_time
     ).count();
 
-    std::cout << mem << std::endl;
+    //std::cout << mem << std::endl;
     tags.push_back(std::make_pair(ms_elapsed, mem));
+    std::cout << "MEM," << ms_elapsed << "," << mem << std::endl;
 }
 
 void Profiler::dump_mem_tags() {

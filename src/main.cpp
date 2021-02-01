@@ -95,6 +95,7 @@ int main(int argc, char** argv) {
     end_m(network);
 
     // STATS
+    /*
 	cout << "----------------------------------------------" << endl;  	
 	cout << "Run details: " << NUM_OF_PARTIES << "PC (P" << partyNum 
 		 << "), " << NUM_ITERATIONS << " iterations, batch size " << MINI_BATCH_SIZE << endl 
@@ -122,6 +123,7 @@ int main(int argc, char** argv) {
 
     cout << "-- Total runtime accounted for: " << total_measured_runtime/1000.0 << " s --" << endl;
 	//printNetwork(net);
+    */
 
     /*
     cout << "the figures" << endl;
