@@ -1,0 +1,4 @@
+[submodule "ext/cutlass"]
+	path = ext/cutlass
+	url = https://github.com/jlwatson/piranha-cutlass.git
+	branch = piranha

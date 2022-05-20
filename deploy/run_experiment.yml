@@ -1,0 +1,105 @@
+---
+# Playbook to run Piranha experiments
+# ----
+# (1) copy the local config file to machines
+# (2) load desired docker image and mount volume
+# (3) figure out what party we are and run the container
+# (4) email output file to me before finishing up
+#
+# Arguments:
+#   conf - configuration file for experiment
+#   // you need to also pass conf as a json argument file
+#
+# Local environment:
+#   AWS_ACCESS_KEY
+#   AWS_SECRET_KEY
+#   PIRANHA_GMAIL_AUTH_PASS
+#
+
+- hosts: all
+  tasks:
+  - name: Install AWS CLI and sendmail
+    become: yes
+    apt:
+      pkg:
+        - awscli
+        - ssmtp
+        - python3-pip
+        - sharutils
+
+  - name: Install Docker pip later
+    become: yes
+    pip:
+      name: docker==4.4.4
+
+  - name: Set up email
+    become: yes
+    ansible.builtin.shell: "echo \"root=piranha.experiments@gmail.com\nmailhub=smtp.gmail.com:465\nFromLineOverride=YES\nAuthUser=piranha.experiments@gmail.com\nAuthPass={{ lookup('env', 'PIRANHA_GMAIL_AUTH_PASS') }}\nUseTLS=YES\" > /etc/ssmtp/ssmtp.conf"
+
+  - name: Set up the /data working directory
+    become: yes
+    ansible.builtin.file:
+      path: /data
+      state: directory
+      mode: '0755'
+
+  - name: Copy config file to machines
+    become: yes
+    ansible.builtin.copy:
+      src: "{{ conf }}"
+      dest: "/data/{{ conf }}"
+
+  - name: Get external IP address
+    ansible.builtin.shell: "curl http://169.254.169.254/latest/meta-data/public-ipv4"
+    register: external_ip_result
+
+  - name: Get party number
+    delegate_to: localhost
+    ansible.builtin.shell: "python {{ playbook_dir }}/scripts/get_party_num.py {{ external_ip_result.stdout }} {{ conf }}"
+    register: party_num_result
+
+  - name: Get AWS ECR password
+    ansible.builtin.shell: "AWS_ACCESS_KEY_ID={{ lookup('env', 'AWS_ACCESS_KEY_ID') }} AWS_SECRET_ACCESS_KEY={{ lookup('env', 'AWS_SECRET_ACCESS_KEY') }} aws ecr get-login-password --region {{ lookup('env', 'AWS_DEFAULT_REGION') }}"
+    register: ecr_password
+
+  - name: Log in to Docker registry
+    become: yes
+    ansible.builtin.shell: "docker login -u AWS -p {{ ecr_password.stdout }} 996174789679.dkr.ecr.us-west-2.amazonaws.com"
+
+  - name: Fix Docker socket
+    become: yes
+    ansible.builtin.shell: "chmod 666 /var/run/docker.sock"
+
+  - name: Pull desired Docker image from AWS ECR
+    ansible.builtin.shell: "docker pull {{ docker_tag }}"
+
+  - name: Run docker image
+    ansible.builtin.shell: "docker run --gpus all --network=host --publish 32000-32100:32000-32100 --volume /data:/data {{ docker_tag }} /piranha/piranha -p {{ party_num_result.stdout }} -c /data/{{ conf }}"
+
+  - name: Get ID of the container
+    ansible.builtin.shell: "docker ps -alq"
+    register: docker_ps_result
+
+  - name: Waiting for experiment to finish...
+    ansible.builtin.shell: "docker wait {{ docker_ps_result.stdout }}"
+
+  - name: Get external IP address (again)
+    ansible.builtin.shell: "curl http://169.254.169.254/latest/meta-data/public-ipv4"
+    register: external_ip_result_2
+
+  - name: Get party number (again)
+    delegate_to: localhost
+    ansible.builtin.shell: "python {{ playbook_dir }}/scripts/get_party_num.py {{ external_ip_result_2.stdout }} {{ conf }}"
+    register: party_num_result_2
+
+  - name: Create output file
+    ansible.builtin.shell: "docker logs {{ docker_ps_result.stdout }} > {{ run_name }}.party-{{ party_num_result_2.stdout }}.txt"
+
+  - name: Stop container
+    ansible.builtin.shell: "docker stop {{ docker_ps_result.stdout }}"
+
+  - name: Email results to me :)
+    ansible.builtin.shell: "echo -e \"to: jlw+piranha@berkeley.edu\nsubject: {{ run_name }} results\n\"| (cat - && uuencode {{ run_name }}.party-{{ party_num_result_2.stdout }}.txt {{ run_name }}.party-{{ party_num_result_2.stdout }}.txt) | /usr/sbin/ssmtp jlw+piranha@berkeley.edu"
+
+
+

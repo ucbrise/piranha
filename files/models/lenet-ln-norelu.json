@@ -1,0 +1,68 @@
+{
+    "name": "LeNet",
+    "dataset": "MNIST",
+    "batch_size": 128,
+    "input_size": 784,
+    "num_classes": 10,
+    "model": [
+        {
+            "layer": "cnn",
+            "input_hw": [28, 28],
+            "in_channels": 1,
+            "out_channels": 20,
+            "filter_hw": [5, 5],
+            "stride": 1,
+            "padding": 0
+        },
+        {
+            "layer": "ln",
+            "input_dim": 11520
+        },
+        {
+            "layer": "maxpool",
+            "input_hw": [24, 24],
+            "in_channels": 20,
+            "pool_hw": [2, 2],
+            "stride": 2
+        },
+        {
+            "layer": "relu",
+            "input_dim": 2880
+        },
+        {
+            "layer": "cnn",
+            "input_hw": [12, 12],
+            "in_channels": 20,
+            "out_channels": 50,
+            "filter_hw": [5, 5],
+            "stride": 1,
+            "padding": 0
+        },
+        {
+            "layer": "maxpool",
+            "input_hw": [8, 8],
+            "in_channels": 50,
+            "pool_hw": [2, 2],
+            "stride": 2
+        },
+        {
+            "layer": "relu",
+            "input_dim": 800 
+        },
+        {
+            "layer": "fc",
+            "input_dim": 800,
+            "output_dim": 500 
+        },
+        {
+            "layer": "relu",
+            "input_dim": 500
+        },
+        {
+            "layer": "fc",
+            "input_dim": 500,
+            "output_dim": 10 
+        }
+    ] 
+}
+

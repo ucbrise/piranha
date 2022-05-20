@@ -1,0 +1,11 @@
+---
+# Playbook to purge docker containers when we run out of memory
+# ----
+
+- hosts: all
+  tasks:
+  - name: Purge all docker containers on system
+    become: yes
+    ansible.builtin.shell: "docker system prune --all --volumes --force"
+
+

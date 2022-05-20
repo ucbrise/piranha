@@ -1,0 +1,37 @@
+{
+    "name": "Sarda",
+    "dataset": "MNIST",
+    "batch_size": 128,
+    "input_size": 784,
+    "num_classes": 10,
+    "model": [
+        {
+            "layer": "cnn",
+            "input_hw": [28, 28],
+            "in_channels": 1,
+            "out_channels": 5,
+            "filter_hw": [2, 2],
+            "stride": 2,
+            "padding": 0
+        },
+        {
+            "layer": "relu",
+            "input_dim": 980
+        },
+        {
+            "layer": "fc",
+            "input_dim": 980,
+            "output_dim": 100
+        },
+        {
+            "layer": "relu",
+            "input_dim": 100
+        },
+        {
+            "layer": "fc",
+            "input_dim": 100,
+            "output_dim": 10 
+        }
+    ] 
+}
+
