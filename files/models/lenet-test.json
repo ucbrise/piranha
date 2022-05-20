@@ -1,0 +1,28 @@
+{
+    "name": "LeNet",
+    "dataset": "MNIST",
+    "batch_size": 128,
+    "input_size": 784,
+    "num_classes": 10,
+    "model": [
+        {
+            "layer": "cnn",
+            "input_hw": [28, 28],
+            "in_channels": 1,
+            "out_channels": 10,
+            "filter_hw": [21, 21],
+            "stride": 1,
+            "padding": 0
+        },
+        {
+            "layer": "ln",
+            "input_dim": 640
+        },
+        {
+            "layer": "fc",
+            "input_dim": 640,
+            "output_dim": 10 
+        }
+    ] 
+}
+

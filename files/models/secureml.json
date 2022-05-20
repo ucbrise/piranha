@@ -1,0 +1,37 @@
+{
+    "name": "SecureML",
+    "dataset": "MNIST",
+    "batch_size": 128,
+    "input_size": 784,
+    "num_classes": 10,
+    "model": [
+        {
+            "layer": "fc",
+            "input_dim": 784,
+            "output_dim": 128 
+        },
+        {
+            "layer": "relu",
+            "input_dim": 128
+        },
+        {
+            "layer": "fc",
+            "input_dim": 128,
+            "output_dim": 128 
+        },
+        {
+            "layer": "relu",
+            "input_dim": 128
+        },
+        {
+            "layer": "fc",
+            "input_dim": 128,
+            "output_dim": 10 
+        },
+        {
+            "layer": "relu",
+            "input_dim": 10 
+        }
+    ] 
+}
+

@@ -1,0 +1,11 @@
+---
+# Playbook to kill a stalled Piranha experiments
+# ----
+
+- hosts: all
+  tasks:
+  - name: Kill any running docker containers
+    become: yes
+    ansible.builtin.shell: "docker stop $(docker ps -a -q)"
+
+

@@ -1,0 +1,87 @@
+{
+    "name": "ResNet18",
+    "dataset": "ImageNet",
+    "batch_size": 128,
+    "input_size": 3072,
+    "num_classes": 1000,
+    "model": [
+        {
+            "layer": "cnn",
+            "input_hw": [224, 224],
+            "in_channels": 3,
+            "out_channels": 64,
+            "filter_hw": [7, 7],
+            "stride": 2,
+            "padding": 3
+        },
+        {
+            "layer": "ln",
+            "input_dim": 802816
+        },
+        {
+            "layer": "maxpool",
+            "input_hw": [112, 112],
+            "in_channels": 1,
+            "pool_hw": [3, 3],
+            "stride": 2
+            // padding 1
+        },
+        {
+            "layer": "relu",
+            "input_dim": 200704
+        },
+        {
+            "layer": "res",
+            "input_hw": [56, 56],
+            "in_planes": 64,
+            "out_planes": 64,
+            "num_blocks": 2,
+            "stride": 1,
+            "expansion": 1
+        },
+        {
+            "layer": "res",
+            "input_hw": [56, 56],
+            "in_planes": 64,
+            "out_planes": 128,
+            "num_blocks": 2,
+            "stride": 2,
+            "expansion": 1
+        },
+        {
+            "layer": "res",
+            "input_hw": [28, 28],
+            "in_planes": 128,
+            "out_planes": 256,
+            "num_blocks": 2,
+            "stride": 2,
+            "expansion": 1
+        },
+        {
+            "layer": "res",
+            "input_hw": [14, 14],
+            "in_planes": 256,
+            "out_planes": 512,
+            "num_blocks": 2,
+            "stride": 2,
+            "expansion": 1
+        },
+        {
+            "layer": "averagepool",
+            "input_hw": [7, 7],
+            "in_channels": 512,
+            "pool_hw": [7, 7],
+            "stride": 1
+        },
+        {
+            "layer": "fc",
+            "input_dim": 512,
+            "output_dim": 1000 
+        },
+        {
+            "layer": "relu",
+            "input_dim": 1000
+        }
+    ]
+}
+

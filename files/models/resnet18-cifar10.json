@@ -1,0 +1,74 @@
+{
+    "name": "ResNet18",
+    "dataset": "CIFAR10",
+    "batch_size": 32,
+    "input_size": 3072,
+    "num_classes": 10,
+    "model": [
+        {
+            "layer": "cnn",
+            "input_hw": [32, 32],
+            "in_channels": 3,
+            "out_channels": 16,
+            "filter_hw": [3, 3],
+            "stride": 1,
+            "padding": 1
+        },
+        {
+            "layer": "ln",
+            "input_dim": 16384
+        },
+        {
+            "layer": "res",
+            "input_hw": [32, 32],
+            "in_planes": 16,
+            "out_planes": 16,
+            "num_blocks": 2,
+            "stride": 1,
+            "expansion": 1
+        },
+        {
+            "layer": "res",
+            "input_hw": [32, 32],
+            "in_planes": 16,
+            "out_planes": 32,
+            "num_blocks": 2,
+            "stride": 2,
+            "expansion": 1
+        },
+        {
+            "layer": "res",
+            "input_hw": [16, 16],
+            "in_planes": 32,
+            "out_planes": 64,
+            "num_blocks": 2,
+            "stride": 2,
+            "expansion": 1
+        },
+        {
+            "layer": "res",
+            "input_hw": [8, 8],
+            "in_planes": 64,
+            "out_planes": 128,
+            "num_blocks": 2,
+            "stride": 2,
+            "expansion": 1
+        },
+        {
+            "layer": "averagepool",
+            "input_hw": [4, 4],
+            "in_channels": 128,
+            "pool_hw": [4, 4],
+            "stride": 1
+        },
+        {
+            "layer": "fc",
+            "input_dim": 128,
+            "output_dim": 10 
+        },
+        {
+            "layer": "relu",
+            "input_dim": 10 
+        }
+    ]
+}

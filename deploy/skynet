@@ -1,0 +1,118 @@
+
+#!/bin/bash
+
+# LAN machines (US East)
+readarray -t LAN_IPS < files/skynet_lan_ips
+LAN_NAMES=(one two three)
+
+# WAN machines (zero in US West, one/two/three in US East)
+readarray -t WAN_IPS < files/skynet_wan_ips
+WAN_NAMES=(one two three)
+
+: ${NETWORK:=files/models/secureml-norelu.json}
+: ${RUN_TYPE:=LAN}
+: ${FLAGS:=""}
+: ${LR_FILE:=files/lr_schedule}
+: ${SEED:=343934585}
+: ${PRELOAD:=""}
+
+NETWORK_NAME=$(basename $NETWORK .json)
+RUN_TIME=$(date '+%m-%d-%Y-%s')
+
+# epochs, batch size, float precision, PC scheme
+: ${OPTION_STRING:=""}
+
+#    if [[ $option == "-DTWOPC" ]]; then
+#        $OPTION_STRING += "-2PC"
+#    elif [[ $option == "-DFOURPC" ]]; then
+#        $OPTION_STRING += "-4PC"
+#    elif [[ $option == "-DONEPC" ]]; then
+#        $OPTION_STRING += "-1PC"
+#    fi
+
+RUN_NAME=$NETWORK_NAME-$OPTION_STRING--$RUN_TIME
+
+FILENAME=output/$RUN_NAME.txt
+echo $FILENAME
+
+printf "model,run type,time,lr file,seed,flags,preload\n" > $FILENAME
+printf "%s,%s,%s,%s,%s,%s,%s\n" $NETWORK_NAME $RUN_TYPE $RUN_TIME $LR_FILE $SEED $FLAGS $PRELOAD >> $FILENAME
+
+# commit current state of repository
+git pull
+git add .
+git commit -m "testing-$NETWORK_NAME-$RUN_TIME"
+git push origin testing
+
+if [[ $RUN_TYPE = LAN ]]; then
+    
+    echo
+    echo "starting LAN experiment > $FILENAME"
+    echo
+
+
+    # update machines with committed code
+    for idx in ${!LAN_IPS[*]}; do
+        CMD="pkill piranha; cd piranha; git pull; make clean; make -j ${LAN_NAMES[$idx]} PIRANHA_FLAGS=\"$FLAGS\" NETWORK=$NETWORK RUN_TYPE=$RUN_TYPE TEST=$TEST LR_FILE=$LR_FILE SEED=$SEED RUN_NAME=$RUN_NAME PRELOAD=$PRELOAD >> $FILENAME"
+        BASH_CMD="bash -ic '$CMD'"
+        echo ssh -i ~/.ssh/id_ed25519 ${LAN_IPS[$idx]} $BASH_CMD
+        ssh -i ~/.ssh/id_ed25519 ${LAN_IPS[$idx]} $BASH_CMD &
+    done
+
+    pkill piranha
+    make clean
+    echo "make -j zero PIRANHA_FLAGS=\"$FLAGS\" NETWORK=$NETWORK RUN_TYPE=$RUN_TYPE TEST=$TEST LR_FILE=$LR_FILE SEED=$SEED RUN_NAME=$RUN_NAME PRELOAD=$PRELOAD >> $FILENAME"
+    make -j zero PIRANHA_FLAGS="$FLAGS" NETWORK=$NETWORK RUN_TYPE=$RUN_TYPE TEST=$TEST LR_FILE=$LR_FILE SEED=$SEED RUN_NAME=$RUN_NAME PRELOAD=$PRELOAD >> $FILENAME
+
+elif [[ $RUN_TYPE = WAN ]]; then
+    
+    echo
+    echo "starting WAN experiment > $FILENAME"
+    echo
+
+
+    # update machines with committed code
+    for idx in ${!WAN_IPS[*]}; do
+        CMD="pkill piranha; cd piranha; git pull; make clean; make -j ${WAN_NAMES[$idx]} PIRANHA_FLAGS=\"$FLAGS\" NETWORK=$NETWORK RUN_TYPE=$RUN_TYPE TEST=$TEST LR_FILE=$LR_FILE SEED=$SEED RUN_NAME=$RUN_NAME PRELOAD=$PRELOAD >> $FILENAME"
+        BASH_CMD="bash -ic '$CMD'"
+        echo ssh -i ~/.ssh/id_ed25519 ${WAN_IPS[$idx]} $BASH_CMD
+        ssh -i ~/.ssh/id_ed25519 ${WAN_IPS[$idx]} $BASH_CMD &
+    done
+
+    pkill piranha
+    make clean
+    echo "make -j zero PIRANHA_FLAGS=\"$FLAGS\" NETWORK=$NETWORK RUN_TYPE=$RUN_TYPE TEST=$TEST LR_FILE=$LR_FILE SEED=$SEED RUN_NAME=$RUN_NAME PRELOAD=$PRELOAD >> $FILENAME"
+    make -j zero PIRANHA_FLAGS="$FLAGS" NETWORK=$NETWORK RUN_TYPE=$RUN_TYPE TEST=$TEST LR_FILE=$LR_FILE SEED=$SEED RUN_NAME=$RUN_NAME PRELOAD=$PRELOAD >> $FILENAME
+
+elif [[ $RUN_TYPE = localhost ]]; then
+
+    echo
+    echo "starting localhost experiment > $FILENAME"
+    echo
+
+    pkill piranha
+    make clean
+    make -j PIRANHA_FLAGS="$FLAGS"
+
+    echo
+    echo "make -j run NETWORK=$NETWORK RUN_TYPE=$RUN_TYPE PIRANHA_FLAGS=\"$FLAGS\" TEST=$TEST LR_FILE=$LR_FILE SEED=$SEED RUN_NAME=$RUN_NAME PRELOAD=$PRELOAD >> $FILENAME"
+    make -j run NETWORK=$NETWORK RUN_TYPE=$RUN_TYPE PIRANHA_FLAGS="$FLAGS" TEST=$TEST LR_FILE=$LR_FILE SEED=$SEED RUN_NAME=$RUN_NAME PRELOAD=$PRELOAD >> $FILENAME
+    #echo "make -j memcheck NETWORK=$NETWORK RUN_TYPE=$RUN_TYPE PIRANHA_FLAGS=\"$FLAGS\" TEST=$TEST LR_FILE=$LR_FILE SEED=$SEED RUN_NAME=$RUN_NAME PRELOAD=$PRELOAD >> $FILENAME"
+    #make -j memcheck NETWORK=$NETWORK RUN_TYPE=$RUN_TYPE PIRANHA_FLAGS="$FLAGS" TEST=$TEST LR_FILE=$LR_FILE SEED=$SEED RUN_NAME=$RUN_NAME PRELOAD=$PRELOAD >> $FILENAME
+
+else
+
+    echo
+	echo "error: RUN_TYPE $RUN_TYPE not found"
+    echo 
+
+    exit 1
+
+fi
+
+echo
+echo "done"
+echo
+
+vim $FILENAME
+

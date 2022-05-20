@@ -1,0 +1,5 @@
+lr 0.1
+Epoch 0, training accuracy 60.218, test accuracy 58.77
+lr 0.09755282581475769
+
+About 3.49 seconds for one epoch over mpc-vm1

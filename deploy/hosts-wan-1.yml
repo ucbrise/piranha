@@ -1,0 +1,11 @@
+---
+
+gcpmachines3:
+  hosts:
+    piranha-7:
+      ansible_host: 34.145.78.220
+    piranha-east-1: 
+      ansible_host: 34.138.216.80
+  vars:
+    ansible_user: shishirpatil
+
