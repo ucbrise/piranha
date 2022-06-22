@@ -16,7 +16,7 @@
 
 #include "Profiler.h"
 
-extern profiler memory_profiler;
+extern Profiler memory_profiler;
 
 // Pre-declare class and friend operator templates
 template<typename T> class DeviceBuffer;
