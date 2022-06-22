@@ -12,6 +12,8 @@
 #include <thrust/device_vector.h>
 #include <vector>
 
+#include "Profiler.h"
+
 #include "DeviceData.h"
 
 template<typename T>
