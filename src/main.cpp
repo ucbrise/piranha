@@ -20,12 +20,15 @@ Precompute PrecomputeObject;
 
 extern Profiler matmul_profiler;
 Profiler func_profiler;
+Profiler memory_profiler;
 
 size_t db_bytes = 0;
 size_t db_layer_max_bytes = 0;
 size_t db_max_bytes = 0;
 
 int main(int argc, char** argv) {
+
+    memory_profiler.start();
 
 /****************************** PREPROCESSING ******************************/ 
 	parseInputs(argc, argv);
