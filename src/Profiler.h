@@ -19,7 +19,7 @@ public:
     void dump_all();
 
     void track_alloc(size_t bytes);
-    void track-free(size_t bytes);
+    void track_free(size_t bytes);
     void tag_mem();
     void dump_mem_tags();
 
