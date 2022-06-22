@@ -20,6 +20,8 @@ DeviceBuffer<T>::DeviceBuffer(size_t n) : hostBuffer(0),
                                         transmitting(false),
                                         data(n) {
     fill(0);
+    memory_profiler.track_alloc(n * sizeof(T));
+    memory_profiler.tag_mem();
 }
 
 template<typename T>
@@ -31,18 +33,23 @@ DeviceBuffer<T>::DeviceBuffer(std::initializer_list<float> il) : hostBuffer(0),
         fixedPointRepr.push_back((T)(f * (1 << FLOAT_PRECISION)));
     }
     thrust::copy(fixedPointRepr.begin(), fixedPointRepr.end(), data.begin());
+
+    memory_profiler.track_alloc(il.size() * sizeof(T));
+    memory_profiler.tag_mem();
 }
 
 template<typename T>
 DeviceBuffer<T>::DeviceBuffer(const DeviceBuffer<T> &b) : hostBuffer(0), 
                                                        transmitting(false),
                                                        data(b.data) {
-    // nothing else
+    memory_profiler.track_alloc(b.size() * sizeof(T));
+    memory_profiler.tag_mem();
 }
 
 template<typename T>
 DeviceBuffer<T>::~DeviceBuffer() {
-    // nothing (for now)
+    memory_profiler.track_free(data.size() * sizeof(T));
+    memory_profiler.tag_mem();
 }
 
 template<typename T>
@@ -52,7 +59,10 @@ size_t DeviceBuffer<T>::size() const {
 
 template<typename T>
 void DeviceBuffer<T>::resize(size_t n) {
+    memory_profiler.track_free(data.size() * sizeof(T));
     data.resize(n);
+    memory_profiler.track_alloc(n * sizeof(T));
+    memory_profiler.tag_mem();
 }
 
 template<typename T>

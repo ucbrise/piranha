@@ -19,8 +19,11 @@ Precompute PrecomputeObject;
 
 extern Profiler matmul_profiler;
 extern Profiler func_profiler;
+Profiler memory_profiler;
 
 int main(int argc, char** argv) {
+
+    memory_profiler.start();
 
 /****************************** PREPROCESSING ******************************/ 
 	parseInputs(argc, argv);

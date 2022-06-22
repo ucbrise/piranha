@@ -14,6 +14,10 @@
 #include <thrust/device_vector.h>
 #include <vector>
 
+#include "Profiler.h"
+
+extern profiler memory_profiler;
+
 // Pre-declare class and friend operator templates
 template<typename T> class DeviceBuffer;
 template<typename T> bool operator==(const DeviceBuffer<T> &lhs, const DeviceBuffer<T> &rhs);
