@@ -131,7 +131,7 @@ int main(int argc, char** argv) {
         cout << net->layers[l]->layer_profiler.get_elapsed_all() << endl;
     }
     */
-    memory_profiler.dump_mem_tags();
+    //memory_profiler.dump_mem_tags();
 
 /****************************** CLEAN-UP ******************************/ 
 	delete aes_indep;
