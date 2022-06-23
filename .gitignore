@@ -3,3 +3,7 @@ piranha.out
 *.swp
 *.swo
 .nfs*
+files/ImageNet/
+files/CIFAR10/
+ext/
+scripts/
