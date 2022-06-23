@@ -18,3 +18,11 @@ files/IP_WAN
 scripts/*cifar-10*
 *.png
 *.ipynb
+experiments/results/fig4
+experiments/results/fig5
+experiments/results/fig6
+experiments/results/fig7
+experiments/results/table2
+experiments/results/table3
+experiments/results/table4
+

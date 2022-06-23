@@ -1,0 +1,16 @@
+n_threads = 8
+  
+def relu(n):
+    a = Array(n, sint)
+    b = Array(n, sint)
+    c = Array(n, sint)
+
+    @for_range(n)
+    def f(i):
+        a[i] = sint(i)
+        b[i] = sint(n-i)
+        c[i] = a[i] > b[i]
+
+
+relu(100)
+

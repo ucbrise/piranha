@@ -1,0 +1,55 @@
+---
+# Run Figure 4 MP-SPDZ microbenchmarks
+# ----
+
+- hosts: all
+  tasks:
+
+  - name: Compile protocols
+    ansible.builtin.shell: "make -j semi2k-party.x; make -j replicated-ring-party.x; make -j rep4-ring-party.x"
+    args:
+      chdir: ~/MP-SPDZ/
+
+  - name: Clean old benchmark out
+    ansible.builtin.shell: "rm -f Programs/Bytecode/mpspdz_bench*; rm -f Programs/Schedules/mpspdz_bench*"
+    args:
+      chdir: ~/MP-SPDZ/
+
+  - name: Copy benchmark to target
+    ansible.builtin.copy:
+      src: "{{ benchmark_name }}.mpc"
+      dest: "~/MP-SPDZ/{{ benchmark_name }}.mpc"
+
+  - name: Compile current benchmark
+    ansible.builtin.shell: "./compile.py -R 64 {{ benchmark_name }}.mpc"
+    args:
+      chdir: ~/MP-SPDZ/
+
+  - name: Copy ip_mpspdz file to target
+    ansible.builtin.copy:
+      src: "ip_mpspdz"
+      dest: "~/MP-SPDZ/ip_mpspdz"
+
+  - name: Get public IP
+    ansible.builtin.shell: "curl http://169.254.169.254/latest/meta-data/public-ipv4"
+    register: external_ip_result
+
+  - name: Convert to party number
+    delegate_to: localhost
+    ansible.builtin.shell: "python get_party_num.py {{ external_ip_result.stdout }} ip_mpspdz"
+    register: party_num_result
+
+  - name: Run benchmark on specified protocol
+    ansible.builtin.shell: "./{{ protocol }} {{ party_num_result.stdout }} {{ benchmark_name}} -ip ip_mpspdz {{ mpspdz_args }} > {{ benchmark_name }}-{{ party_num_result.stdout }}.txt"
+    args:
+      chdir: ~/MP-SPDZ/
+    when: party_num_result.stdout < num_parties
+
+  - name: Copy result back onto our machine
+    ansible.builtin.fetch:
+      src: "~/MP-SPDZ/{{ benchmark_name }}-{{ party_num_result.stdout }}.txt"
+      dest: "../results/fig4/{{ benchmark_name }}-{{ party_num_result.stdout }}.txt"
+    when: party_num_result.stdout < num_parties
+
+
+

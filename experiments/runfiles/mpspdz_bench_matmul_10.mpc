@@ -1,0 +1,9 @@
+def matrix_mult(n):
+    """ Matrix multiplication benchmarks """
+    sfix.set_precision(16, 31)
+    M1 = Matrix(n, n, sfix)
+    M2 = Matrix(n, n, sfix)
+    M1 = M1 * M2
+
+matrix_mult(10)
+

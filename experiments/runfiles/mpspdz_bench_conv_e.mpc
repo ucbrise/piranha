@@ -1,12 +1,3 @@
-n_threads = 8
-  
-def matrix_mult(n):
-    """ Matrix multiplication benchmarks """
-    sfix.set_precision(16, 31)
-    M1 = Matrix(n, n, sfix)
-    M2 = Matrix(n, n, sfix)
-    M1 = M1 * M2
-
 def conv(which_conv):
     """ Convolution benchmarks """
     import ml
@@ -51,48 +42,5 @@ def conv(which_conv):
     opt.layers = layers
     opt.forward(1)
 
+conv('E')
 
-def relu(n):
-    """ Convolution benchmarks """
-    a = Array(n, sint)
-    b = Array(n, sint)
-    c = Array(n, sint)
-
-    # @for_range(n)
-    # def f(i):
-    #     a[i] = sint(i)
-    #     b[i] = sint(n-i)
-
-    # start_timer(1)
-    # @for_range_multithread(n_threads, 1000, n)
-    # def _(i):
-    #     c[i] = a[i] > b[i]
-    # stop_timer(1)
-
-    # start_timer(1)
-    @for_range(n)
-    def f(i):
-        a[i] = sint(i)
-        b[i] = sint(n-i)
-        c[i] = a[i] > b[i]
-    # stop_timer(1)
-
-
-#matrix_mult(10)
-#matrix_mult(30)
-#matrix_mult(50)
-#matrix_mult(100)
-#matrix_mult(300)
-#matrix_mult(1000)
-
-#conv('A')
-#conv('B')
-#conv('C')
-#conv('D')
-#conv('E')
-
-#relu(10)
-#relu(100)
-#relu(1000)
-relu(10000)
-#relu(100000)

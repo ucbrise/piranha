@@ -1,0 +1,51 @@
+---
+# Playbook to run Piranha experiments
+# ----
+# (1) copy the local config file to machines
+# (3) figure out what party we are, make, and run
+# (4) copy back the output file
+#
+# Arguments:
+#   conf - configuration file for experiment
+#   // you need to also pass conf as a json argument file
+#
+
+- hosts: all
+  tasks:
+
+  - name: Copy config file to machines
+    become: yes
+    ansible.builtin.copy:
+      src: "{{ conf }}"
+      dest: "/home/ubuntu/piranha/"
+
+  - name: Get public IP
+    ansible.builtin.shell: "curl http://169.254.169.254/latest/meta-data/public-ipv4"
+    register: external_ip_result
+
+  - name: Convert to party number
+    delegate_to: localhost
+    ansible.builtin.shell: "python get_party_num.py {{ external_ip_result.stdout }} {{ ip_file }}"
+    register: party_num_result
+
+  - name: Build Piranha
+    ansible.builtin.shell: "make clean; make -j PIRANHA_FLAGS=\"-DFLOAT_PRECISION={{ float_precision }} {{ protocol }}\""
+    args:
+      chdir: /home/ubuntu/piranha
+    when: rebuild is defined
+
+  - name: Run Piranha
+    ansible.builtin.shell: "./piranha -p {{ party_num_result.stdout }} -c {{ conf }} --gtest_filter={{ testfilter }} > output/{{ label }}.out"
+    args:
+      chdir: /home/ubuntu/piranha/
+    when: party_num_result.stdout < num_parties
+
+  - name: Copy result back onto our machine
+    ansible.builtin.fetch:
+      src: "/home/ubuntu/piranha/output/{{ label }}.out"
+      dest: "results/{{ fig }}/"
+    when: party_num_result.stdout < num_parties
+
+
+
+

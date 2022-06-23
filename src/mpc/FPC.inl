@@ -575,7 +575,6 @@ void FPC<T, BufferIterator<T> >::resize(size_t n) {
 template<typename T, typename I>
 void dividePublic(FPC<T, I> &a, T denominator) {
 
-    // TODO generate from randomness
     FPC<T> r(a.size()), rPrime(a.size());
     PrecomputeObject.getDividedShares<T, FPC<T> >(r, rPrime, denominator, a.size()); 
     a -= rPrime;
@@ -594,7 +593,6 @@ void dividePublic(FPC<T, I> &a, DeviceData<T, I2> &denominators) {
 
     assert(denominators.size() == a.size() && "FPC dividePublic powers size mismatch");
 
-    // TODO generate from randomness
     FPC<T> r(a.size()), rPrime(a.size());
     PrecomputeObject.getDividedShares<T, I2, FPC<T> >(r, rPrime, denominators, a.size()); 
 
@@ -675,11 +673,8 @@ void selectShare(const FPC<T, I> &x, const FPC<T, I2> &y, const FPC<U, I3> &b, F
 
     assert(x.size() == y.size() && x.size() == b.size() && x.size() == z.size() && "FPC selectShare input size mismatch");
 
-    // TODO XXX use precomputation randomness XXX TODO
     FPC<T> c(x.size());
-    c.zero();
     FPC<U> cbits(b.size());
-    cbits.zero();
 
     // b XOR c, then open -> e
     cbits ^= b;
@@ -936,13 +931,8 @@ void dReLU(const FPC<T, I> &input, FPC<U, I2> &result) {
 
     int bitWidth = sizeof(T) * 8;
 
-    // TODO move most code to pre-processing 
     FPC<T> r(input.size());
-    r.zero();
-
     FPC<U> rbits(input.size() * bitWidth);
-    // XXX fix
-    //  rbits = (U)1 - rbits; // element-wise subtract bits
     rbits.fill(1);
 
     DeviceData<T> a(input.size());
@@ -1004,9 +994,7 @@ void ReLU(const FPC<T, I> &input, FPC<T, I2> &result, FPC<U, I3> &dresult) {
     dReLU(input, dresult);
     //func_profiler.accumulate("relu-drelu");
 
-    // TODO XXX randomness use XXX TODO
     FPC<T> zeros(input.size());
-    zeros.zero();
 
     //func_profiler.start();
     selectShare(zeros, input, dresult, result);
@@ -1207,10 +1195,7 @@ void reshareFPC(DeviceData<T, I> &z, DeviceData<T, I2> &zPrime, int partyI, int 
         // auto shareG = FPC<T>::shareG(partyI, partyJ);
         auto shareH = FPC<T>::shareH(partyI, partyJ, partyNum);
 
-        // TODO XXX use precomputation randomness XXX TODO
-        // This will be PRG(partyG) ≡ PRG shared by partyI, partyJ, partyH
         DeviceData<T> rndMask(z.size());
-        rndMask.fill(0); 
 
         if (FPC<T>::areOpposites(partyI, partyJ) )
         {

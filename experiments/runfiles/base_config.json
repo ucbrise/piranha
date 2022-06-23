@@ -1,0 +1,112 @@
+{
+    "_desc_num_parties": "Number of parties involved in the MPC computation. Should match compiled application protocol.",
+    "num_parties": 0,
+
+    "_desc_party_ips": "IP addresses of each party, ordered by party number",
+    "party_ips": [],
+
+    "_desc_party_users": "Usernames for each party, ordered by party number. Mostly used to SSH into machines if necessary to start piranha processes",
+    "party_users": [],
+
+    "_desc_run_unit_tests": "Run unit tests",
+    "run_unit_tests": false,
+
+    "_desc_unit_test_only": "Only run unit tests, do not try to run any full Piranha applications",
+    "unit_test_only": false,
+
+    "_desc_debug_print": "Show debug output",
+    "debug_print": false,
+
+    "_desc_debug_overflow": "Test for overflow and print related debug output. Breaks security by revealing intermediary values.",
+    "debug_overflow": false,
+
+    "_desc_debug_sqrt": "Test sqrt for invalid input and print related debug output. Breaks security by revealing intermediary values.",
+    "debug_sqrt": false,
+
+    "_desc_run_name": "Descriptive name for run, used to name log files with something useful",
+    "run_name": "",
+
+    "_desc_network": "Path to NN architecture to use for the run",
+    "network": "",
+
+    "_desc_custom_epochs": "Enable custom number of epochs. Otherwise set by size of learning rate schedule",
+    "custom_epochs": false,
+
+    "_desc_custom_epoch_count": "Number of epochs to train for, if custom_epochs is set",
+    "custom_epoch_count": 0,
+
+    "_desc_custom_iterations": "Enable custom number of iterations. Otherwise set by training dataset size.",
+    "custom_iterations": false,
+
+    "_desc_custom_iteration_count": "Number of iterators to train per epoch, if custom_iterations is set",
+    "custom_iteration_count": 0,
+
+    "_desc_custom_batch_size": "Enable custom batch size. Otherwise set by architecture configuration.",
+    "custom_batch_size": false,
+
+    "_desc_custom_batch_size_count": "Desired custom batch size",
+    "custom_batch_size_count": 0,
+
+    "_desc_nn_seed": "Seed for NN initialization",
+    "nn_seed": 343934585,
+
+    "_desc_preload": "Preload weights from a snapshot directory instead of training from scratch",
+    "preload": false,
+
+    "_desc_preload_path": "Directory path from which to preload network weights",
+    "preload_path": "",
+
+    "_desc_lr_schedule": "Learning rate schedule, in negative powers of 2 (e.g. 3 -> learning rate of 2^-3). Assumes that the number of LR exponents matches the desired number of training epochs",
+    "lr_schedule": [3, 3, 3, 4, 4, 5, 6, 7, 8, 9],
+
+    "_desc_test_only": "Only run NN test, skip training (useful if weights have been preloaded)",
+    "test_only": false,
+
+    "_desc_inference_only": "Only run inference (forward pass), not backward pass training",
+    "inference_only": false,
+
+    "_desc_no_test": "Do not run testing after training epochs",
+    "no_test": false,
+
+    "_desc_last_test": "Only run a test pass after the last training epoch",
+    "last_test": false,
+
+    "_desc_iteration_snapshots": "Take snapshots at each training iteration",
+    "iteration_snapshots": false,
+
+    "_desc_test_iteration_snapshots": "Take snapshots of a '1PC' test network running the same data",
+    "test_iteration_snapshots": false,
+
+    "_desc_epoch_snapshots": "Take snapshots after each training epoch",
+    "epoch_snapshots": false,
+
+    "_desc_eval_accuracy": "Evaluation: print training/test accuracy",
+    "eval_accuracy": false,
+
+    "_desc_eval_inference_stats": "Evaluation: print runtime and communication statistics for each inference forward pass",
+    "eval_inference_stats": false,
+
+    "_desc_eval_train_stats": "Evaluation: print runtime and communication statistics for each training forward-backward pass",
+    "eval_train_stats": false,
+
+    "_desc_eval_fw_peak_memory": "Evaluation: print peak memory usage during each forward pass",
+    "eval_fw_peak_memory": false,
+
+    "_desc_eval_bw_peak_memory": "Evaluation: print peak memory usage during each backward pass",
+    "eval_bw_peak_memory": false,
+    
+    "_desc_eval_epoch_stats": "Evaluation: print runtime and communication statistics for each training epoch",
+    "eval_epoch_stats": false,
+
+    "_desc_print_activations": "Print output activations for each layer every forward pass",
+    "print_activations": false,
+
+    "_desc_print_deltas": "Print input gradient to each layer every backward pass",
+    "print_deltas": false,
+    
+    "_desc_debug_all_forward": "Print debug information for all layer forward passes",
+    "debug_all_forward": false,
+
+    "_desc_debug_all_backward": "Print debug information for all layer backward passes",
+    "debug_all_backward": false
+}

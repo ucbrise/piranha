@@ -370,7 +370,6 @@ void TPC<T, BufferIterator<T> >::resize(size_t n) {
 template<typename T, typename I>
 void dividePublic(TPC<T, I> &a, T denominator) {
 
-    // TODO generate from randomness
     TPC<T> r(a.size()), rPrime(a.size());
     PrecomputeObject.getDividedShares<T, TPC<T> >(r, rPrime, denominator, a.size()); 
     a -= rPrime;
@@ -389,7 +388,6 @@ void dividePublic(TPC<T, I> &a, DeviceData<T, I2> &denominators) {
 
     assert(denominators.size() == a.size() && "TPC dividePublic powers size mismatch");
 
-    // TODO generate from randomness
     TPC<T> r(a.size()), rPrime(a.size());
     PrecomputeObject.getDividedShares<T, I2, TPC<T> >(r, rPrime, denominators, a.size()); 
 
@@ -590,11 +588,8 @@ void selectShare(const TPC<T, I> &x, const TPC<T, I2> &y, const TPC<U, I3> &b, T
     assert(x.size() == y.size() && x.size() == b.size() && x.size() == z.size() && "TPC selectShare input size mismatch");
 
     //TO_BE_DONE
-    // TODO XXX use precomputation randomness XXX TODO
     TPC<T> c(x.size());
-    c.zero();
     TPC<U> cbits(b.size());
-    cbits.zero();
 
     // b XOR c, then open -> e
     cbits ^= b;
@@ -836,13 +831,8 @@ void dReLU(const TPC<T, I> &input, TPC<U, I2> &result) {
     //TO_BE_DONE
     int bitWidth = sizeof(T) * 8;
 
-    // TODO move most code to pre-processing 
     TPC<T> r(input.size());
-    r.zero();
-
     TPC<U> rbits(input.size() * bitWidth);
-    // XXX fix
-    //  rbits = (U)1 - rbits; // element-wise subtract bits
     rbits.fill(1);
 
     DeviceData<T> a(input.size());
@@ -886,9 +876,7 @@ void ReLU(const TPC<T, I> &input, TPC<T, I2> &result, TPC<U, I3> &dresult) {
     dReLU(input, dresult);
     //func_profiler.accumulate("relu-drelu");
 
-    // TODO XXX randomness use XXX TODO
     TPC<T> zeros(input.size());
-    zeros.zero();
 
     //func_profiler.start();
     selectShare(zeros, input, dresult, result);

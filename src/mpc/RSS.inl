@@ -422,7 +422,6 @@ void RSS<T, BufferIterator<T> >::resize(size_t n) {
 template<typename T, typename I>
 void dividePublic(RSS<T, I> &a, T denominator) {
 
-    // TODO generate from randomness
     RSS<T> r(a.size()), rPrime(a.size());
     PrecomputeObject.getDividedShares<T, RSS<T> >(r, rPrime, denominator, a.size()); 
     a -= rPrime;
@@ -441,7 +440,6 @@ void dividePublic(RSS<T, I> &a, DeviceData<T, I2> &denominators) {
 
     assert(denominators.size() == a.size() && "RSS dividePublic powers size mismatch");
 
-    // TODO generate from randomness
     RSS<T> r(a.size()), rPrime(a.size());
     PrecomputeObject.getDividedShares<T, I2, RSS<T> >(r, rPrime, denominators, a.size()); 
 
@@ -546,11 +544,8 @@ void selectShare(const RSS<T, I> &x, const RSS<T, I2> &y, const RSS<U, I3> &b, R
 
     assert(x.size() == y.size() && x.size() == b.size() && x.size() == z.size() && "RSS selectShare input size mismatch");
 
-    // TODO XXX use precomputation randomness XXX TODO
     RSS<T> c(x.size());
-    c.zero();
     RSS<U> cbits(b.size());
-    cbits.zero();
 
     // b XOR c, then open -> e
     cbits ^= b;
@@ -813,13 +808,9 @@ void dReLU(const RSS<T, I> &input, RSS<U, I2> &result) {
 
     int bitWidth = sizeof(T) * 8;
 
-    // TODO move most code to pre-processing 
     RSS<T> r(input.size());
-    r.zero();
 
     RSS<U> rbits(input.size() * bitWidth);
-    // XXX fix
-    //  rbits = (U)1 - rbits; // element-wise subtract bits
     rbits.fill(1);
 
     DeviceData<T> a(input.size());
@@ -866,9 +857,7 @@ void ReLU(const RSS<T, I> &input, RSS<T, I2> &result, RSS<U, I3> &dresult) {
     dReLU(input, dresult);
     //func_profiler.accumulate("relu-drelu");
 
-    // TODO XXX randomness use XXX TODO
     RSS<T> zeros(input.size());
-    zeros.zero();
 
     //func_profiler.start();
     selectShare(zeros, input, dresult, result);
@@ -1066,10 +1055,7 @@ void reshare(DeviceData<T, I> &c, RSSBase<T, I2> &out) {
     auto next = RSS<T>::nextParty(partyNum);
     auto prev = RSS<T>::prevParty(partyNum);
 
-    // TODO XXX use precomputation randomness XXX TODO
     DeviceData<T> rndMask(c.size());
-    rndMask.fill(0); 
-
     rndMask += c;
 
     // jank equivalent to =

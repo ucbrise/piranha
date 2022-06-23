@@ -1,0 +1,12 @@
+---
+# Simple playbook to rebuild Piranha
+# ----
+
+- hosts: all
+  tasks:
+
+  - name: Build Piranha
+    ansible.builtin.shell: "make clean; make -j PIRANHA_FLAGS=\"-DFLOAT_PRECISION={{ float_precision }} {{ protocol }}\""
+    args:
+      chdir: /home/ubuntu/piranha
+

@@ -1,0 +1,22 @@
+{
+    "lan": {
+        "secureml-computation": [123.021, 116.355, 145.854],
+        "secureml-communication": [89.816, 62.176, 936.709],
+        "lenet-computation": [385.645, 359.867, 655.87],
+        "lenet-communication": [852.809, 519.811, 1603.504],
+        "alexnet-computation": [672.456, 627.283, 1243.329],
+        "alexnet-communication": [1158.498, 960.215, 1847.189],
+        "vgg16-computation": [462.186, 402.913, 869.525],
+        "vgg16-communication": [1938.409, 2197.705, 2788.505]
+    },
+    "wan": {
+        "secureml-computation": [72.876, 53.186, 148.975],
+        "secureml-communication": [3609.076, 2148.335, 5201.945],
+        "lenet-computation": [376.141, 301.378, 676.082],
+        "lenet-communication": [8651.332, 5378.626, 16058.791],
+        "alexnet-computation": [661.385, 578.957, 1268.737],
+        "alexnet-communication": [14950.726, 8613.061, 21893.229],
+        "vgg16-computation": [431.829, 364.757, 930.489],
+        "vgg16-communication": [30574.327, 17074.803, 45681.835]
+    }
+}

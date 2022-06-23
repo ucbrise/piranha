@@ -8,9 +8,38 @@ Piranha is described in more detail in our USENIX Security '22 paper: {Link comi
 
 This repo currently includes a secure ML inference and training application, which you can find in `/nn`.
 
-## Build
+## Artifact Evaluation
 
-> (Note; some of these instructions are fairly incomplete and will be updated in the near future :) ).
+For our experiments, we use a cluser of AWS GPU-provisioned machines. Reviewers should have credentials to access the environment, but due to resource limits, we can only support one reviewer evaluating at a time. You can run Piranha to regenerate Figures 4, 5, 6, and 7, as well as Tables 2, 3, and 4.
+
+Evaluation runs through `experiments/run_experiment.py`, which should be executed on the control instance we provide with the required dependencies. Here are the relevant options:
+
+```
+usage: run_experiment.py [-h] [--start] [--stop] [--figure FIGURE] [--table TABLE] [--fast] [--verbose]
+
+Run artifact evaluation!
+
+optional arguments:
+  -h, --help       show this help message and exit
+  --start          Provision cluster for experiments. _Please suspend the cluster while not running experiments :)_
+  --stop           Suspend evaluation machines.
+  --figure FIGURE  Figure # to run.
+  --table TABLE    Table # to run.
+  --fast           Run all the (relatively) fast runs, see README for more information
+  --verbose        Display verbose run commands, helpful for debugging
+```
+
+* You can start and stop the cluster with `--start` and `--stop`, respectively. Please use these if you're not running evaluation! GPU instances are not cheap and cost about $450/day to keep running.
+
+* Use the `--figure` and `--table` flags to run data generation for each of the paper's figures/tables. They're fairly automatic and should run without intervention. 
+
+(As of 6/23, code to make the process of comparing raw results with table figures is sorely lacking. Coming to the repo a few days after? Update to the latest state of `main` to get the full monty.)
+
+* **Very important note on timing.** Unfortunately, MPC still requires a significant amount of time (~30 hrs/training run) on a larger network like VGG16. A conservative estimate is that for Figure 5 alone, > 270 computation-hours are required to replicate the full figure. We've included a `--fast` flag if you'd like to replicate every other datapoint first (will still require a number of compute-hours), then come back to the VGG-based values.
+
+* Use `--verbose` if something isn't working and you want to take a look at the raw output. In the backend, we use Ansible to communicate with each of the machines in the cluster.
+
+## Build
 
 Assumes that you have CUDA drivers/toolkit installed.
 
