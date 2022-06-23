@@ -24,7 +24,7 @@ DATASET	:= ImageNet# Dataset {MNIST, CIFAR10, and ImageNet}
 SECURITY:= Semi-honest# Security {Semi-honest or Malicious} 
 #########################################################################################
 
-all: $(BUILDDIR) BMRPassive.out
+all: $(BUILDDIR) piranha.out
 
 $(BUILDDIR):
 	mkdir -p $@
@@ -32,7 +32,7 @@ $(BUILDDIR):
 	echo $(SRC_CU_FILES)
 	echo $(OBJ_FILES)
 
-BMRPassive.out: $(OBJ_FILES)
+piranha.out: $(OBJ_FILES)
 	$(CXX) $(FLAGS) -o $@ $(OBJ_FILES) $(BMR_INCLUDES) $(LIBS)
 
 $(BUILDDIR)/%.o: %.cpp $(HEADER_FILES)
@@ -42,46 +42,46 @@ $(BUILDDIR)/%.o: %.cu $(HEADER_FILES)
 	$(CXX) $(FLAGS) -c $< -o $@ $(OBJ_INCLUDES)
 
 clean:
-	rm -rf BMRPassive.out
+	rm -rf piranha.out
 	rm -rf $(BUILDDIR)
 
 ################################# Remote runs ##########################################
-terminal: BMRPassive.out
-	./BMRPassive.out 2 files/IP_$(RUN_TYPE) files/keyC files/keyAC files/keyBC $(NETWORK) $(DATASET) $(SECURITY) >/dev/null 2>&1 &
-	./BMRPassive.out 1 files/IP_$(RUN_TYPE) files/keyB files/keyBC files/keyAB $(NETWORK) $(DATASET) $(SECURITY) >/dev/null 2>&1 &
-	./BMRPassive.out 0 files/IP_$(RUN_TYPE) files/keyA files/keyAB files/keyAC $(NETWORK) $(DATASET) $(SECURITY)
+terminal: piranha.out
+	./piranha.out 2 files/IP_$(RUN_TYPE) files/keyC files/keyAC files/keyBC $(NETWORK) $(DATASET) $(SECURITY) >/dev/null 2>&1 &
+	./piranha.out 1 files/IP_$(RUN_TYPE) files/keyB files/keyBC files/keyAB $(NETWORK) $(DATASET) $(SECURITY) >/dev/null 2>&1 &
+	./piranha.out 0 files/IP_$(RUN_TYPE) files/keyA files/keyAB files/keyAC $(NETWORK) $(DATASET) $(SECURITY)
 	@echo "Execution completed"
 
-gdb: BMRPassive.out
-	./BMRPassive.out 2 files/IP_$(RUN_TYPE) files/keyC files/keyAC files/keyBC $(NETWORK) $(DATASET) $(SECURITY) >/dev/null 2>&1 &
-	./BMRPassive.out 1 files/IP_$(RUN_TYPE) files/keyB files/keyBC files/keyAB $(NETWORK) $(DATASET) $(SECURITY) >/dev/null 2>&1 &
-	cuda-gdb --args ./BMRPassive.out 0 files/IP_$(RUN_TYPE) files/keyA files/keyAB files/keyAC $(NETWORK) $(DATASET) $(SECURITY)
+gdb: piranha.out
+	./piranha.out 2 files/IP_$(RUN_TYPE) files/keyC files/keyAC files/keyBC $(NETWORK) $(DATASET) $(SECURITY) >/dev/null 2>&1 &
+	./piranha.out 1 files/IP_$(RUN_TYPE) files/keyB files/keyBC files/keyAB $(NETWORK) $(DATASET) $(SECURITY) >/dev/null 2>&1 &
+	cuda-gdb --args ./piranha.out 0 files/IP_$(RUN_TYPE) files/keyA files/keyAB files/keyAC $(NETWORK) $(DATASET) $(SECURITY)
 	@echo "Execution completed"
 
-file: BMRPassive.out
-	./BMRPassive.out 2 files/IP_$(RUN_TYPE) files/keyC files/keyAC files/keyBC >/dev/null &
-	./BMRPassive.out 1 files/IP_$(RUN_TYPE) files/keyB files/keyBC files/keyAB >/dev/null &
-	./BMRPassive.out 0 files/IP_$(RUN_TYPE) files/keyA files/keyAB files/keyAC >output/3PC.txt
+file: piranha.out
+	./piranha.out 2 files/IP_$(RUN_TYPE) files/keyC files/keyAC files/keyBC >/dev/null &
+	./piranha.out 1 files/IP_$(RUN_TYPE) files/keyB files/keyBC files/keyAB >/dev/null &
+	./piranha.out 0 files/IP_$(RUN_TYPE) files/keyA files/keyAB files/keyAC >output/3PC.txt
 	@echo "Execution completed"
 
-valg: BMRPassive.out 
-	./BMRPassive.out 2 files/IP_$(RUN_TYPE) files/keyC files/keyAC files/keyBC >/dev/null &
-	./BMRPassive.out 1 files/IP_$(RUN_TYPE) files/keyB files/keyBC files/keyAB >/dev/null &
-	valgrind --tool=memcheck --leak-check=full --track-origins=yes --dsymutil=yes ./BMRPassive.out 0 files/IP_$(RUN_TYPE) files/keyA files/keyAB files/keyAC
+valg: piranha.out 
+	./piranha.out 2 files/IP_$(RUN_TYPE) files/keyC files/keyAC files/keyBC >/dev/null &
+	./piranha.out 1 files/IP_$(RUN_TYPE) files/keyB files/keyBC files/keyAB >/dev/null &
+	valgrind --tool=memcheck --leak-check=full --track-origins=yes --dsymutil=yes ./piranha.out 0 files/IP_$(RUN_TYPE) files/keyA files/keyAB files/keyAC
 
-command: BMRPassive.out
-	./BMRPassive.out 2 files/IP_$(RUN_TYPE) files/keyC files/keyAC files/keyBC $(NETWORK) $(DATASET) $(SECURITY) >/dev/null 2>&1 &
-	./BMRPassive.out 1 files/IP_$(RUN_TYPE) files/keyB files/keyBC files/keyAB $(NETWORK) $(DATASET) $(SECURITY) >/dev/null 2>&1 &
-	./BMRPassive.out 0 files/IP_$(RUN_TYPE) files/keyA files/keyAB files/keyAC $(NETWORK) $(DATASET) $(SECURITY) 
+command: piranha.out
+	./piranha.out 2 files/IP_$(RUN_TYPE) files/keyC files/keyAC files/keyBC $(NETWORK) $(DATASET) $(SECURITY) >/dev/null 2>&1 &
+	./piranha.out 1 files/IP_$(RUN_TYPE) files/keyB files/keyBC files/keyAB $(NETWORK) $(DATASET) $(SECURITY) >/dev/null 2>&1 &
+	./piranha.out 0 files/IP_$(RUN_TYPE) files/keyA files/keyAB files/keyAC $(NETWORK) $(DATASET) $(SECURITY) 
 	@echo "Execution completed"
 #########################################################################################
 
-zero: BMRPassive.out
-	./BMRPassive.out 0 files/IP_$(RUN_TYPE) files/keyA files/keyAB files/keyAC $(NETWORK) $(DATASET) $(SECURITY)
+zero: piranha.out
+	./piranha.out 0 files/IP_$(RUN_TYPE) files/keyA files/keyAB files/keyAC $(NETWORK) $(DATASET) $(SECURITY)
 
-one: BMRPassive.out
-	./BMRPassive.out 1 files/IP_$(RUN_TYPE) files/keyB files/keyBC files/keyAB $(NETWORK) $(DATASET) $(SECURITY)
+one: piranha.out
+	./piranha.out 1 files/IP_$(RUN_TYPE) files/keyB files/keyBC files/keyAB $(NETWORK) $(DATASET) $(SECURITY)
 
-two: BMRPassive.out
-	./BMRPassive.out 2 files/IP_$(RUN_TYPE) files/keyC files/keyAC files/keyBC $(NETWORK) $(DATASET) $(SECURITY)
+two: piranha.out
+	./piranha.out 2 files/IP_$(RUN_TYPE) files/keyC files/keyAC files/keyBC $(NETWORK) $(DATASET) $(SECURITY)
 
