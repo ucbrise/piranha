@@ -10,12 +10,17 @@
     args:
       chdir: /home/ubuntu/piranha
 
-  - name: Compile
-    ansible.buildin.shell: "make clean; make -j"
+  - name: Pull any changes
+    ansible.builtin.shell: "git pull"
     args:
       chdir: /home/ubuntu/piranha
 
-  - name: Copy ip_mpspdz file to target
+  - name: Compile
+    ansible.builtin.shell: "make clean; make -j"
+    args:
+      chdir: /home/ubuntu/piranha
+
+  - name: Copy ip file to target
     ansible.builtin.copy:
       src: "ip_piranha"
       dest: "/home/ubuntu/piranha/files/IP_LAN"
@@ -30,27 +35,37 @@
     register: party_num_result
 
   - name: Run zero
-    ansible.buildin.shell: "make zero > {{ label }}.out"
+    ansible.builtin.shell: "make zero > {{ label }}.out"
     args:
       chdir: /home/ubuntu/piranha
-    when: party_num_result.stdout == 0
+    async: 500
+    poll: 0
+    when: party_num_result.stdout == "0"
 
   - name: Run one
-    ansible.buildin.shell: "make one"
+    ansible.builtin.shell: "make one > {{ label }}.out"
     args:
       chdir: /home/ubuntu/piranha
-    when: party_num_result.stdout == 1
+    async: 500
+    poll: 0
+    when: party_num_result.stdout == "1"
 
   - name: Run two
-    ansible.buildin.shell: "make two"
+    ansible.builtin.shell: "make two > {{ label }}.out"
     args:
       chdir: /home/ubuntu/piranha
-    when: party_num_result.stdout == 2
+    async: 500
+    poll: 0
+    when: party_num_result.stdout == "2"
+
+  - name: Wait for run to finish
+    ansible.builtin.pause:
+      seconds: 90
 
   - name: Copy result back onto our machine
     ansible.builtin.fetch:
       src: "/home/ubuntu/piranha/{{ label }}.out"
-      dest: "../results/fig7/{{ label }}.out"
+      dest: "../results/fig7/"
     when: party_num_result.stdout < num_parties
 
   - name: Check out back to main for other experiments

@@ -1,13 +1,6 @@
 ---
-# Playbook to run Piranha experiments
+# Playbook to run Table 3 experiment, which needs nvidia-smi loggin in the background
 # ----
-# (1) copy the local config file to machines
-# (3) figure out what party we are, make, and run
-# (4) copy back the output file
-#
-# Arguments:
-#   conf - configuration file for experiment
-#   // you need to also pass conf as a json argument file
 #
 
 - hosts: all
@@ -34,10 +27,22 @@
       chdir: /home/ubuntu/piranha
     when: rebuild is defined
 
-  - name: Run Piranha
-    ansible.builtin.shell: "./piranha -p {{ party_num_result.stdout }} -c {{ conf }} --gtest_filter={{ testfilter }} > output/{{ label }}.out"
+  - name: Start nvidia-smi memory logging
+    ansible.builtin.shell: "nvidia-smi -lms 1 --query-gpu=memory.used --format=csv,noheader > output/{{ label }}.out"
     args:
       chdir: /home/ubuntu/piranha/
+    async: 1000
+    poll: 0
+    when: party_num_result.stdout < num_parties
+
+  - name: Run Piranha
+    ansible.builtin.shell: "./piranha -p {{ party_num_result.stdout }} -c {{ conf }} --gtest_filter={{ testfilter }}"
+    args:
+      chdir: /home/ubuntu/piranha/
+    when: party_num_result.stdout < num_parties
+
+  - name: Kill nvidia-smi
+    ansible.builtin.shell: "killall nvidia-smi -q"
     when: party_num_result.stdout < num_parties
 
   - name: Copy result back onto our machine
@@ -45,6 +50,7 @@
       src: "/home/ubuntu/piranha/output/{{ label }}.out"
       dest: "../results/{{ fig }}/"
     when: party_num_result.stdout < num_parties
+
 
 
 

@@ -3,10 +3,10 @@ DEBUG_BINARY=piranha-debug
 BUILD_DIR=build
 DEBUG_DIR=debug
 
-CUDA_VERSION=10.0
+CUDA_VERSION=11.5
 CUTLASS_PATH=ext/cutlass
 
-CXX=nvcc
+CXX=/usr/local/cuda-$(CUDA_VERSION)/bin/nvcc
 FLAGS := -Xcompiler="-O3,-w,-std=c++14,-pthread,-msse4.1,-maes,-msse2,-mpclmul,-fpermissive,-fpic,-pthread" -Xcudafe "--diag_suppress=declared_but_not_referenced"
 DEBUG_FLAGS := -Xcompiler="-O0,-g,-w,-std=c++14,-pthread,-msse4.1,-maes,-msse2,-mpclmul,-fpermissive,-fpic,-pthread" -Xcudafe "--diag_suppress=declared_but_not_referenced"
 

@@ -40,7 +40,7 @@
     register: party_num_result
 
   - name: Run benchmark on specified protocol
-    ansible.builtin.shell: "./{{ protocol }} {{ party_num_result.stdout }} {{ benchmark_name}} -ip ip_mpspdz {{ mpspdz_args }} > {{ benchmark_name }}-{{ party_num_result.stdout }}.txt"
+    ansible.builtin.shell: "./{{ protocol }} {{ party_num_result.stdout }} {{ benchmark_name}} -ip ip_mpspdz {{ mpspdz_args }} > {{ benchmark_name }}-{{ party_num_result.stdout }}.txt 2>&1"
     args:
       chdir: ~/MP-SPDZ/
     when: party_num_result.stdout < num_parties
@@ -48,7 +48,7 @@
   - name: Copy result back onto our machine
     ansible.builtin.fetch:
       src: "~/MP-SPDZ/{{ benchmark_name }}-{{ party_num_result.stdout }}.txt"
-      dest: "../results/fig4/{{ benchmark_name }}-{{ party_num_result.stdout }}.txt"
+      dest: "../results/fig4/"
     when: party_num_result.stdout < num_parties
 
 
