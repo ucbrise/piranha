@@ -15,7 +15,7 @@ For our experiments, we use a cluser of AWS GPU-provisioned machines. Reviewers 
 Evaluation runs through `experiments/run_experiment.py`, which should be executed on the control instance we provide with the required dependencies. Here are the relevant options:
 
 ```
-usage: run_experiment.py [-h] [--start] [--stop] [--figure FIGURE] [--table TABLE] [--fast] [--verbose]
+usage: run_experiment.py [-h] [--start] [--stop] [--figure FIGURE] [--table TABLE] [--generate] [--fast] [--verbose]
 
 Run artifact evaluation!
 
@@ -25,6 +25,7 @@ optional arguments:
   --stop           Suspend evaluation machines.
   --figure FIGURE  Figure # to run.
   --table TABLE    Table # to run.
+  --generate       Generate figure/table images.
   --fast           Run all the (relatively) fast runs, see README for more information
   --verbose        Display verbose run commands, helpful for debugging
 ```
@@ -33,11 +34,11 @@ optional arguments:
 
 * Use the `--figure` and `--table` flags to run data generation for each of the paper's figures/tables. They're fairly automatic and should run without intervention. 
 
-(As of 6/23, code to make the process of comparing raw results with table figures is sorely lacking. Coming to the repo a few days after? Update to the latest state of `main` to get the full monty.)
+* Generate each figure/table with the `--generate` flag. You can run the evaluation script on partial results and the results will reflect those partial values. Figures generate `.png` files in `artifact_figures/artifact` while table replication generates JSON. You can compare to the paper figures/tables generated into `artifact_figures/paper` from hardcoded data.
 
 * **Very important note on timing.** Unfortunately, MPC still requires a significant amount of time (~30 hrs/training run) on a larger network like VGG16. A conservative estimate is that for Figure 5 alone, > 270 computation-hours are required to replicate the full figure. We've included a `--fast` flag if you'd like to replicate every other datapoint first (will still require a number of compute-hours), then come back to the VGG-based values.
 
-* Use `--verbose` if something isn't working and you want to take a look at the raw output. In the backend, we use Ansible to communicate with each of the machines in the cluster.
+* Use `--verbose` if something isn't working and you want to take a look at the raw output or need an error message. In the backend, we use Ansible to communicate with each of the machines in the cluster.
 
 ## Build
 
