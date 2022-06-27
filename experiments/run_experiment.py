@@ -275,8 +275,8 @@ def run_fig4(ips, fast, verbose):
         for ip in mpspdz_ips:
             print(ip, file=f)
 
-    for (protocol, num_parties) in fig4_mpspdz_protocols:
-        for benchmark in tqdm(glob.glob('runfiles/mpspdz_bench*.mpc'), desc='MP-SPDZ microbenchmarks'):
+    for (protocol, num_parties) in tqdm(fig4_mpspdz_protocols, desc='Figure 4 | Protocol'):
+        for benchmark in tqdm(glob.glob('runfiles/mpspdz_bench*.mpc'), desc='Microbenchmarks'):
             benchmark = os.path.basename(os.path.splitext(benchmark)[0])
 
             if fast and benchmark == 'mpspdz_bench_conv_e': # if we're trying to go fast, ignore the really slow convolution
@@ -301,15 +301,13 @@ fig5_FPs = [10, 12, 14, 16, 18, 20, 22, 24, 26]
 fig5_networks = [
     MODEL_PATH+'secureml-norelu.json',
     MODEL_PATH+'lenet-norelu-avgpool.json',
-    MODEL_PATH+'alexnet-cifar10-norelu',
-    MODEL_PATH+'vgg16-cifar10-norelu'
+    MODEL_PATH+'alexnet-cifar10-norelu.json',
+    MODEL_PATH+'vgg16-cifar10-norelu.json'
 ]
 fig5_protocol = ('', 3)    # 3PC/Falcon
 fig5_config = {
     'custom_epochs': True,
-    'custom_epoch_count': 1, # XXX: 10
-    'custom_iterations': True, # XXX: DELETE
-    'custom_iteration_count': 1, # XXX: DELETE
+    'custom_epoch_count': 10,
     'custom_batch_size': True,
     'custom_batch_size_count': 128,
     'no_test': True,
@@ -322,15 +320,17 @@ def run_fig5(ips, fast, verbose):
     lan_ips, _, _ = ips
 
     # Run and retrieve Piranha training accuracies -> results/fig5
-    for network in tqdm(fig5_networks, desc='Networks'):
+    for fp in tqdm(fig5_FPs, desc='Figure 5 | Fixed point precision'):
+        rebuild_piranha('lan', fig5_protocol[0], fp, verbose)
 
-        if fast and 'vgg16' in network:
-            continue #skip the reaaaaally slow VGG if we're in a hurry
+        for network in tqdm(fig5_networks, desc='Network'):
 
-        for fp in tqdm(fig5_FPs, desc='Fixed point precision'):
+            if fast and 'vgg16' in network:
+                continue #skip the reaaaaally slow VGG if we're in a hurry
+
             run_piranha_experiment(
                 'lan', lan_ips, fig5_protocol[0], fig5_protocol[1], fp, fig5_config,
-                network, 'fig5', verbose, rebuild=True, label='fig5-{}-fp{}'.format(network.split('/')[-1], fp)
+                network, 'fig5', verbose, rebuild=False, label='fig5-{}-fp{}'.format(network.split('/')[-1], fp)
             )
 
 
@@ -340,8 +340,8 @@ fig6_FP = 26
 fig6_networks = [
     MODEL_PATH+'secureml-norelu.json',
     MODEL_PATH+'lenet-norelu-avgpool.json',
-    MODEL_PATH+'alexnet-cifar10-norelu',
-    MODEL_PATH+'vgg16-cifar10-norelu'
+    MODEL_PATH+'alexnet-cifar10-norelu.json',
+    MODEL_PATH+'vgg16-cifar10-norelu.json'
 ]
 fig6_settings = ['lan', 'wan']
 fig6_protocols = [
@@ -355,7 +355,7 @@ fig6_config = {
     'custom_iterations': True,
     'custom_iteration_count': 1,
     'custom_batch_size': True,
-    'custom_batch_size_count': 128,
+    'custom_batch_size_count': 1,
     'no_test': True,
     'eval_train_stats': True
 }
@@ -365,29 +365,30 @@ def run_fig6(ips, fast, verbose):
     lan_ips, wan_ips, _ = ips
 
     # Run and retrieve Piranha communication/computation split for LAN
-    for protocol, num_parties in tqdm(fig6_protocols, desc='Protocols'):
+    for protocol, num_parties in tqdm(fig6_protocols, desc='Figure 6 | LAN Protocol'):
+        break
         rebuild_piranha('lan', protocol, 26, verbose)
-        for network in tqdm(fig6_networks, desc='Networks'):
+        for network in tqdm(fig6_networks, desc='Network'):
 
             if fast and 'vgg16' in network:
-                continue #skip the reaaaaally slow VGG if we're in a hurry
+                continue #skip the slow VGG if we're in a hurry
 
             run_piranha_experiment(
                 'lan', lan_ips, protocol, num_parties, 26, fig6_config,
-                network, 'fig6', verbose, rebuild=False, label='fig6-lan-{}-{}'.format(network, protocol)
+                network, 'fig6', verbose, rebuild=False, label='fig6-lan-{}-{}party'.format(network.split('/')[-1], num_parties)
             )
 
     # Same thing for WAN
-    for protocol, num_parties in tqdm(fig6_protocols, desc='Protocols'):
+    for protocol, num_parties in tqdm(fig6_protocols, desc='Figure 6 | WAN Protocol'):
         rebuild_piranha('wan', protocol, 26, verbose)
-        for network in tqdm(fig6_networks, desc='Networks'):
+        for network in tqdm(fig6_networks, desc='Network'):
 
             if fast and 'vgg16' in network:
                 continue #skip the reaaaaally slow VGG if we're in a hurry
 
             run_piranha_experiment(
-                'wan', lan_ips, protocol, num_parties, 26, fig6_config,
-                network, 'fig6', verbose, rebuild=False, label='fig6-wan-{}-{}'.format(network, protocol)
+                'wan', wan_ips, protocol, num_parties, 26, fig6_config,
+                network, 'fig6', verbose, rebuild=False, label='fig6-wan-{}-{}party'.format(network.split('/')[-1], num_parties)
             )
 
 
@@ -396,13 +397,15 @@ def run_fig6(ips, fast, verbose):
 fig7_branches = ['mem-footprint-naive', 'mem-footprint-iterator', 'mem-footprint-typing']
 def run_fig7(ips, fast, verbose):
 
+    lan_ips, _, _ = ips
+
     with open('runfiles/ip_piranha', 'w') as f:
-        for ip in ips:
+        for ip in lan_ips:
             print(ip, file=f)
 
-    for branch in tqdm(fig7_branches, desc='Versions'):
+    for branch in tqdm(fig7_branches, desc='Figure 7 | Memory footprint run'):
 
-        cmd = 'ansible-playbook --private-key ~/.ssh/piranha-ae -i runfiles/hosts.yml -l lan runfiles/run_fig7.yml -e "branch={}" -e "label={}"'.format(branch, 'fig7-{}-footprint'.format('branch'))
+        cmd = 'ansible-playbook --private-key ~/.ssh/piranha-ae -i runfiles/hosts.yml -l lan runfiles/run_fig7.yml -e "branch={}" -e "label={}" -e "num_parties=3"'.format(branch, 'fig7-{}-footprint'.format(branch))
         if not verbose:
             cmd += ' >/dev/null 2>&1'
 
@@ -432,8 +435,8 @@ table2_FP = 26
 table2_networks = [
     MODEL_PATH+'secureml-norelu.json',
     MODEL_PATH+'lenet-norelu-avgpool.json',
-    MODEL_PATH+'alexnet-cifar10-norelu',
-    MODEL_PATH+'vgg16-cifar10-norelu'
+    MODEL_PATH+'alexnet-cifar10-norelu.json',
+    MODEL_PATH+'vgg16-cifar10-norelu.json'
 ]
 table2_protocols = [
     ('-DTWOPC', 2), # SecureML
@@ -456,16 +459,16 @@ def run_table2(ips, fast, verbose):
     lan_ips, _, _ = ips
 
     # Run and retrieve Piranha communication/computation split for LAN
-    for protocol, num_parties in tqdm(table2_protocols, desc='Protocols'):
+    for protocol, num_parties in tqdm(table2_protocols, desc='Table 2 | Protocol'):
         rebuild_piranha('lan', protocol, 26, verbose)
-        for network in tqdm(table2_networks, desc='Networks'):
+        for network in tqdm(table2_networks, desc='Network'):
 
             if fast and 'vgg16' in network:
                 continue #skip the reaaaaally slow VGG if we're in a hurry
 
             run_piranha_experiment(
                 'lan', lan_ips, protocol, num_parties, 26, table2_config,
-                network, 'table2', verbose, rebuild=False, label='table2-{}-{}'.format(network, protocol)
+                network, 'table2', verbose, rebuild=False, label='table2-{}-{}'.format(network.split('/')[-1], protocol)
             )
 
 
@@ -475,8 +478,8 @@ table3_FP = 26
 table3_networks = [
     MODEL_PATH+'secureml-norelu.json',
     MODEL_PATH+'lenet-norelu-avgpool.json',
-    MODEL_PATH+'alexnet-cifar10-norelu',
-    MODEL_PATH+'vgg16-cifar10-norelu'
+    MODEL_PATH+'alexnet-cifar10-norelu.json',
+    MODEL_PATH+'vgg16-cifar10-norelu.json'
 ]
 table3_protocols = [
     ('-DTWOPC', 2), # SecureML
@@ -490,7 +493,6 @@ table3_config = {
     'custom_iterations': True,
     'custom_iteration_count': 1,
     'no_test': True,
-    'eval_bw_peak_memory': True
 }
 
 def run_table3(ips, fast, verbose):
@@ -498,17 +500,50 @@ def run_table3(ips, fast, verbose):
     lan_ips, _, _ = ips
 
     # Run and retrieve Piranha communication/computation split for LAN
-    for protocol, num_parties in tqdm(table3_protocols, desc='Protocols'):
+    for protocol, num_parties in tqdm(table3_protocols, desc='Table 3 | Protocol'):
         rebuild_piranha('lan', protocol, 26, verbose)
-        for network in tqdm(table3_networks, desc='Networks'):
+        for network in tqdm(table3_networks, desc='Network'):
             for k in tqdm(table3_batch_sizes, desc='Batch size'):
+
                 table3_config['custom_batch_size'] = True
                 table3_config['custom_batch_size_count'] = k
 
-                run_piranha_experiment(
-                    'lan', lan_ips, protocol, num_parties, 26, table3_config,
-                    network, 'table3', verbose, rebuild=False, label='table3-{}-{}'.format(network, protocol)
+                label = 'table3-batch{}-{}-{}'.format(k, network.split('/')[-1], protocol)
+
+                with open('runfiles/ip_piranha', 'w') as f:
+                    for ip in lan_ips:
+                        print(ip, file=f)
+
+                with open('runfiles/base_config.json', 'r') as f:
+                    full_config = json.load(f)
+
+                full_config.update(table3_config)
+                full_config['num_parties'] = num_parties
+                full_config['party_ips'] = lan_ips
+                full_config['party_users'] = ['ubuntu'] * num_parties
+                full_config['run_name'] = label
+                full_config['network'] = network
+
+                with open('runfiles/current_config.json', 'w') as f:
+                    json.dump(full_config, f)
+
+                cmd = 'ansible-playbook --private-key ~/.ssh/piranha-ae -i runfiles/hosts.yml -l {} runfiles/run_table3.yml -e "conf=current_config.json" -e "ip_file=ip_piranha" -e "num_parties={}" -e "float_precision={}" -e "protocol={}" -e "label={}" -e "fig={}" -e "testfilter={}"'.format(
+                    'lan',
+                    num_parties,
+                    26,
+                    protocol,
+                    label,
+                    'table3',
+                    '' 
                 )
+
+                if not verbose:
+                    cmd += ' >/dev/null 2>&1'
+
+                status = os.system(cmd)
+                if os.waitstatus_to_exitcode(status) != 0:
+                    print('Table 3 run failed with code {}'.format(os.waitstatus_to_exitcode(status)))
+                    exit(os.waitstatus_to_exitcode(status))
 
 
 # ---- Table 4 ----
@@ -516,8 +551,8 @@ def run_table3(ips, fast, verbose):
 table4_FP = 26
 table4_networks = [
     MODEL_PATH+'lenet-norelu-avgpool.json',
-    MODEL_PATH+'alexnet-cifar10-norelu',
-    MODEL_PATH+'vgg16-cifar10-norelu'
+    MODEL_PATH+'alexnet-cifar10-norelu.json',
+    MODEL_PATH+'vgg16-cifar10-norelu.json'
 ]
 table4_protocol = ('', 3)    # 3PC/Falcon, default
 table4_inference_batch_size = 1
@@ -536,7 +571,7 @@ def run_table4(ips, fast, verbose):
 
     rebuild_piranha('lan', table4_protocol[0], 26, verbose)
     # Run and retrieve Piranha communication/computation split for LAN
-    for i, network in tqdm(enumerate(table4_networks), desc='Networks'):
+    for i, network in tqdm(enumerate(table4_networks), desc='Table 4 | Network'):
 
         # Inference
         table4_config['custom_batch_size'] = True
@@ -548,7 +583,11 @@ def run_table4(ips, fast, verbose):
 
         run_piranha_experiment(
             'lan', lan_ips, table4_protocol[0], table4_protocol[1], 26, table4_config,
-            network, 'table4', verbose, rebuild=False, label='table4-inference-{}'.format(network)
+            network, 'table4', verbose, rebuild=False, label='table4-inference-{}'.format(network.split('/')[-1])
+        )
+        run_piranha_experiment(
+            'lan', lan_ips, table4_protocol[0], table4_protocol[1], 26, table4_config,
+            network, 'table4', verbose, rebuild=False, label='table4-inference-{}'.format(network.split('/')[-1])
         )
 
         # Training
@@ -561,7 +600,7 @@ def run_table4(ips, fast, verbose):
 
         run_piranha_experiment(
             'lan', lan_ips, table4_protocol[0], table4_protocol[1], 26, table4_config,
-            network, 'table4', verbose, rebuild=False, label='table4-train-{}'.format(network)
+            network, 'table4', verbose, rebuild=False, label='table4-train-{}'.format(network.split('/')[-1])
         )
 
 

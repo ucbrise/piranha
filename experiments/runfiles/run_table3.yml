@@ -1,0 +1,57 @@
+---
+# Playbook to run Table 3 experiment, which needs nvidia-smi loggin in the background
+# ----
+#
+
+- hosts: all
+  tasks:
+
+  - name: Copy config file to machines
+    become: yes
+    ansible.builtin.copy:
+      src: "{{ conf }}"
+      dest: "/home/ubuntu/piranha/"
+
+  - name: Get public IP
+    ansible.builtin.shell: "curl http://169.254.169.254/latest/meta-data/public-ipv4"
+    register: external_ip_result
+
+  - name: Convert to party number
+    delegate_to: localhost
+    ansible.builtin.shell: "python get_party_num.py {{ external_ip_result.stdout }} {{ ip_file }}"
+    register: party_num_result
+
+  - name: Build Piranha
+    ansible.builtin.shell: "make clean; make -j PIRANHA_FLAGS=\"-DFLOAT_PRECISION={{ float_precision }} {{ protocol }}\""
+    args:
+      chdir: /home/ubuntu/piranha
+    when: rebuild is defined
+
+  - name: Start nvidia-smi memory logging
+    ansible.builtin.shell: "nvidia-smi -lms 1 --query-gpu=memory.used --format=csv,noheader > output/{{ label }}.out"
+    args:
+      chdir: /home/ubuntu/piranha/
+    async: 1000
+    poll: 0
+    when: party_num_result.stdout < num_parties
+
+  - name: Run Piranha
+    ansible.builtin.shell: "./piranha -p {{ party_num_result.stdout }} -c {{ conf }} --gtest_filter={{ testfilter }}"
+    args:
+      chdir: /home/ubuntu/piranha/
+    when: party_num_result.stdout < num_parties
+
+  - name: Kill nvidia-smi
+    ansible.builtin.shell: "killall nvidia-smi -q"
+    when: party_num_result.stdout < num_parties
+
+  - name: Copy result back onto our machine
+    ansible.builtin.fetch:
+      src: "/home/ubuntu/piranha/output/{{ label }}.out"
+      dest: "../results/{{ fig }}/"
+    when: party_num_result.stdout < num_parties
+
+
+
+
+
