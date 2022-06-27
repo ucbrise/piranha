@@ -158,7 +158,7 @@ def update_hosts():
     wan_ips = lan_ips[0:2] + get_running_ips(piranha_west, 'jlw')
     mpspdz_ips = get_running_ips(mpspdz_client, 'piranha-mpspdz')
 
-    with open('runfiles/hosts.yml', 'w') as f:
+    with open('runfiles/hosts.yml', 'w+') as f:
         new_hosts = '''
 ---
 
@@ -224,7 +224,7 @@ def rebuild_piranha(target_hosts, protocol, fp, verbose):
 
 def run_piranha_experiment(target_hosts, ips, protocol, nparties, fp, configuration, network, figure, verbose, testfilter='', rebuild=False, label=''):
     
-    with open('runfiles/ip_piranha', 'w') as f:
+    with open('runfiles/ip_piranha', 'w+') as f:
         for ip in ips:
             print(ip, file=f)
 
@@ -238,7 +238,7 @@ def run_piranha_experiment(target_hosts, ips, protocol, nparties, fp, configurat
     full_config['run_name'] = label
     full_config['network'] = network
 
-    with open('runfiles/current_config.json', 'w') as f:
+    with open('runfiles/current_config.json', 'w+') as f:
         json.dump(full_config, f)
 
     cmd = 'ansible-playbook --private-key ~/.ssh/piranha-ae -i runfiles/hosts.yml -l {} runfiles/run_piranha.yml -e "conf=current_config.json" -e "ip_file=ip_piranha" -e "num_parties={}" -e "float_precision={}" -e "protocol={}" -e "label={}" -e "fig={}" -e "testfilter={}"'.format(
@@ -297,7 +297,7 @@ def run_fig4(ips, fast, verbose):
     # Run and retrieve mpspdz benchmarks -> results/fig4
     #  - create runfiles/ip_mpspdz
     #  - use ansible to run benchmarks
-    with open('runfiles/ip_mpspdz', 'w') as f:
+    with open('runfiles/ip_mpspdz', 'w+') as f:
         for ip in mpspdz_ips:
             print(ip, file=f)
 
@@ -425,7 +425,7 @@ def run_fig7(ips, fast, verbose):
 
     lan_ips, _, _ = ips
 
-    with open('runfiles/ip_piranha', 'w') as f:
+    with open('runfiles/ip_piranha', 'w+') as f:
         for ip in lan_ips:
             print(ip, file=f)
 
@@ -536,7 +536,7 @@ def run_table3(ips, fast, verbose):
 
                 label = 'table3-batch{}-{}-{}'.format(k, network.split('/')[-1], protocol)
 
-                with open('runfiles/ip_piranha', 'w') as f:
+                with open('runfiles/ip_piranha', 'w+') as f:
                     for ip in lan_ips:
                         print(ip, file=f)
 
@@ -550,7 +550,7 @@ def run_table3(ips, fast, verbose):
                 full_config['run_name'] = label
                 full_config['network'] = network
 
-                with open('runfiles/current_config.json', 'w') as f:
+                with open('runfiles/current_config.json', 'w+') as f:
                     json.dump(full_config, f)
 
                 cmd = 'ansible-playbook --private-key ~/.ssh/piranha-ae -i runfiles/hosts.yml -l {} runfiles/run_table3.yml -e "conf=current_config.json" -e "ip_file=ip_piranha" -e "num_parties={}" -e "float_precision={}" -e "protocol={}" -e "label={}" -e "fig={}" -e "testfilter={}"'.format(
@@ -1001,7 +1001,7 @@ def generate_figures():
                         if m:
                             fig4_raw_data[dst_label][protocol][idx] = float(m.group(1))
             
-    with open('artifact_figures/artifact/fig4.json', 'w') as f:
+    with open('artifact_figures/artifact/fig4.json', 'w+') as f:
         json.dump(fig4_raw_data, f)
     
     # * create paper and artifact images in experiments/artifact_figures
@@ -1046,7 +1046,7 @@ def generate_figures():
                         if m:
                             fig5_raw_data[dst_model][idx] = float(m.group(1))
             
-    with open('artifact_figures/artifact/fig5.json', 'w') as f:
+    with open('artifact_figures/artifact/fig5.json', 'w+') as f:
         json.dump(fig5_raw_data, f)
     
     # * create paper and artifact images in experiments/artifact_figures
@@ -1114,7 +1114,7 @@ def generate_figures():
                             if m:
                                 fig6_raw_data[s][dst_model+'-communication'][idx] = float(m.group(1))
                 
-    with open('artifact_figures/artifact/fig6.json', 'w') as f:
+    with open('artifact_figures/artifact/fig6.json', 'w+') as f:
         json.dump(fig6_raw_data, f)
     
     # * create paper and artifact images in experiments/artifact_figures
@@ -1252,7 +1252,7 @@ def generate_tables():
                 
                     tab2_raw_data[dst_model][dst_protocol] = [time, sum(comms) / num_parties, train_acc * 100, test_acc * 100]
     
-    with open('artifact_figures/artifact/table2.json', 'w') as f:
+    with open('artifact_figures/artifact/table2.json', 'w+') as f:
         json.dump(tab2_raw_data, f, indent=4)
     
 
@@ -1297,7 +1297,7 @@ def generate_tables():
                     max_mem_mb = float(subprocess.check_output('sort -g -k 1 {} | tail -n 1'.format(filepath), shell=True).split()[0])
                     tab3_raw_data[dst_model][k][num_parties - 2] = max_mem_mb
     
-    with open('artifact_figures/artifact/table3.json', 'w') as f:
+    with open('artifact_figures/artifact/table3.json', 'w+') as f:
         json.dump(tab3_raw_data, f, indent=4)
 
 
@@ -1369,7 +1369,7 @@ def generate_tables():
 
                     tab4_raw_data['time'][dst_model][2 if mode == 'inference' else 5] = time
 
-    with open('artifact_figures/artifact/table4.json', 'w') as f:
+    with open('artifact_figures/artifact/table4.json', 'w+') as f:
         json.dump(tab4_raw_data, f, indent=4)
 
 
