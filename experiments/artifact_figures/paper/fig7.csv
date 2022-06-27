@@ -1,4 +1,4 @@
-time (ms),naive (bytes),time (ms),iterator (bytes),time (ms),typing (bytes)
+naive time (ms),naive (bytes),iterator time (ms),iterator (bytes),typing time (ms),typing (bytes)
 11772,196608,5159,196608,4952,196608
 11772,393216,5159,393216,4952,393216
 11772,396416,5159,396416,4952,396416
