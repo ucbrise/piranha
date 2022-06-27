@@ -220,8 +220,8 @@ def run_piranha_experiment(target_hosts, ips, protocol, nparties, fp, configurat
         nparties,
         fp,
         protocol,
-        figure,
         label,
+        figure,
         testfilter
     )
 
@@ -244,8 +244,8 @@ fig4_protocols = [
     ('-DFOURPC', 4), # FantasticFour, the unit tests will cover all 3 protocols
 ]
 fig4_mpspdz_protocols = [
-    ('semi2k-party.x', 2),
     ('replicated-ring-party.x', 3),
+    ('semi2k-party.x', 2),
     ('rep4-ring-party.x', 4)
 ]
 fig4_config = {
@@ -260,7 +260,7 @@ def run_fig4(ips, fast, verbose):
     lan_ips, _, mpspdz_ips = ips
 
     # Run and retrieve Piranha benchmarks -> results/fig4
-    for (protocol, num_parties) in tqdm(fig4_protocols, desc='Piranha protocols'):
+    for (protocol, num_parties) in tqdm(fig4_protocols, desc='Piranha microbenchmarks'):
         rebuild_piranha('lan', protocol, 26, verbose)
         run_piranha_experiment(
             'lan', lan_ips, protocol, num_parties, 26, fig4_config,
@@ -275,16 +275,17 @@ def run_fig4(ips, fast, verbose):
         for ip in mpspdz_ips:
             print(ip, file=f)
 
-    for (protocol, num_parties) in tqdm(fig4_mpspdz_protocols, desc='MP-SPDZ protocols'):
-        for benchmark in tqdm(glob.glob('runfiles/mpspdz_bench*.mpc'), desc='benchmarks'):
+    for (protocol, num_parties) in fig4_mpspdz_protocols:
+        for benchmark in tqdm(glob.glob('runfiles/mpspdz_bench*.mpc'), desc='MP-SPDZ microbenchmarks'):
             benchmark = os.path.basename(os.path.splitext(benchmark)[0])
 
             if fast and benchmark == 'mpspdz_bench_conv_e': # if we're trying to go fast, ignore the really slow convolution
                 continue
 
-            args = ' -e "mpspdz_args=\\"-N 2\\""' if protocol == 'semi2k-party.x' else ''
+            args = ' -e "mpspdz_args=\\"-N 2\\""' if protocol == 'semi2k-party.x' else ' -e "mpspdz_args=\\"\\""'
 
             cmd = 'ansible-playbook --private-key ~/.ssh/piranha-ae -i runfiles/hosts.yml -l mpspdz runfiles/run_fig4_mpspdz.yml -e "protocol={}" -e "benchmark_name={}" -e "num_parties={}"'.format(protocol, benchmark, num_parties) + args
+            #print(cmd)
             if not verbose:
                 cmd += ' >/dev/null 2>&1'
 
@@ -306,7 +307,9 @@ fig5_networks = [
 fig5_protocol = ('', 3)    # 3PC/Falcon
 fig5_config = {
     'custom_epochs': True,
-    'custom_epoch_count': 10,
+    'custom_epoch_count': 1, # XXX: 10
+    'custom_iterations': True, # XXX: DELETE
+    'custom_iteration_count': 1, # XXX: DELETE
     'custom_batch_size': True,
     'custom_batch_size_count': 128,
     'no_test': True,
@@ -327,7 +330,7 @@ def run_fig5(ips, fast, verbose):
         for fp in tqdm(fig5_FPs, desc='Fixed point precision'):
             run_piranha_experiment(
                 'lan', lan_ips, fig5_protocol[0], fig5_protocol[1], fp, fig5_config,
-                network, 'fig5', verbose, rebuild=True, label='fig5-{}-fp{}'.format(network, fp)
+                network, 'fig5', verbose, rebuild=True, label='fig5-{}-fp{}'.format(network.split('/')[-1], fp)
             )
 
 

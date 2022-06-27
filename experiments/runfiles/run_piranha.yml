@@ -43,7 +43,7 @@
   - name: Copy result back onto our machine
     ansible.builtin.fetch:
       src: "/home/ubuntu/piranha/output/{{ label }}.out"
-      dest: "results/{{ fig }}/"
+      dest: "../results/{{ fig }}/"
     when: party_num_result.stdout < num_parties
 
 
