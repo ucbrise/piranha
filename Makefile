@@ -1,7 +1,7 @@
 CONDA_BASE=/data/jlwatson/anaconda3
 BUILDDIR=build
 
-CXX=/usr/local/cuda-11.5/binnvcc
+CXX=/usr/local/cuda-11.5/bin/nvcc
 FLAGS := -Xcompiler="-O3,-w,-std=c++11,-pthread,-msse4.1,-maes,-msse2,-mpclmul,-fpermissive,-fpic,-pthread" -Xcudafe "--diag_suppress=declared_but_not_referenced"
 #FLAGS := -Xcompiler="-O3,-w,-std=c++11,-pthread,-msse4.1,-maes,-msse2,-mpclmul,-fpermissive,-fpic,-pthread" -Xcudafe "--diag_suppress=declared_but_not_referenced"
 
