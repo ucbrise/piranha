@@ -2,11 +2,85 @@
 # Piranha: A GPU Platform for Secure Computation
 -----
 
-Piranha is a C++-based platform for accelerating secure multi-party computation (MPC) protocols on the GPU in a protocol-independent manner. It is designed both for MPC developers, providing a modular structure for easily adding new protocol implementations, and secure application developers, allowing execution on any Piranha-implemented protocols.
+Piranha is a C++-based platform for accelerating secure multi-party computation (MPC) protocols on the GPU in a protocol-independent manner. It is designed both for MPC developers, providing a modular structure for easily adding new protocol implementations, and secure application developers, allowing execution on any Piranha-implemented protocols. This repo currently includes a secure ML inference and training application, which you can find in `/nn`.
 
-Piranha is described in more detail in our USENIX Security '22 paper: {Link coming soon}.
+Piranha is described in more detail in our USENIX Security '22 paper!
 
-This repo currently includes a secure ML inference and training application, which you can find in `/nn`.
+**Warning**: This is an academic proof-of-concept prototype and has not received careful code review. This implementation is NOT ready for production use.
+
+## Build
+
+This project requires an NVIDIA GPU, and assumes you have your GPU drivers and the [NVIDIA CUDA Toolkit](https://docs.nvidia.com/cuda/) already installed. The following has been tested on AWS with the `Deep Learning Base AMI (Ubuntu 18.04 ) Version 53.5` AMI.
+
+1. Checkout external modules
+```
+git submodule update --init --recursive
+```
+
+1. Build CUTLASS
+
+```
+cd ext/cutlass
+mkdir build
+cmake .. -DCUTLASS_NVCC_ARCHS=<YOUR_GPU_ARCH_HERE> -DCMAKE_CUDA_COMPILER_WORKS=1 -DCMAKE_CUDA_COMPILER=<YOUR NVCC PATH HERE>
+make -j
+```
+
+1. Install GTest. We use it for unit testing.
+
+```
+sudo apt install libgtest-dev libssl-dev
+cd /usr/src/gtest
+sudo mkdir build
+cd build
+sudo cmake ..
+sudo make
+sudo make install
+```
+
+1. Create some necessary directories
+
+```
+mkdir output; mkdir files/MNIST; mkdir files/CIFAR10
+```
+
+1. Download the MNIST/CIFAR10 datasets, if using. This step might take a while
+
+```
+cd scripts
+sudo pip install torch torchvision
+python download_{mnist, cifar10}.py
+```
+
+1. Build Piranha at a specific fixed point precision and for a particular protocol. 3-party replicated secret sharing is the default and doesn't require a command-line flag.
+
+```
+make -j8 PIRANHA_FLAGS="-DFLOAT_PRECISION=<NBITS> -D{TWOPC,FOURPC}"
+```
+
+## Run
+
+1. Copy and set up a run configuration using `config.json` as a base. It is already set up to perform a 10-epoch SecureML training run; simply specify party IPs in the configuration.
+
+1. Run Piranha on each machine with a party number (0 -> n_parties - 1):
+
+```
+./piranha -p <PARTY NUM> -c <CONFIG FILE>
+```
+
+## Citation
+
+You can cite the paper using the following BibTeX entry (the paper links to this repo):
+
+```
+@inproceedings {watson22piranha,
+    title = {Piranha: A {GPU} Platform for Secure Computation},
+    booktitle = {31st USENIX Security Symposium (USENIX Security 22)},
+    year = {2022},
+    url = {https://www.usenix.org/conference/usenixsecurity22/presentation/watson},
+    publisher = {USENIX Association}
+}
+```
 
 ## Artifact Evaluation
 
@@ -40,64 +114,4 @@ optional arguments:
 
 * Use `--verbose` if something isn't working and you want to take a look at the raw output or need an error message. In the backend, we use Ansible to communicate with each of the machines in the cluster.
 
-## Build
-
-Assumes that you have CUDA drivers/toolkit installed.
-
-1. Checkout external modules
-
-```
-git submodule update --init --recursive
-```
-
-1. Build CUTLASS
-
-```
-cd ext/cutlass
-mkdir build
-cmake .. -DCUTLASS_NVCC_ARCHS=70 -DCMAKE_CUDA_COMPILER_WORKS=1 -DCMAKE_CUDA_COMPILER=<YOUR NVCC PATH>
-make -j
-```
-
-1. Install GTest. We use it for unit testing.
-
-```
-sudo apt install libgtest-dev libssl-dev
-cd /usr/src/gtest
-sudo mkdir build
-cd build
-sudo cmake ..
-sudo make
-sudo make install
-```
-
-1. Create some necessary directories
-
-```
-mkdir output; mkdir files/MNIST; mkdir files/CIFAR10
-```
-
-1. Download the MNIST/CIFAR10 datasets, if using. This step might take a while
-
-```
-cd scripts
-sudo pip install torch torchvision
-python download_{mnist, cifar10}.py
-```
-
-1. Build Piranha at a specific fixed point precision and for a particular protocol:
-
-```
-make -j8 PIRANHA_FLAGS="-DFLOAT_PRECISION=<NBITS> -D{TWOPC,FOURPC}"
-```
-
-## Run
-
-1. Copy and set up a run configuration from one of the examples in `/deploy`.
-
-1. Run Piranha with a party number:
-
-```
-./piranha -p <PARTY NUM> -c <CONFIG>
-```
 
