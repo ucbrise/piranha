@@ -1,7 +1,7 @@
 
 # Piranha: A GPU Platform for Secure Computation
 
-![cute cuddly PIRANHA >:D](https://github.com/ucbrise/piranha/blob/main/files/piranha-fish.png?raw=true)
+<img src="https://github.com/ucbrise/piranha/blob/main/files/piranha-fish.png?raw=true" alt="cute cuddly PIRANHA >:D courtesy of Vivian Fang @ vivi.sh" width=20% height=20%/>
 
 Piranha is a C++-based platform for accelerating secure multi-party computation (MPC) protocols on the GPU in a protocol-independent manner. It is designed both for MPC developers, providing a modular structure for easily adding new protocol implementations, and secure application developers, allowing execution on any Piranha-implemented protocols. This repo currently includes a secure ML inference and training application, which you can find in `/nn`.
 
