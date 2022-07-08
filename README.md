@@ -7,7 +7,7 @@
 
 Piranha is a C++-based platform for accelerating secure multi-party computation (MPC) protocols on the GPU in a protocol-independent manner. It is designed both for MPC developers, providing a modular structure for easily adding new protocol implementations, and secure application developers, allowing execution on any Piranha-implemented protocols. This repo currently includes a secure ML inference and training application, which you can find in `/nn`.
 
-Piranha is described in more detail in our USENIX Security '22 paper! If you have quetions, please create git issues; for eventual replies, you can also reach out to `jlw@berkeley.edu`.
+Piranha is described in more detail in our [USENIX Security '22 paper](https://eprint.iacr.org/2022/892)! If you have questions, please create git issues; for eventual replies, you can also reach out to `jlw@berkeley.edu`.
 
 **Warning**: This is an academic proof-of-concept prototype and has not received careful code review. This implementation is NOT ready for production use.
 
