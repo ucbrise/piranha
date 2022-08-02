@@ -9,6 +9,12 @@ Piranha is a C++-based platform for accelerating secure multi-party computation 
 
 Piranha is described in more detail in our [USENIX Security '22 paper](https://eprint.iacr.org/2022/892)! If you have questions, please create git issues; for eventual replies, you can also reach out to `jlw@berkeley.edu`.
 
+<p align="center">
+    <img src="https://github.com/ucbrise/piranha/blob/main/files/images/usenixbadges-available.png?raw=true" alt="usenix-available" width=8% height=8%/>
+    <img src="https://github.com/ucbrise/piranha/blob/main/files/images/usenixbadges-functional.png?raw=true" alt="usenix-functional" width=8% height=8%/>
+    <img src="https://github.com/ucbrise/piranha/blob/main/files/images/usenixbadges-reproduced.png?raw=true" alt="usenix-reproduced" width=8% height=8%/>
+</p>
+
 **Warning**: This is an academic proof-of-concept prototype and has not received careful code review. This implementation is NOT ready for production use.
 
 ## Build
