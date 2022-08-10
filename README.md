@@ -83,11 +83,16 @@ You can cite the paper using the following BibTeX entry (the paper links to this
 
 ```
 @inproceedings {watson22piranha,
+    author = {Watson, Jean-Luc and Wagh, Sameer and Popa, Raluca Ada},
     title = {Piranha: A {GPU} Platform for Secure Computation},
     booktitle = {31st USENIX Security Symposium (USENIX Security 22)},
     year = {2022},
+    isbn = {978-1-939133-31-1},
+    address = {Boston, MA},
+    pages = {827--844},
     url = {https://www.usenix.org/conference/usenixsecurity22/presentation/watson},
-    publisher = {USENIX Association}
+    publisher = {USENIX Association},
+    month = aug,
 }
 ```
 
