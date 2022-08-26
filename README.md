@@ -47,13 +47,13 @@ sudo make
 sudo make install
 ```
 
-1. Create some necessary directories
+2. Create some necessary directories
 
 ```
 mkdir output; mkdir files/MNIST; mkdir files/CIFAR10
 ```
 
-1. Download the MNIST/CIFAR10 datasets, if using. This step might take a while
+3. Download the MNIST/CIFAR10 datasets, if using. This step might take a while
 
 ```
 cd scripts
@@ -61,7 +61,7 @@ sudo pip install torch torchvision
 python download_{mnist, cifar10}.py
 ```
 
-1. Build Piranha at a specific fixed point precision and for a particular protocol. 3-party replicated secret sharing is the default and doesn't require a command-line flag.
+4. Build Piranha at a specific fixed point precision and for a particular protocol. 3-party replicated secret sharing is the default and doesn't require a command-line flag.
 
 ```
 make -j8 PIRANHA_FLAGS="-DFLOAT_PRECISION=<NBITS> -D{TWOPC,FOURPC}"
@@ -71,7 +71,7 @@ make -j8 PIRANHA_FLAGS="-DFLOAT_PRECISION=<NBITS> -D{TWOPC,FOURPC}"
 
 1. Copy and set up a run configuration using `config.json` as a base. It is already set up to perform a 10-epoch SecureML training run; simply specify party IPs in the configuration.
 
-1. Run Piranha on each machine with a party number (0 -> n_parties - 1):
+2. Run Piranha on each machine with a party number (0 -> n_parties - 1):
 
 ```
 ./piranha -p <PARTY NUM> -c <CONFIG FILE>
