@@ -77,6 +77,16 @@ make -j8 PIRANHA_FLAGS="-DFLOAT_PRECISION=<NBITS> -D{TWOPC,FOURPC}"
 ./piranha -p <PARTY NUM> -c <CONFIG FILE>
 ```
 
+### Running locally
+
+You may want to run Piranha on a local machine for development. An example configuration for 3-party local execution can be found at `files/samples/localhost_config.json` with an accompanying runfile. You can modify the runfile to change which GPUs Piranha uses for each party using the `CUDA_VISIBLE_DEVICES` environment variable. The script uses GPUs 0-2 by default, but can be changed to run on a single GPU as well. Note that due to contention, hosting several parties on a single GPU will limit the problem sizes you can test and incur some additional overhead.
+
+Start the computation with:
+
+```
+./files/samples/localhost_runner.sh
+```
+
 ## Citation
 
 You can cite the paper using the following BibTeX entry (the paper links to this repo):
