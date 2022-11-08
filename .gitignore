@@ -11,6 +11,7 @@ piranha-debug
 tags
 output/
 output/*
+debug/
 files/skynet_lan_ips
 files/skynet_wan_ips
 files/IP_LAN
