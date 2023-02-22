@@ -31,6 +31,7 @@ git submodule update --init --recursive
 ```
 cd ext/cutlass
 mkdir build
+cd build
 cmake .. -DCUTLASS_NVCC_ARCHS=<YOUR_GPU_ARCH_HERE> -DCMAKE_CUDA_COMPILER_WORKS=1 -DCMAKE_CUDA_COMPILER=<YOUR NVCC PATH HERE>
 make -j
 ```
