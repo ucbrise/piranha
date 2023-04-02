@@ -259,14 +259,18 @@ TPCBase<T, I> &TPCBase<T, I>::operator*=(const TPCBase<T, I2> &rhs) {
 
     temp.zero();
     temp += f;
-    temp -= *y.getShare(0);
     temp *= e;
     *this += temp;
 
     temp.zero();
+    temp -= *y.getShare(0);
+    temp *= e;
+    *this.getShare(0) += temp;
+
+    temp.zero();
     temp -= *x.getShare(0);
     temp *= f;
-    *this += temp;
+    *this.getShare(0) += temp;
  
     return *this;
 }
@@ -298,14 +302,18 @@ TPCBase<T, I> &TPCBase<T, I>::operator&=(const TPCBase<T, I2> &rhs) {
 
     temp.zero();
     temp ^= f;
-    temp ^= *y.getShare(0);
     temp &= e;
     *this ^= temp;
 
     temp.zero();
+    temp ^= *y.getShare(0);
+    temp &= e;
+    *this->getShare(0) ^= temp;
+
+    temp.zero();
     temp ^= *x.getShare(0);
     temp &= f;
-    *this ^= temp;
+    *this->getShare(0) ^= temp;
  
     return *this;
 }
@@ -1082,11 +1090,11 @@ void localMatMul(const TPC<T> &a, const TPC<T> &b, TPC<T> &c,
     temp.zero();
 
     gpu::gemm(M, N, K, &e, transpose_a, y.getShare(0), transpose_b, &temp, transpose_c);
-    c -= temp;
+    *c.getShare(0) -= temp;
     temp.zero();
 
     gpu::gemm(M, N, K, x.getShare(0), transpose_a, &f, transpose_b, &temp, transpose_c);
-    c -= temp;
+    *c.getShare(0) -= temp;
 }
 
 template<typename T, typename I, typename I2>
