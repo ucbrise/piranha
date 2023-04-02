@@ -1090,11 +1090,11 @@ void localMatMul(const TPC<T> &a, const TPC<T> &b, TPC<T> &c,
     temp.zero();
 
     gpu::gemm(M, N, K, &e, transpose_a, y.getShare(0), transpose_b, &temp, transpose_c);
-    c -= temp;
+    *c.getShare(0) -= temp;
     temp.zero();
 
     gpu::gemm(M, N, K, x.getShare(0), transpose_a, &f, transpose_b, &temp, transpose_c);
-    c -= temp;
+    *c.getShare(0) -= temp;
 }
 
 template<typename T, typename I, typename I2>
